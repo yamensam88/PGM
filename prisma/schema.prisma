@@ -1,0 +1,314 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id               String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String            @db.VarChar(255)
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  users            User[]
+  clients          Client[]
+  drivers          Driver[]
+  vehicles         Vehicle[]
+  zones            Zone[]
+  rate_cards       RateCard[]
+  daily_runs       DailyRun[]
+  incidents        Incident[]
+  events_log       EventsLog[]
+  fuel_logs        FuelLog[]
+  maintenance_logs MaintenanceLog[]
+  hr_events        HrEvent[]
+  financial_entries FinancialEntry[]
+  ai_reports       AiReport[]
+
+  @@map("organizations")
+}
+
+model User {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  email           String       @db.VarChar(255)
+  password_hash   String       @db.VarChar(255)
+  role            String       @db.VarChar(50)
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([organization_id, email])
+  @@map("users")
+}
+
+model Client {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  name            String       @db.VarChar(255)
+  is_deleted      Boolean?     @default(false)
+  deleted_at      DateTime?    @db.Timestamptz(6)
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  rate_cards      RateCard[]
+  daily_runs      DailyRun[]
+
+  @@index([organization_id], map: "idx_clients_org")
+  @@map("clients")
+}
+
+model Driver {
+  id                 String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id    String       @db.Uuid
+  first_name         String       @db.VarChar(255)
+  last_name          String       @db.VarChar(255)
+  status             String?      @default("active") @db.VarChar(50)
+  daily_base_cost    Decimal?     @default(0.00) @db.Decimal(10, 2)
+  sst_score          Decimal?     @default(100.00) @db.Decimal(5, 2)
+  productivity_index Decimal?     @default(1.00) @db.Decimal(5, 2)
+  penalty_risk_score Decimal?     @default(0.00) @db.Decimal(5, 2)
+  is_deleted         Boolean?     @default(false)
+  deleted_at         DateTime?    @db.Timestamptz(6)
+  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_runs         DailyRun[]
+  hr_events          HrEvent[]
+
+  @@index([organization_id], map: "idx_drivers_org")
+  @@map("drivers")
+}
+
+model Vehicle {
+  id               String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id  String           @db.Uuid
+  license_plate    String           @db.VarChar(50)
+  type             String?          @db.VarChar(100)
+  status           String?          @default("available") @db.VarChar(50)
+  cost_per_km      Decimal?         @default(0.00) @db.Decimal(10, 2)
+  default_run_cost Decimal?         @default(0.00) @db.Decimal(10, 2)
+  is_deleted       Boolean?         @default(false)
+  deleted_at       DateTime?        @db.Timestamptz(6)
+  created_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  organization     Organization     @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_runs       DailyRun[]
+  fuel_logs        FuelLog[]
+  maintenance_logs MaintenanceLog[]
+
+  @@index([organization_id], map: "idx_vehicles_org")
+  @@map("vehicles")
+}
+
+model Zone {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  name            String       @db.VarChar(255)
+  description     String?
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  rate_cards      RateCard[]
+  daily_runs      DailyRun[]
+
+  @@index([organization_id], map: "idx_zones_org")
+  @@map("zones")
+}
+
+model RateCard {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  client_id       String       @db.Uuid
+  zone_id         String?      @db.Uuid
+  price_per_stop  Decimal?     @db.Decimal(10, 2)
+  price_per_parcel Decimal?    @db.Decimal(10, 2)
+  bonus_relay     Decimal?     @default(0.00) @db.Decimal(10, 2)
+  base_daily_flat Decimal?     @default(0.00) @db.Decimal(10, 2)
+  currency        String?      @default("EUR") @db.VarChar(10)
+  valid_from      DateTime     @db.Date
+  valid_to        DateTime?    @db.Date
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  client          Client       @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  zone            Zone?        @relation(fields: [zone_id], references: [id], onDelete: Restrict)
+  daily_runs      DailyRun[]
+
+  @@index([organization_id], map: "idx_rate_cards_org")
+  @@map("rate_cards")
+}
+
+model DailyRun {
+  id                        String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id           String       @db.Uuid
+  date                      DateTime     @db.Date
+  driver_id                 String       @db.Uuid
+  vehicle_id                String       @db.Uuid
+  client_id                 String       @db.Uuid
+  zone_id                   String       @db.Uuid
+  rate_card_id              String?      @db.Uuid
+  status                    String?      @default("planned") @db.VarChar(50)
+  km_start                  Decimal?     @db.Decimal(10, 2)
+  km_end                    Decimal?     @db.Decimal(10, 2)
+  direct_parcels            Int?         @default(0)
+  relay_parcels             Int?         @default(0)
+  stops_planned             Int?         @default(0)
+  stops_done                Int?         @default(0)
+  failed_stops              Int?         @default(0)
+  advised_parcels           Int?         @default(0)
+  started_at                DateTime?    @db.Timestamptz(6)
+  ended_at                  DateTime?    @db.Timestamptz(6)
+  return_notes              String?
+  proof_of_return_photo_url String?      @db.VarChar(1024)
+  revenue_calculated        Decimal?     @default(0.00) @db.Decimal(10, 2)
+  cost_driver               Decimal?     @default(0.00) @db.Decimal(10, 2)
+  cost_fleet                Decimal?     @default(0.00) @db.Decimal(10, 2)
+  /// Field is GENERATED ALWAYS AS in PostgreSQL, so we cannot insert into it
+  margin_net                Decimal?     @db.Decimal(10, 2)
+  productivity_index        Decimal?     @db.Decimal(5, 2)
+  penalty_risk_score        Decimal?     @db.Decimal(5, 2)
+  created_at                DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?    @default(now()) @db.Timestamptz(6)
+  organization              Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  driver                    Driver       @relation(fields: [driver_id], references: [id], onDelete: Restrict)
+  vehicle                   Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+  client                    Client       @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  zone                      Zone         @relation(fields: [zone_id], references: [id], onDelete: Restrict)
+  rate_card                 RateCard?    @relation(fields: [rate_card_id], references: [id], onDelete: Restrict)
+  incidents                 Incident[]
+
+  @@index([organization_id, date], map: "idx_daily_runs_org_date")
+  @@index([driver_id, vehicle_id, client_id], map: "idx_daily_runs_fk")
+  @@map("daily_runs")
+}
+
+model Incident {
+  id                      String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id         String       @db.Uuid
+  daily_run_id            String       @db.Uuid
+  type                    String       @db.VarChar(100)
+  description             String?
+  proof_url               String?      @db.VarChar(1024)
+  severity                String?      @db.VarChar(50)
+  gps_lat                 Decimal?     @db.Decimal(10, 6)
+  gps_lng                 Decimal?     @db.Decimal(10, 6)
+  incident_timestamp      DateTime?    @default(now()) @db.Timestamptz(6)
+  ai_validation_flag      Boolean?     @default(false)
+  resolution_status       String?      @default("open") @db.VarChar(50)
+  penalty_exposure_amount Decimal?     @default(0.00) @db.Decimal(10, 2)
+  created_at              DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?    @default(now()) @db.Timestamptz(6)
+  organization            Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_run               DailyRun     @relation(fields: [daily_run_id], references: [id], onDelete: Cascade)
+
+  @@index([daily_run_id], map: "idx_incidents_run")
+  @@map("incidents")
+}
+
+model EventsLog {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  entity_type     String       @db.VarChar(50)
+  entity_id       String       @db.Uuid
+  event_type      String       @db.VarChar(100)
+  metadata        Json?
+  timestamp       DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([entity_type, entity_id], map: "idx_events_log_entity")
+  @@map("events_log")
+}
+
+model FuelLog {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  vehicle_id      String       @db.Uuid
+  date            DateTime     @db.Timestamptz(6)
+  volume          Decimal      @db.Decimal(8, 2)
+  cost            Decimal      @db.Decimal(10, 2)
+  mileage         Int?
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  vehicle         Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+
+  @@index([vehicle_id], map: "idx_fuel_logs_vehicle")
+  @@map("fuel_logs")
+}
+
+model MaintenanceLog {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  vehicle_id      String       @db.Uuid
+  type            String       @db.VarChar(50)
+  description     String?
+  cost            Decimal      @db.Decimal(10, 2)
+  downtime_hours  Decimal?     @default(0.00) @db.Decimal(6, 2)
+  date            DateTime     @db.Date
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  vehicle         Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+
+  @@index([vehicle_id], map: "idx_maintenance_logs_vehicle")
+  @@map("maintenance_logs")
+}
+
+model HrEvent {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  driver_id       String       @db.Uuid
+  type            String       @db.VarChar(50)
+  start_date      DateTime     @db.Date
+  end_date        DateTime?    @db.Date
+  description     String?
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  driver          Driver       @relation(fields: [driver_id], references: [id], onDelete: Restrict)
+
+  @@index([driver_id], map: "idx_hr_events_driver")
+  @@map("hr_events")
+}
+
+model FinancialEntry {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  entity_type     String?      @db.VarChar(50)
+  entity_id       String?      @db.Uuid
+  type            String       @db.VarChar(50)
+  direction       String?      @db.VarChar(20)
+  category        String?      @db.VarChar(50)
+  amount          Decimal      @db.Decimal(10, 2)
+  currency        String?      @default("EUR") @db.VarChar(10)
+  description     String?
+  source          String?      @db.VarChar(50)
+  date            DateTime     @db.Date
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, date], map: "idx_financial_entries_org_date")
+  @@map("financial_entries")
+}
+
+model AiReport {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organization_id String       @db.Uuid
+  type            String       @db.VarChar(100)
+  report_date     DateTime     @db.Date
+  content         Json
+  prompt_metadata Json?
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, type], map: "idx_ai_reports_org_type")
+  @@map("ai_reports")
+}
