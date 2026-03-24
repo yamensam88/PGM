@@ -308,8 +308,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                          {monthlyCost.toFixed(2)} €
                                       </span>
                                       <Dialog>
-                                        <DialogTrigger asChild>
-                                           <button className="text-slate-400 hover:text-orange-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-orange-500/30 underline-offset-2 transition-all">Modifier</button>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-orange-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-orange-500/30 underline-offset-2 transition-all" />}>
+                                           Modifier
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-sm bg-white border-slate-200 text-slate-800">
                                            <DialogHeader>
@@ -329,8 +329,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                          {netSalary.toFixed(2)} € {hasCustomNet ? '' : '(Est.)'}
                                       </span>
                                       <Dialog>
-                                        <DialogTrigger asChild>
-                                           <button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all">Modifier</button>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>
+                                           Modifier
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-sm bg-white border-slate-200">
                                            <DialogHeader>
