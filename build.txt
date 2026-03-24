@@ -1,0 +1,59 @@
+﻿
+> app@0.1.0 build
+> next build
+
+node.exe : ΓÜá Warning: Next.js inferred your workspace root, but 
+it may not be correct.
+Au caractère C:\Program Files\nodejs\npm.ps1:29 : 3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÜá Warning: Ne..    
+.not be correct.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ We detected multiple lockfiles and selected the directory of 
+C:\Users\Sami\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js 
+config, or consider removing one of the lockfiles if it's not 
+needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config
+-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Sami\.gemini\antigravity\scratch\saas_delivery\app\pa
+ckage-lock.json
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+ΓÜá The "middleware" file convention is deprecated. Please use 
+"proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 7.3s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/dispatch/settings/page.tsx:70:22
+Type error: Cannot find name 'Badge'.
+
+[0m [90m 68 |[39m                         
+[33m<[39m[33mp[39m className[33m=[39m[32m"text-xs text-slate
+-500"[39m[33m>[39m{session[33m.[39muser[33m.[39memail}[33m<
+[39m[33m/[39m[33mp[39m[33m>[39m
+ [90m 69 |[39m                     
+[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 70 |[39m                     
+[33m<[39m[33mBadge[39m variant[33m=[39m[32m"outline"[39m 
+className[33m=[39m[32m"bg-slate-100 text-slate-800"[39m[33m>[
+39m[33mAdmin[39m[33m<[39m[33m/[39m[33mBadge[39m[33m>[39m
+ [90m    |[39m                      [31m[1m^[22m[39m
+ [90m 71 |[39m                  
+[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 72 |[39m                  [33m<[39m[33mdiv[39m 
+className[33m=[39m[32m"pt-4"[39m[33m>[39m
+ [90m 73 |[39m                     [33m<[39m[33mButton[39m 
+variant[33m=[39m[32m"outline"[39m 
+className[33m=[39m[32m"w-full text-blue-600 border-blue-200 
+hover:bg-blue-50 dark:hover:bg-blue-900/20 
+dark:border-blue-900/50"[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

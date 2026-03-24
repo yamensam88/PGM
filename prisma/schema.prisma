@@ -11,177 +11,282 @@ datasource db {
 }
 
 model Organization {
-  id               String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name             String            @db.VarChar(255)
-  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?         @default(now()) @db.Timestamptz(6)
-  users            User[]
-  clients          Client[]
-  drivers          Driver[]
-  vehicles         Vehicle[]
-  zones            Zone[]
-  rate_cards       RateCard[]
-  daily_runs       DailyRun[]
-  incidents        Incident[]
-  events_log       EventsLog[]
-  fuel_logs        FuelLog[]
-  maintenance_logs MaintenanceLog[]
-  hr_events        HrEvent[]
-  financial_entries FinancialEntry[]
-  ai_reports       AiReport[]
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String    @db.VarChar(255)
+  tax_id              String?   @db.VarChar(100)
+  currency            String?   @default("EUR") @db.VarChar(10)
+  country             String?   @default("FR") @db.VarChar(50)
+  subscription_plan   String?   @default("pro") @db.VarChar(50)
+  subscription_status String?   @default("active") @db.VarChar(50)
+  settings_json       Json?
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at          DateTime? @db.Timestamptz(6)
+
+  users              User[]
+  drivers            Driver[]
+  vehicles           Vehicle[]
+  zones              Zone[]
+  clients            Client[]
+  rate_cards         RateCard[]
+  daily_runs         DailyRun[]
+  incidents          Incident[]
+  events_log         EventsLog[]
+  fuel_logs          FuelLog[]
+  maintenance_logs   MaintenanceLog[]
+  hr_events          HrEvent[]
+  financial_entries  FinancialEntry[]
+  ai_reports         AiReport[]
+  hr_documents       HrDocument[]
 
   @@map("organizations")
 }
 
 model User {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   organization_id String       @db.Uuid
-  email           String       @db.VarChar(255)
+  email           String       @unique @db.VarChar(255)
   password_hash   String       @db.VarChar(255)
-  role            String       @db.VarChar(50)
+  role            String       @db.VarChar(50) // admin, owner, manager, dispatcher, hr, finance, driver
+  first_name      String?      @db.VarChar(255)
+  last_name       String?      @db.VarChar(255)
+  phone           String?      @db.VarChar(50)
+  status          String?      @default("active") @db.VarChar(50) // active, suspended, invited
+  last_login_at   DateTime?    @db.Timestamptz(6)
   created_at      DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  deleted_at      DateTime?    @db.Timestamptz(6)
 
-  @@unique([organization_id, email])
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  driver_profile  Driver?
+
+  @@index([organization_id], map: "idx_users_org")
   @@map("users")
 }
 
-model Client {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id String       @db.Uuid
-  name            String       @db.VarChar(255)
-  is_deleted      Boolean?     @default(false)
-  deleted_at      DateTime?    @db.Timestamptz(6)
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  rate_cards      RateCard[]
-  daily_runs      DailyRun[]
-
-  @@index([organization_id], map: "idx_clients_org")
-  @@map("clients")
-}
-
 model Driver {
-  id                 String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id    String       @db.Uuid
-  first_name         String       @db.VarChar(255)
-  last_name          String       @db.VarChar(255)
-  status             String?      @default("active") @db.VarChar(50)
-  daily_base_cost    Decimal?     @default(0.00) @db.Decimal(10, 2)
-  sst_score          Decimal?     @default(100.00) @db.Decimal(5, 2)
-  productivity_index Decimal?     @default(1.00) @db.Decimal(5, 2)
-  penalty_risk_score Decimal?     @default(0.00) @db.Decimal(5, 2)
-  is_deleted         Boolean?     @default(false)
-  deleted_at         DateTime?    @db.Timestamptz(6)
-  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?    @default(now()) @db.Timestamptz(6)
-  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  daily_runs         DailyRun[]
-  hr_events          HrEvent[]
+  id                       String       @id @default(uuid()) @db.Uuid
+  organization_id          String       @db.Uuid
+  user_id                  String?      @unique @db.Uuid
+  employee_code            String?      @db.VarChar(50)
+  first_name               String       @db.VarChar(255)
+  last_name                String       @db.VarChar(255)
+  phone                    String?      @db.VarChar(50)
+  email                    String?      @db.VarChar(255)
+  job_title                String?      @default("Chauffeur") @db.VarChar(100)
+  employment_type          String?      @default("CDI") @db.VarChar(50) // CDI, CDD, Interim, Sous-traitant
+  hire_date                DateTime?    @db.Date
+  contract_end_date        DateTime?    @db.Date
+  daily_base_cost          Decimal?     @default(0) @db.Decimal(10, 2)
+  hourly_cost              Decimal?     @db.Decimal(10, 2)
+  monthly_net_salary       Decimal?     @db.Decimal(10, 2)
+  quality_rating           Decimal?     @default(0) @db.Decimal(5, 2)
+  performance_score        Decimal?     @default(0) @db.Decimal(5, 2)
+  compliance_status        String?      @default("valid") @db.VarChar(20) // valid, warning, expired
+  license_number           String?      @db.VarChar(100)
+  license_expiration_date  DateTime?    @db.Date
+  medical_visit_expiration DateTime?    @db.Date
+  status                   String?      @default("active") @db.VarChar(50) // active, inactive, suspended
+  notes                    String?
+
+  created_at               DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at               DateTime?    @db.Timestamptz(6)
+
+  organization             Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  user                     User?        @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  daily_runs               DailyRun[]
+  hr_events                HrEvent[]
+  incidents                Incident[]
+  events_log               EventsLog[]
+  financial_entries        FinancialEntry[]
+  hr_documents             HrDocument[]
 
   @@index([organization_id], map: "idx_drivers_org")
   @@map("drivers")
 }
 
 model Vehicle {
-  id               String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id  String           @db.Uuid
-  license_plate    String           @db.VarChar(50)
-  type             String?          @db.VarChar(100)
-  status           String?          @default("available") @db.VarChar(50)
-  cost_per_km      Decimal?         @default(0.00) @db.Decimal(10, 2)
-  default_run_cost Decimal?         @default(0.00) @db.Decimal(10, 2)
-  is_deleted       Boolean?         @default(false)
-  deleted_at       DateTime?        @db.Timestamptz(6)
-  created_at       DateTime?        @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?        @default(now()) @db.Timestamptz(6)
-  organization     Organization     @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  daily_runs       DailyRun[]
-  fuel_logs        FuelLog[]
-  maintenance_logs MaintenanceLog[]
+  id                        String       @id @default(uuid()) @db.Uuid
+  organization_id           String       @db.Uuid
+  plate_number              String       @db.VarChar(50)
+  internal_code             String?      @db.VarChar(50)
+  brand                     String?      @db.VarChar(100)
+  model                     String?      @db.VarChar(100)
+  category                  String?      @default("van") @db.VarChar(50) // van, truck, car, other
+  fuel_type                 String?      @default("diesel") @db.VarChar(50) // diesel, petrol, electric, hybrid
+  year                      Int?
+  current_km                Int?         @default(0)
+  internal_cost_per_km      Decimal?     @default(0) @db.Decimal(10, 2)
+  fixed_monthly_cost        Decimal?     @default(0) @db.Decimal(10, 2)
+  insurance_monthly_cost    Decimal?     @default(0) @db.Decimal(10, 2)
+  rental_monthly_cost       Decimal?     @default(0) @db.Decimal(10, 2)
+  status                    String?      @default("active") @db.VarChar(50) // active, maintenance, inactive
+  last_maintenance_km       Int?
+  next_maintenance_km       Int?
+  insurance_expiration_date DateTime?    @db.Date
+  technical_inspection_date DateTime?    @db.Date
+  next_appointment_date     DateTime?    @db.Date
+  next_appointment_nature   String?      @db.VarChar(255)
+  notes                     String?
+
+  ownership_type            String?      @default("owned") @db.VarChar(50) // owned, rented
+  lessor_name               String?      @db.VarChar(100)
+
+  created_at                DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at                DateTime?    @db.Timestamptz(6)
+
+  organization              Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  daily_runs                DailyRun[]
+  incidents                 Incident[]
+  events_log                EventsLog[]
+  fuel_logs                 FuelLog[]
+  maintenance_logs          MaintenanceLog[]
+  financial_entries         FinancialEntry[]
 
   @@index([organization_id], map: "idx_vehicles_org")
   @@map("vehicles")
 }
 
 model Zone {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id String       @db.Uuid
-  name            String       @db.VarChar(255)
-  description     String?
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  rate_cards      RateCard[]
-  daily_runs      DailyRun[]
+  id                    String       @id @default(uuid()) @db.Uuid
+  organization_id       String       @db.Uuid
+  name                  String       @db.VarChar(255)
+  code                  String?      @db.VarChar(50)
+  difficulty_multiplier Decimal?     @default(1) @db.Decimal(5, 2)
+  zone_type             String?      @default("urban") @db.VarChar(50) // urban, suburban, rural, mixed
+  description           String?
+  status                String?      @default("active") @db.VarChar(50)
+
+  created_at            DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?    @default(now()) @db.Timestamptz(6)
+
+  organization          Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_runs            DailyRun[]
 
   @@index([organization_id], map: "idx_zones_org")
   @@map("zones")
 }
 
+model Client {
+  id                    String       @id @default(uuid()) @db.Uuid
+  organization_id       String       @db.Uuid
+  name                  String       @db.VarChar(255)
+  client_code           String?      @db.VarChar(50)
+  contract_type         String?      @db.VarChar(100)
+  billing_contact_name  String?      @db.VarChar(255)
+  billing_contact_email String?      @db.VarChar(255)
+  billing_contact_phone String?      @db.VarChar(50)
+  sla_penalty_rules     Json?
+  payment_terms_days    Int?
+  status                String?      @default("active") @db.VarChar(50)
+  notes                 String?
+
+  created_at            DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at            DateTime?    @db.Timestamptz(6)
+
+  organization          Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  rate_cards            RateCard[]
+  daily_runs            DailyRun[]
+  financial_entries     FinancialEntry[]
+
+  @@index([organization_id], map: "idx_clients_org")
+  @@map("clients")
+}
+
 model RateCard {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id String       @db.Uuid
-  client_id       String       @db.Uuid
-  zone_id         String?      @db.Uuid
-  price_per_stop  Decimal?     @db.Decimal(10, 2)
-  price_per_parcel Decimal?    @db.Decimal(10, 2)
-  bonus_relay     Decimal?     @default(0.00) @db.Decimal(10, 2)
-  base_daily_flat Decimal?     @default(0.00) @db.Decimal(10, 2)
-  currency        String?      @default("EUR") @db.VarChar(10)
-  valid_from      DateTime     @db.Date
-  valid_to        DateTime?    @db.Date
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  client          Client       @relation(fields: [client_id], references: [id], onDelete: Restrict)
-  zone            Zone?        @relation(fields: [zone_id], references: [id], onDelete: Restrict)
-  daily_runs      DailyRun[]
+  id                 String       @id @default(uuid()) @db.Uuid
+  organization_id    String       @db.Uuid
+  client_id          String       @db.Uuid
+  name               String       @db.VarChar(255)
+  pricing_mode       String?      @default("per_package") @db.VarChar(50) // per_stop, per_package, mixed, flat_daily
+  unit_price_stop    Decimal?     @default(0) @db.Decimal(10, 2)
+  unit_price_package Decimal?     @default(0) @db.Decimal(10, 2)
+  bonus_relay_point  Decimal?     @default(0) @db.Decimal(10, 2)
+  base_daily_flat    Decimal?     @default(0) @db.Decimal(10, 2)
+  active_from        DateTime?    @db.Date
+  active_to          DateTime?    @db.Date
+  status             String?      @default("active") @db.VarChar(50)
+
+  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?    @default(now()) @db.Timestamptz(6)
+
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  client             Client       @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  daily_runs         DailyRun[]
 
   @@index([organization_id], map: "idx_rate_cards_org")
   @@map("rate_cards")
 }
 
 model DailyRun {
-  id                        String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id           String       @db.Uuid
-  date                      DateTime     @db.Date
-  driver_id                 String       @db.Uuid
-  vehicle_id                String       @db.Uuid
-  client_id                 String       @db.Uuid
-  zone_id                   String       @db.Uuid
-  rate_card_id              String?      @db.Uuid
-  status                    String?      @default("planned") @db.VarChar(50)
-  km_start                  Decimal?     @db.Decimal(10, 2)
-  km_end                    Decimal?     @db.Decimal(10, 2)
-  direct_parcels            Int?         @default(0)
-  relay_parcels             Int?         @default(0)
-  stops_planned             Int?         @default(0)
-  stops_done                Int?         @default(0)
-  failed_stops              Int?         @default(0)
-  advised_parcels           Int?         @default(0)
-  started_at                DateTime?    @db.Timestamptz(6)
-  ended_at                  DateTime?    @db.Timestamptz(6)
-  return_notes              String?
-  proof_of_return_photo_url String?      @db.VarChar(1024)
-  revenue_calculated        Decimal?     @default(0.00) @db.Decimal(10, 2)
-  cost_driver               Decimal?     @default(0.00) @db.Decimal(10, 2)
-  cost_fleet                Decimal?     @default(0.00) @db.Decimal(10, 2)
-  /// Field is GENERATED ALWAYS AS in PostgreSQL, so we cannot insert into it
-  margin_net                Decimal?     @db.Decimal(10, 2)
-  productivity_index        Decimal?     @db.Decimal(5, 2)
-  penalty_risk_score        Decimal?     @db.Decimal(5, 2)
-  created_at                DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at                DateTime?    @default(now()) @db.Timestamptz(6)
-  organization              Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  driver                    Driver       @relation(fields: [driver_id], references: [id], onDelete: Restrict)
-  vehicle                   Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
-  client                    Client       @relation(fields: [client_id], references: [id], onDelete: Restrict)
-  zone                      Zone         @relation(fields: [zone_id], references: [id], onDelete: Restrict)
-  rate_card                 RateCard?    @relation(fields: [rate_card_id], references: [id], onDelete: Restrict)
-  incidents                 Incident[]
+  id                   String       @id @default(uuid()) @db.Uuid
+  organization_id      String       @db.Uuid
+  client_id            String       @db.Uuid
+  rate_card_id         String?      @db.Uuid
+  driver_id            String       @db.Uuid
+  vehicle_id           String       @db.Uuid
+  zone_id              String?      @db.Uuid
+
+  run_code             String?      @db.VarChar(100)
+  date                 DateTime     @db.Date
+  status               String?      @default("planned") @db.VarChar(50) // planned, in_progress, completed, cancelled
+
+  departure_time       DateTime?    @db.Timestamptz(6)
+  return_time          DateTime?    @db.Timestamptz(6)
+  run_duration_minutes Int?         @default(0)
+
+  km_start             Int?         @default(0)
+  km_end               Int?         @default(0)
+  km_total             Int?         @default(0)
+  
+  fuel_consumed_liters Decimal?     @default(0) @db.Decimal(8, 2)
+
+  stops_planned        Int?         @default(0)
+  stops_completed      Int?         @default(0)
+  stops_failed         Int?         @default(0)
+
+  packages_loaded             Int?         @default(0)
+  packages_delivered          Int?         @default(0)
+  packages_relay              Int?         @default(0)
+  packages_returned           Int?         @default(0)
+  packages_advised            Int?         @default(0)
+  packages_advised_direct     Int?         @default(0)
+  packages_advised_relay      Int?         @default(0)
+
+  notes                String?
+
+  revenue_calculated   Decimal?     @default(0) @db.Decimal(10, 2)
+  cost_driver          Decimal?     @default(0) @db.Decimal(10, 2)
+  cost_vehicle         Decimal?     @default(0) @db.Decimal(10, 2)
+  cost_fuel            Decimal?     @default(0) @db.Decimal(10, 2)
+  cost_other           Decimal?     @default(0) @db.Decimal(10, 2)
+  total_cost           Decimal?     @default(0) @db.Decimal(10, 2)
+  margin_net           Decimal?     @default(0) @db.Decimal(10, 2)
+
+  productivity_index   Decimal?     @default(0) @db.Decimal(5, 2)
+  penalty_risk_score   Decimal?     @default(0) @db.Decimal(5, 2)
+  sst_score            Decimal?     @default(0) @db.Decimal(5, 2)
+
+  created_at           DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at           DateTime?    @db.Timestamptz(6)
+
+  organization         Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  client               Client       @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  rate_card            RateCard?    @relation(fields: [rate_card_id], references: [id], onDelete: SetNull)
+  driver               Driver       @relation(fields: [driver_id], references: [id], onDelete: Restrict)
+  vehicle              Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+  zone                 Zone?        @relation(fields: [zone_id], references: [id], onDelete: SetNull)
+
+  incidents            Incident[]
+  events_log           EventsLog[]
+  fuel_logs            FuelLog[]
+  financial_entries    FinancialEntry[]
 
   @@index([organization_id, date], map: "idx_daily_runs_org_date")
   @@index([driver_id, vehicle_id, client_id], map: "idx_daily_runs_fk")
@@ -189,126 +294,201 @@ model DailyRun {
 }
 
 model Incident {
-  id                      String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id         String       @db.Uuid
-  daily_run_id            String       @db.Uuid
-  type                    String       @db.VarChar(100)
-  description             String?
-  proof_url               String?      @db.VarChar(1024)
-  severity                String?      @db.VarChar(50)
-  gps_lat                 Decimal?     @db.Decimal(10, 6)
-  gps_lng                 Decimal?     @db.Decimal(10, 6)
-  incident_timestamp      DateTime?    @default(now()) @db.Timestamptz(6)
-  ai_validation_flag      Boolean?     @default(false)
-  resolution_status       String?      @default("open") @db.VarChar(50)
-  penalty_exposure_amount Decimal?     @default(0.00) @db.Decimal(10, 2)
-  created_at              DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?    @default(now()) @db.Timestamptz(6)
-  organization            Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  daily_run               DailyRun     @relation(fields: [daily_run_id], references: [id], onDelete: Cascade)
+  id                           String       @id @default(uuid()) @db.Uuid
+  organization_id              String       @db.Uuid
+  run_id                       String?      @db.Uuid
+  driver_id                    String?      @db.Uuid
+  vehicle_id                   String?      @db.Uuid
 
-  @@index([daily_run_id], map: "idx_incidents_run")
+  incident_type                String       @db.VarChar(100) // failed_delivery, absent_customer, damaged_package, etc.
+  severity                     String?      @default("low") @db.VarChar(50) // low, medium, high, critical
+  
+  description                  String?
+  
+  gps_latitude                 Decimal?     @db.Decimal(10, 6)
+  gps_longitude                Decimal?     @db.Decimal(10, 6)
+  distance_from_delivery_point Int?         // in meters
+
+  photo_evidence_url           String?      @db.VarChar(1024)
+  video_evidence_url           String?      @db.VarChar(1024)
+  audio_evidence_url           String?      @db.VarChar(1024)
+  invoice_url                  String?      @db.VarChar(1024)
+
+  ai_validation_flag           Boolean?     @default(false)
+  ai_risk_score                Decimal?     @default(0) @db.Decimal(5, 2)
+  penalty_exposure_amount      Decimal?     @default(0) @db.Decimal(10, 2)
+  penalty_saved_amount         Decimal?     @default(0) @db.Decimal(10, 2)
+
+  resolution_status            String?      @default("pending") @db.VarChar(50) // pending, under_review, contested, validated, rejected, closed
+
+  created_at                   DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?    @default(now()) @db.Timestamptz(6)
+
+  organization                 Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_run                    DailyRun?    @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  driver                       Driver?      @relation(fields: [driver_id], references: [id], onDelete: SetNull)
+  vehicle                      Vehicle?     @relation(fields: [vehicle_id], references: [id], onDelete: SetNull)
+
+  @@index([organization_id], map: "idx_incidents_org")
+  @@index([run_id], map: "idx_incidents_run")
   @@map("incidents")
 }
 
 model EventsLog {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   organization_id String       @db.Uuid
-  entity_type     String       @db.VarChar(50)
-  entity_id       String       @db.Uuid
-  event_type      String       @db.VarChar(100)
-  metadata        Json?
-  timestamp       DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  run_id          String?      @db.Uuid
+  driver_id       String?      @db.Uuid
+  vehicle_id      String?      @db.Uuid
 
-  @@index([entity_type, entity_id], map: "idx_events_log_entity")
+  event_type      String       @db.VarChar(100) // run_created, run_started, delivery_scan, etc.
+  event_timestamp DateTime     @default(now()) @db.Timestamptz(6)
+
+  gps_latitude    Decimal?     @db.Decimal(10, 6)
+  gps_longitude   Decimal?     @db.Decimal(10, 6)
+
+  source          String?      @db.VarChar(50) // system, mobile_app, admin_panel, api
+  metadata_json   Json?
+
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_run       DailyRun?    @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  driver          Driver?      @relation(fields: [driver_id], references: [id], onDelete: Cascade)
+  vehicle         Vehicle?     @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, event_timestamp], map: "idx_events_log_time")
   @@map("events_log")
 }
 
 model FuelLog {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   organization_id String       @db.Uuid
   vehicle_id      String       @db.Uuid
-  date            DateTime     @db.Timestamptz(6)
-  volume          Decimal      @db.Decimal(8, 2)
-  cost            Decimal      @db.Decimal(10, 2)
-  mileage         Int?
+  run_id          String?      @db.Uuid
+
+  liters          Decimal      @db.Decimal(8, 2)
+  price_per_liter Decimal      @db.Decimal(8, 2)
+  total_cost      Decimal      @db.Decimal(10, 2)
+
+  station_name    String?      @db.VarChar(255)
+  receipt_url     String?      @db.VarChar(1024)
+  fueled_at       DateTime     @db.Timestamptz(6)
+
   created_at      DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+
   organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
   vehicle         Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+  daily_run       DailyRun?    @relation(fields: [run_id], references: [id], onDelete: SetNull)
 
-  @@index([vehicle_id], map: "idx_fuel_logs_vehicle")
+  @@index([organization_id], map: "idx_fuel_logs_org")
   @@map("fuel_logs")
 }
 
 model MaintenanceLog {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id String       @db.Uuid
-  vehicle_id      String       @db.Uuid
-  type            String       @db.VarChar(50)
-  description     String?
-  cost            Decimal      @db.Decimal(10, 2)
-  downtime_hours  Decimal?     @default(0.00) @db.Decimal(6, 2)
-  date            DateTime     @db.Date
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  vehicle         Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+  id                   String       @id @default(uuid()) @db.Uuid
+  organization_id      String       @db.Uuid
+  vehicle_id           String       @db.Uuid
 
-  @@index([vehicle_id], map: "idx_maintenance_logs_vehicle")
+  maintenance_type     String       @db.VarChar(100) // oil_change, tires, repair, inspection, etc.
+  description          String?
+  cost                 Decimal      @db.Decimal(10, 2)
+  km_at_service        Int?         @default(0)
+  next_service_km      Int?
+  immobilization_days  Int?         @default(0)
+  vendor_name          String?      @db.VarChar(255)
+  service_date         DateTime     @db.Date
+  invoice_url          String?      @db.VarChar(1024)
+
+  created_at           DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?    @default(now()) @db.Timestamptz(6)
+
+  organization         Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  vehicle              Vehicle      @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+
+  @@index([organization_id], map: "idx_maintenance_logs_org")
   @@map("maintenance_logs")
 }
 
 model HrEvent {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   organization_id String       @db.Uuid
   driver_id       String       @db.Uuid
-  type            String       @db.VarChar(50)
+
+  event_type      String       @db.VarChar(100) // presence, absence, sick_leave, vacation, etc.
   start_date      DateTime     @db.Date
   end_date        DateTime?    @db.Date
-  description     String?
+  status          String?      @default("planned") @db.VarChar(50) // planned, active, completed
+  notes           String?
+
   created_at      DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+
   organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
   driver          Driver       @relation(fields: [driver_id], references: [id], onDelete: Restrict)
 
-  @@index([driver_id], map: "idx_hr_events_driver")
+  @@index([organization_id], map: "idx_hr_events_org")
   @@map("hr_events")
 }
 
 model FinancialEntry {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   organization_id String       @db.Uuid
-  entity_type     String?      @db.VarChar(50)
-  entity_id       String?      @db.Uuid
-  type            String       @db.VarChar(50)
-  direction       String?      @db.VarChar(20)
-  category        String?      @db.VarChar(50)
+  run_id          String?      @db.Uuid
+  client_id       String?      @db.Uuid
+  vehicle_id      String?      @db.Uuid
+  driver_id       String?      @db.Uuid
+
+  entry_type      String       @db.VarChar(50) // revenue, cost, adjustment, penalty, reimbursement
+  category        String       @db.VarChar(100) // delivery_revenue, fuel_cost, driver_cost, etc.
   amount          Decimal      @db.Decimal(10, 2)
-  currency        String?      @default("EUR") @db.VarChar(10)
   description     String?
-  source          String?      @db.VarChar(50)
-  date            DateTime     @db.Date
+  entry_date      DateTime     @db.Date
+
   created_at      DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
 
-  @@index([organization_id, date], map: "idx_financial_entries_org_date")
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  daily_run       DailyRun?    @relation(fields: [run_id], references: [id], onDelete: SetNull)
+  client          Client?      @relation(fields: [client_id], references: [id], onDelete: SetNull)
+  vehicle         Vehicle?     @relation(fields: [vehicle_id], references: [id], onDelete: SetNull)
+  driver          Driver?      @relation(fields: [driver_id], references: [id], onDelete: SetNull)
+
+  @@index([organization_id, entry_date], map: "idx_financial_entries_time")
   @@map("financial_entries")
 }
 
 model AiReport {
-  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  organization_id String       @db.Uuid
-  type            String       @db.VarChar(100)
-  report_date     DateTime     @db.Date
-  content         Json
-  prompt_metadata Json?
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  id                   String       @id @default(uuid()) @db.Uuid
+  organization_id      String       @db.Uuid
 
-  @@index([organization_id, type], map: "idx_ai_reports_org_type")
+  report_type          String       @db.VarChar(100) // daily, weekly, anomaly, predictive
+  report_period_start  DateTime?    @db.Date
+  report_period_end    DateTime?    @db.Date
+  generated_text       String       @db.Text
+  structured_data_json Json?
+
+  created_at           DateTime?    @default(now()) @db.Timestamptz(6)
+
+  organization         Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id], map: "idx_ai_reports_org")
   @@map("ai_reports")
+}
+
+model HrDocument {
+  id              String       @id @default(uuid()) @db.Uuid
+  organization_id String       @db.Uuid
+  driver_id       String       @db.Uuid
+  
+  document_type   String       @db.VarChar(100) // contract, payslip, sick_leave, id_card, other
+  title           String       @db.VarChar(255)
+  file_url        String       @db.VarChar(1024)
+  uploaded_at     DateTime     @default(now()) @db.Timestamptz(6)
+  
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  driver          Driver       @relation(fields: [driver_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id], map: "idx_hr_documents_org")
+  @@index([driver_id], map: "idx_hr_documents_driver")
+  @@map("hr_documents")
 }
