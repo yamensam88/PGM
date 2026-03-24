@@ -116,7 +116,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                  <DialogTrigger render={<Button className="bg-blue-600 hover:bg-blue-700 text-slate-900 shadow-sm flex items-center gap-2" />}>
                    <Plus className="w-4 h-4" /> Ajouter un salarié
                  </DialogTrigger>
-                 <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border-slate-200 text-slate-800">
+                 <DialogContent className="sm:max-w-xl p-0 overflow-y-auto max-h-[85vh] bg-white border-slate-200 text-slate-800">
                    <div className="px-6 py-4 border-b border-slate-200">
                       <h2 className="text-xl font-bold flex items-center justify-between text-slate-900">Nouveau Salarié</h2>
                    </div>
