@@ -194,8 +194,8 @@ export function CreateEmployeeForm() {
            <p className="text-[11px] text-slate-500">Définissez manuellement les accès de ce chauffeur ou laissez vide pour une génération automatique.</p>
            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                 <Label htmlFor="driverEmail" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Email (Identifiant)</Label>
-                 <Input id="driverEmail" name="driverEmail" type="email" placeholder="ex: prenom.nom@transportos.com" className="bg-[#f8f9fc] border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+                 <Label htmlFor="driverEmail" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Identifiant</Label>
+                 <Input id="driverEmail" name="driverEmail" type="text" placeholder="ex: prenom123" className="bg-[#f8f9fc] border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
               </div>
               <div className="space-y-2">
                  <Label htmlFor="driverPassword" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Mot de passe</Label>

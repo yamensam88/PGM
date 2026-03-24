@@ -114,10 +114,15 @@ export function CreateUserForm() {
         </Select>
       </div>
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-        <p className="text-sm text-blue-800 dark:text-blue-300">
-           <strong>Note :</strong> L'identifiant (@delivertech.fr) et le mot de passe sécurisé seront générés automatiquement et affichés à l'étape suivante.
-        </p>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Identifiant <span className="text-red-500">*</span></Label>
+          <Input id="email" name="email" placeholder="ex: admin123" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Mot de passe <span className="text-red-500">*</span></Label>
+          <Input id="password" name="password" type="password" required />
+        </div>
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 text-slate-900">

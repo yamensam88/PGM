@@ -196,21 +196,19 @@ export async function createAdminUser(formData: FormData) {
     const lastName = formData.get("lastName") as string;
     const role = formData.get("role") as string; // admin, dispatcher, hr
 
-    if (!firstName || !lastName || !role) {
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!firstName || !lastName || !role || !email || !password) {
       throw new Error("Veuillez remplir les champs obligatoires.");
     }
 
-    // Auto-generate credentials
-    const cleanFirstName = firstName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const cleanLastName = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const createdEmail = `${cleanFirstName}.${cleanLastName}@delivertech.fr`;
-    const createdPassword = `AdminOS2026!`; // Default secure password
-    const hashedPassword = await bcrypt.hash(createdPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await prisma.user.create({
       data: {
         organization_id: orgId,
-        email: createdEmail,
+        email: email.trim(),
         password_hash: hashedPassword,
         first_name: firstName,
         last_name: lastName,
@@ -223,8 +221,8 @@ export async function createAdminUser(formData: FormData) {
     
     return { 
       success: true, 
-      email: createdEmail, 
-      password: createdPassword 
+      email: email.trim(), 
+      password: password 
     };
   } catch (error: any) {
     console.error("Erreur createAdminUser:", error);

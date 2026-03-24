@@ -47,13 +47,13 @@ function LoginForm() {
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-[15px] font-semibold text-[#334155]">Email</Label>
+        <Label htmlFor="email" className="text-[15px] font-semibold text-[#334155]">Identifiant</Label>
         <div className="relative">
           <Input
             id="email"
             name="email"
-            type="email"
-            autoComplete="email"
+            type="text"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
