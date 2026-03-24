@@ -657,6 +657,43 @@ export async function finishRun(formData: FormData) {
 }
 
 /**
+ * Server Action: Delete Daily Run (For cleaning faux runs)
+ */
+export async function deleteRun(runId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    const run = await prisma.dailyRun.findFirst({
+       where: { id: runId, organization_id: orgId }
+    });
+
+    if (!run) {
+       throw new Error("Tournée introuvable.");
+    }
+
+    await prisma.$transaction(async (tx) => {
+       await tx.eventsLog.deleteMany({ where: { run_id: runId } });
+       await tx.incident.deleteMany({ where: { run_id: runId } });
+       await tx.financialEntry.deleteMany({ where: { run_id: runId } });
+       await tx.fuelLog.deleteMany({ where: { run_id: runId } });
+       
+       await tx.dailyRun.delete({ where: { id: runId } });
+    });
+
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
+    revalidatePath("/dispatch/hr");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur deleteRun:", error);
+    return { success: false, error: error.message || "Erreur lors de la suppression." };
+  }
+}
+
+/**
  * Server Action: Report Incident
  */
 export async function reportIncident(formData: FormData) {

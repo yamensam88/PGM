@@ -12,12 +12,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, CheckCircle, Clock, LineChart, AlertTriangle, ChevronDown, Edit } from "lucide-react";
+import { FileText, CheckCircle, Clock, LineChart, AlertTriangle, ChevronDown, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { CreateDamageForm } from "@/components/forms/CreateDamageForm";
 import { DriverHistoryDialog } from "./DriverHistoryDialog";
 import { UpdateRunForm } from "@/components/forms/UpdateRunForm";
+import { deleteRun } from "@/lib/actions";
 
 type DailyRunWithRelations = any; // normally Prisma output
 
@@ -42,6 +43,19 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
 
   const handleAction = (action: string, id: string) => {
     toast.info(`Action: ${action} sur la tournée ${id}`);
+  };
+
+  const handleDeleteRun = async (runId: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cette tournée ? Cette action supprimera également tous les événements et données financières liés à cette tournée. Action irréversible.")) return;
+    
+    // Optimistic UI state could be implemented, but simple logic works fine
+    const res = await deleteRun(runId);
+    if (res.success) {
+      toast.success("Tournée supprimée avec succès.");
+      // The page will automatically be revalidated from the server side
+    } else {
+      toast.error(res.error || "Erreur lors de la suppression");
+    }
   };
 
   if(!data || data.length === 0) {
@@ -178,6 +192,9 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setIncidentRunId(run)} title="Déclarer Casse/Sinistre">
                 <AlertTriangle className="h-4 w-4" />
               </Button>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-700 hover:bg-red-100 rounded-full" onClick={() => handleDeleteRun(run.id)} title="Supprimer la tournée">
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </TableCell>
         ) : (
@@ -200,6 +217,9 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setIncidentRunId(run)} title="Déclarer Casse/Sinistre">
                 <AlertTriangle className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-700 hover:bg-red-100 rounded-full" onClick={() => handleDeleteRun(run.id)} title="Supprimer la tournée">
+                <Trash2 className="h-4 w-4" />
               </Button>
               <Link href={`/dispatch/runs/${run.id}`}>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Détails" type="button">
