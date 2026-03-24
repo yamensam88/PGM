@@ -285,13 +285,24 @@ export async function deleteDriver(driverId: string) {
 
     // Delete in transaction
     await prisma.$transaction(async (tx) => {
+       // Explicitly delete related records to bypass referential integrity Restrict
+       // This allows wiping out fake accounts and all their simulated data
+       await tx.eventsLog.deleteMany({ where: { driver_id: driverId } });
+       await tx.incident.deleteMany({ where: { driver_id: driverId } });
+       await tx.financialEntry.deleteMany({ where: { driver_id: driverId } });
+       await tx.hrEvent.deleteMany({ where: { driver_id: driverId } });
+       await tx.hrDocument.deleteMany({ where: { driver_id: driverId } });
+       
+       // Daily runs must be deleted, but because FuelLogs and FinancialEntries 
+       // point to them with SetNull, we can safely delete Many runs directly.
+       await tx.dailyRun.deleteMany({ where: { driver_id: driverId } });
+
        // Delete the driver profile
        await tx.driver.delete({
           where: { id: driverId }
        });
        
-       // If there's an associated User account, we should delete it too, or keep it?
-       // Let's delete it so they can't login anymore
+       // If there's an associated User account, delete it too
        if (driver.user_id) {
           await tx.user.delete({
              where: { id: driver.user_id }
