@@ -92,6 +92,10 @@ export async function createEmployee(formData: FormData) {
     const dailyCostStr = formData.get("dailyCost") as string;
     const monthlyNetSalaryStr = formData.get("monthlyNetSalary") as string;
     
+    const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
+    const justifiedAbsencesStr = formData.get("justifiedAbsences") as string;
+    const unjustifiedAbsencesStr = formData.get("unjustifiedAbsences") as string;
+    
     if (!firstName || !lastName || !jobTitle || !employmentType || !hireDateStr) {
        throw new Error("Tous les champs sont requis.");
     }
@@ -163,6 +167,9 @@ export async function createEmployee(formData: FormData) {
         status: "active",
         daily_base_cost: dailyCost,
         monthly_net_salary: monthlyNetSalary,
+        paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
+        justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,
+        unjustified_absences: unjustifiedAbsencesStr ? Number(unjustifiedAbsencesStr) : 0,
       } as any // Bypass strict typescript generated schema if needed 
     });
 

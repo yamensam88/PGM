@@ -186,6 +186,27 @@ export function CreateEmployeeForm() {
         <Input id="monthlyNetSalary" name="monthlyNetSalary" type="number" step="0.01" className="w-full bg-white border-slate-200 text-slate-900 focus-visible:ring-emerald-600" placeholder="ex: 2000.00" />
       </div>
 
+      <div className="space-y-4 p-5 border border-slate-200 bg-slate-50 rounded-xl">
+         <h4 className="text-[13px] font-semibold text-slate-700 flex items-center gap-2">
+            Initialisation des compteurs (Reprise d'historique)
+         </h4>
+         <p className="text-[11px] text-slate-500">Pour un salarié existant, renseignez ses soldes actuels. Laissez à 0 pour un nouveau salarié.</p>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+               <Label htmlFor="paidLeaveBalance" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Congés Payés (Jours)</Label>
+               <Input id="paidLeaveBalance" name="paidLeaveBalance" type="number" step="0.5" defaultValue="0" className="bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="justifiedAbsences" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Absences Justifiées</Label>
+               <Input id="justifiedAbsences" name="justifiedAbsences" type="number" step="0.5" defaultValue="0" className="bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="unjustifiedAbsences" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Absences Injustifiées</Label>
+               <Input id="unjustifiedAbsences" name="unjustifiedAbsences" type="number" step="0.5" defaultValue="0" className="bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+            </div>
+         </div>
+      </div>
+
       {jobTitle === "Chauffeur" && (
         <div className="space-y-4 p-5 mt-4 border border-slate-200 bg-white rounded-xl">
            <h4 className="text-[13px] font-semibold text-slate-700 flex items-center gap-2">
