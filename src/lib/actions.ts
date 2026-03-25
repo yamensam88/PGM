@@ -2665,6 +2665,7 @@ export async function updateVehicle(formData: FormData) {
     const vehicleId = formData.get("vehicleId") as string;
     const plateNumber = formData.get("plate_number") as string;
     const category = formData.get("category") as string;
+    const status = formData.get("status") as string;
     const currentKmInput = formData.get("current_km");
     const currentKm = currentKmInput ? Number(currentKmInput) : undefined;
     const ownershipType = formData.get("ownership_type") as string;
@@ -2695,6 +2696,7 @@ export async function updateVehicle(formData: FormData) {
       data: {
         plate_number: plateNumber,
         category: category || null,
+        status: status || undefined,
         current_km: currentKm,
         ownership_type: ownershipType || "owned",
         lessor_name: ownershipType === "rented" ? lessorName || null : null,

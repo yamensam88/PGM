@@ -50,6 +50,22 @@ export function EditVehicleForm({ vehicle, onSuccess }: EditVehicleFormProps) {
       </div>
 
       <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="status" className="text-right">Statut</Label>
+        <select 
+          id="status" 
+          name="status" 
+          required 
+          defaultValue={vehicle.status || "active"}
+          className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:ring-offset-zinc-950 dark:placeholder:text-slate-500 dark:focus:ring-zinc-300"
+        >
+           <option value="active">Actif</option>
+           <option value="maintenance">En Maintenance</option>
+           <option value="inactive">Inactif</option>
+           <option value="archived">Archivé (Anciens Véhicules)</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="current_km" className="text-right">Kilométrage</Label>
         <Input id="current_km" name="current_km" type="number" defaultValue={vehicle.current_km || 0} className="col-span-3" />
       </div>

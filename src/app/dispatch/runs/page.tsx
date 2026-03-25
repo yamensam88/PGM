@@ -464,6 +464,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                   <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300">Maintenance</Badge>
                                 ) : vehicle.status === 'archived' ? (
                                   <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300">Archivé</Badge>
+                                ) : vehicle.status === 'inactive' ? (
+                                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300">Inactif</Badge>
                                 ) : (
                                   <Badge variant="outline" className="bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-white dark:text-slate-600">{vehicle.status}</Badge>
                                 )}
