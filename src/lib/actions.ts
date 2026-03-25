@@ -1500,6 +1500,7 @@ export async function addVehicle(formData: FormData) {
     const fixed_monthly_cost = parseNumber(formData.get("fixed_monthly_cost"));
     const rental_monthly_cost = parseNumber(formData.get("rental_monthly_cost"));
     const insurance_monthly_cost = parseNumber(formData.get("insurance_monthly_cost"));
+    const internal_cost_per_km = parseNumber(formData.get("internal_cost_per_km"));
     const ownership_type = formData.get("ownership_type") as string;
     const lessor_name = formData.get("lessor_name") as string;
 
@@ -1514,6 +1515,7 @@ export async function addVehicle(formData: FormData) {
         fixed_monthly_cost: ownership_type === 'owned' ? fixed_monthly_cost : 0,
         rental_monthly_cost: ownership_type === 'rented' ? rental_monthly_cost : 0,
         insurance_monthly_cost,
+        internal_cost_per_km,
         ownership_type: ownership_type || 'owned',
         lessor_name: ownership_type === 'rented' ? lessor_name : null,
         status: 'active'
@@ -2585,7 +2587,7 @@ export async function deleteZone(formData: FormData) {
 }
 
 /**
- * Server Action: Update Daily Run (Mid-day metric updates)
+ * Server Action: Update Daily Run (Mid-day metric updates & Admin Edition)
  */
 export async function updateRun(formData: FormData) {
   try {
@@ -2596,52 +2598,151 @@ export async function updateRun(formData: FormData) {
     const runId = formData.get("runId") as string;
     if (!runId) throw new Error("ID de tournée manquant.");
 
-    const driver_id = formData.get("driver_id") as string | undefined;
-    const vehicle_id = formData.get("vehicle_id") as string | undefined;
-    const status = formData.get("status") as string | undefined;
+    const formDriverId = formData.get("driver_id") as string | undefined;
+    const formVehicleId = formData.get("vehicle_id") as string | undefined;
+    const formStatus = formData.get("status") as string | undefined;
     
-    const packages_loaded = formData.get("packages_loaded") ? Number(formData.get("packages_loaded")) : undefined;
-    const packages_delivered = formData.get("packages_delivered") ? Number(formData.get("packages_delivered")) : undefined;
-    const packages_returned = formData.get("packages_returned") ? Number(formData.get("packages_returned")) : undefined;
-    const packages_advised_direct = formData.get("packages_advised_direct") ? Number(formData.get("packages_advised_direct")) : undefined;
-    const packages_advised_relay = formData.get("packages_advised_relay") ? Number(formData.get("packages_advised_relay")) : undefined;
-    const km_start = formData.get("km_start") ? Number(formData.get("km_start")) : undefined;
-    const km_end = formData.get("km_end") ? Number(formData.get("km_end")) : undefined;
-
-    let advised_total = undefined;
-    if (packages_advised_direct !== undefined || packages_advised_relay !== undefined) {
-      advised_total = (packages_advised_direct || 0) + (packages_advised_relay || 0);
-    }
-
     const run = await prisma.dailyRun.findUnique({
-      where: { id: runId, organization_id: orgId }
+      where: { id: runId, organization_id: orgId },
+      include: { 
+         driver: true, 
+         vehicle: true, 
+         client: { include: { rate_cards: true } }
+      }
     });
 
     if (!run) throw new Error("Tournée introuvable.");
 
-    const dataToUpdate: any = {};
-    if (driver_id) dataToUpdate.driver_id = driver_id;
-    if (vehicle_id) dataToUpdate.vehicle_id = vehicle_id;
-    if (status) dataToUpdate.status = status;
-    if (packages_loaded !== undefined) dataToUpdate.packages_loaded = packages_loaded;
-    if (packages_delivered !== undefined) dataToUpdate.packages_delivered = packages_delivered;
-    if (packages_returned !== undefined) dataToUpdate.packages_returned = packages_returned;
-    if (packages_advised_direct !== undefined) dataToUpdate.packages_advised_direct = packages_advised_direct;
-    if (packages_advised_relay !== undefined) dataToUpdate.packages_advised_relay = packages_advised_relay;
-    if (advised_total !== undefined) dataToUpdate.packages_advised = advised_total;
-    if (km_start !== undefined) dataToUpdate.km_start = km_start;
-    if (km_end !== undefined) dataToUpdate.km_end = km_end;
+    const final_status = formStatus || run.status;
+    const final_packages_loaded = formData.has("packages_loaded") ? Number(formData.get("packages_loaded")) : Number(run.packages_loaded || 0);
+    const final_packages_delivered = formData.has("packages_delivered") ? Number(formData.get("packages_delivered")) : Number(run.packages_delivered || 0);
+    const final_packages_returned = formData.has("packages_returned") ? Number(formData.get("packages_returned")) : Number(run.packages_returned || 0);
+    const final_packages_advised_direct = formData.has("packages_advised_direct") ? Number(formData.get("packages_advised_direct")) : Number(run.packages_advised_direct || 0);
+    const final_packages_advised_relay = formData.has("packages_advised_relay") ? Number(formData.get("packages_advised_relay")) : Number(run.packages_advised_relay || 0);
+    const final_advised_total = final_packages_advised_direct + final_packages_advised_relay;
     
-    const final_km_start = km_start !== undefined ? km_start : Number(run.km_start || 0);
-    const final_km_end = km_end !== undefined ? km_end : Number(run.km_end || 0);
-    if (final_km_end > 0) {
-      dataToUpdate.km_total = Math.max(0, final_km_end - final_km_start);
+    const final_km_start = formData.has("km_start") ? Number(formData.get("km_start")) : Number(run.km_start || 0);
+    const final_km_end = formData.has("km_end") ? Number(formData.get("km_end")) : Number(run.km_end || 0);
+    const km_diff = Math.max(0, final_km_end - final_km_start);
+
+    const dataToUpdate: any = {
+       driver_id: formDriverId || undefined,
+       vehicle_id: formVehicleId || undefined,
+       status: formStatus || undefined,
+       packages_loaded: final_packages_loaded,
+       packages_delivered: final_packages_delivered,
+       packages_returned: final_packages_returned,
+       packages_advised_direct: final_packages_advised_direct,
+       packages_advised_relay: final_packages_advised_relay,
+       packages_advised: final_advised_total,
+       km_start: final_km_start,
+       km_end: final_km_end,
+       km_total: km_diff
+    };
+
+    let operations: any[] = [];
+
+    if (final_status === 'completed') {
+       // --- FINANCIAL RECALCULATION FOR ADMIN EDITS ---
+       const rateCard = run.rate_card_id ? 
+             await prisma.rateCard.findUnique({ where: { id: run.rate_card_id } }) : 
+             run.client?.rate_cards?.[0];
+
+       const base_flat = Number(rateCard?.base_daily_flat || 0);
+       const price_stop = Number(rateCard?.unit_price_stop || 0);
+       const price_parcel = Number(rateCard?.unit_price_package || 0);
+       const bonus_relay = Number(rateCard?.bonus_relay_point || 0);
+
+       const activeDriverId = formDriverId || run.driver_id;
+       const activeVehicleId = formVehicleId || run.vehicle_id;
+
+       const activeDriver = formDriverId && formDriverId !== run.driver_id ? await prisma.driver.findUnique({ where: { id: formDriverId } }) : run.driver;
+       const activeVehicle = formVehicleId && formVehicleId !== run.vehicle_id ? await prisma.vehicle.findUnique({ where: { id: formVehicleId } }) : run.vehicle;
+
+       const billed_parcels = final_packages_loaded + final_packages_advised_relay;
+       const stops_completed = Number(run.stops_completed || 0); 
+
+       const revenue_calculated = base_flat + (price_stop * stops_completed) + (price_parcel * billed_parcels) + (bonus_relay * final_packages_advised_relay);
+
+       const startOfDay = new Date(run.date);
+       startOfDay.setUTCHours(0, 0, 0, 0);
+       const endOfDay = new Date(run.date);
+       endOfDay.setUTCHours(23, 59, 59, 999);
+
+       const priorDriverRuns = await prisma.dailyRun.count({
+          where: { driver_id: activeDriverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
+       });
+       const cost_driver = priorDriverRuns > 0 ? 0 : Number(activeDriver?.daily_base_cost || 0);
+
+       const priorVehicleRuns = await prisma.dailyRun.count({
+          where: { vehicle_id: activeVehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
+       });
+       const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 30;
+       const variable_fleet_cost = km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
+       const cost_vehicle = base_fleet_cost + variable_fleet_cost;
+
+       const cost_fuel = Number(run.cost_fuel || 0); 
+       const margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
+
+       dataToUpdate.revenue_calculated = revenue_calculated;
+       dataToUpdate.cost_driver = cost_driver;
+       dataToUpdate.cost_vehicle = cost_vehicle;
+       dataToUpdate.margin_net = margin_net;
+       dataToUpdate.return_time = run.return_time || new Date();
+
+       // Synchronize Ledger Entries
+       operations.push(prisma.financialEntry.deleteMany({
+          where: { 
+             run_id: runId, 
+             category: { in: ['delivery_revenue', 'driver_cost', 'vehicle_wear_cost'] } 
+          }
+       }));
+
+       operations.push(prisma.financialEntry.createMany({
+          data: [
+            {
+               organization_id: orgId,
+               vehicle_id: activeVehicleId,
+               driver_id: activeDriverId,
+               client_id: run.client_id,
+               run_id: runId,
+               entry_type: 'revenue',
+               category: 'delivery_revenue',
+               amount: revenue_calculated,
+               entry_date: run.return_time || new Date(),
+               description: `CA Modifié - Tournée ${run.run_code || runId}`
+            },
+            {
+               organization_id: orgId,
+               vehicle_id: activeVehicleId,
+               driver_id: activeDriverId,
+               run_id: runId,
+               entry_type: 'cost',
+               category: 'driver_cost',
+               amount: cost_driver,
+               entry_date: run.return_time || new Date(),
+               description: `Coût Modifié Chauffeur - Tournée ${run.run_code || runId}`
+            },
+            {
+               organization_id: orgId,
+               vehicle_id: activeVehicleId,
+               run_id: runId,
+               entry_type: 'cost',
+               category: 'vehicle_wear_cost',
+               amount: cost_vehicle,
+               entry_date: run.return_time || new Date(),
+               description: `Coût Véhicule (fixe+km) - Tournée ${run.run_code || runId}`
+            }
+          ]
+       }));
     }
 
-    await prisma.dailyRun.update({
+    operations.push(prisma.dailyRun.update({
       where: { id: runId },
       data: dataToUpdate
-    });
+    }));
+
+    await prisma.$transaction(operations);
 
     revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
@@ -2682,10 +2783,12 @@ export async function updateVehicle(formData: FormData) {
     const fixedCostInput = formData.get("fixed_monthly_cost");
     const rentalCostInput = formData.get("rental_monthly_cost");
     const insuranceCostInput = formData.get("insurance_monthly_cost");
+    const internalCostPerKmInput = formData.get("internal_cost_per_km");
     
     const fixedCost = parseNumber(fixedCostInput);
     const rentalCost = parseNumber(rentalCostInput);
     const insuranceCost = parseNumber(insuranceCostInput);
+    const internalCostPerKm = parseNumber(internalCostPerKmInput);
 
     if (!vehicleId || !plateNumber) {
       throw new Error("L'identifiant du véhicule et la plaque sont requis.");
@@ -2703,6 +2806,7 @@ export async function updateVehicle(formData: FormData) {
         fixed_monthly_cost: ownershipType === "owned" ? fixedCost : 0,
         rental_monthly_cost: ownershipType === "rented" ? rentalCost : 0,
         insurance_monthly_cost: insuranceCost,
+        internal_cost_per_km: internalCostPerKm,
       } as any
     });
 

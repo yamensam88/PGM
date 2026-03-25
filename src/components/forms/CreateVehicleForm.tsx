@@ -92,6 +92,11 @@ export function CreateVehicleForm({ onSuccess }: CreateVehicleFormProps) {
         <Input id="insurance_monthly_cost" name="insurance_monthly_cost" type="number" step="0.01" defaultValue={0} className="col-span-3" />
       </div>
 
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="internal_cost_per_km" className="text-right">Coût / KM (€)</Label>
+        <Input id="internal_cost_per_km" name="internal_cost_per_km" type="number" step="0.001" defaultValue={0.15} className="col-span-3" />
+      </div>
+
       {error && (
         <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm mt-2">
           {error}
