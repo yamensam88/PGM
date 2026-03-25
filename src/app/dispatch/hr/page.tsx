@@ -7,7 +7,7 @@ import { fr } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, UserCheck, UserX, Receipt, CalendarClock, BriefcaseMedical, Plus } from "lucide-react";
+import { Users, UserCheck, UserX, Receipt, CalendarClock, BriefcaseMedical, Plus, Palmtree } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateEmployeeForm } from "@/components/forms/CreateEmployeeForm";
@@ -139,6 +139,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
         {/* KPIs Section (Premium Dark View) */}
         {(() => {
           const sickLeaves = drivers.flatMap(d => d.hr_events).filter(e => e.event_type === 'sick_leave');
+          const unjustifiedAbsences = drivers.flatMap(d => d.hr_events).filter(e => e.event_type === 'absence');
+          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + Number((d as any).paid_leave_balance || 0), 0);
           const totalAbsences = drivers.flatMap(d => d.hr_events).filter(e => e.event_type !== 'presence');
           const sanctions = drivers.flatMap(d => d.hr_events).filter(e => ['sanction', 'warning'].includes(e.event_type));
           const currentlyAbsent = drivers.filter(d => 
@@ -149,7 +151,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           return (
             <div>
               <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Indicateurs RH</h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                 <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
                   <div className="flex flex-row items-center justify-between pb-2">
                      <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Effectif Global</h3>
@@ -193,6 +195,28 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                        {sanctions.length}
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1 font-medium">Avertissements/Retards</p>
+                  </div>
+                </Card>
+
+                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
+                  <div className="flex flex-row items-center justify-between pb-2">
+                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Abs. Injustifiées</h3>
+                     <UserX className="w-4 h-4 text-rose-500" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold tracking-tight text-rose-400">{unjustifiedAbsences.length}</div>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Cumul sur 30 jours</p>
+                  </div>
+                </Card>
+
+                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
+                  <div className="flex flex-row items-center justify-between pb-2">
+                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Congés Restants</h3>
+                     <Palmtree className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold tracking-tight text-emerald-400">{totalPaidLeaveBalance}</div>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Jours cumulés dispo.</p>
                   </div>
                 </Card>
 
