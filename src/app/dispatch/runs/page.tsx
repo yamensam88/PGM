@@ -347,9 +347,9 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
 
            return (
              <>
-               {/* Effectifs Top Bar */}
-               <div className="flex flex-wrap gap-4 mb-4">
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 min-w-[340px] flex-1 max-w-md">
+               {/* Effectifs & KPIs Top Bar */}
+               <div className="flex flex-wrap gap-4 mb-8">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 flex-1 min-w-[340px]">
                      <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Chauffeurs</h3>
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
@@ -367,7 +367,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      </div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 min-w-[340px] flex-1 max-w-md">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 flex-1 min-w-[340px]">
                      <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Véhicules</h3>
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
@@ -384,34 +384,32 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        </div>
                      </div>
                   </div>
-               </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                 <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Taux de Livraison</h3>
                   <p className="text-3xl font-bold text-emerald-600">{txLivraison}%</p>
                   <p className="text-xs text-slate-500 mt-1">{totalDelivered} livrés / {totalLoaded} chargés</p>
-               </div>
+                 </div>
 
-               <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Taux d'Avisage</h3>
                   <p className={`text-3xl font-bold ${Number(txAvisage) > 10 ? 'text-red-500' : 'text-zinc-700 dark:text-slate-700'}`}>{txAvisage}%</p>
                   <p className="text-xs text-slate-500 mt-1">{totalAdvised} avisés / {totalLoaded} chargés</p>
-               </div>
+                 </div>
 
-               <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Productivité Moy.</h3>
                   <p className="text-3xl font-bold text-blue-600">{productiviteTournee}</p>
                   <p className="text-xs text-slate-500 mt-1">Colis livrés / tournée</p>
-               </div>
-               
-               <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+                 </div>
+                 
+                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Km Utiles / Jour</h3>
                   <p className="text-3xl font-bold text-purple-600">{avgKmPerRun} <span className="text-lg">km</span></p>
                   <p className="text-xs text-slate-500 mt-1">Moyenne par tournée</p>
-               </div>
+                 </div>
 
-               <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+                 <div className="bg-white dark:bg-white flex-1 min-w-[200px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-amber-600 mb-1 uppercase tracking-wider">Leaderboard Zone</h3>
                   <div className="mt-2 space-y-2">
                      {Object.entries(zonesStats).slice(0,2).map(([zone, stats]) => (
@@ -422,7 +420,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      ))}
                      {Object.keys(zonesStats).length === 0 && <span className="text-sm text-slate-500">Aucune data</span>}
                   </div>
-               </div>
+                 </div>
                </div>
              </>
            );
