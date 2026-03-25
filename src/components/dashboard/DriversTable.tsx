@@ -8,6 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
 export function DriversTable({ drivers }: { drivers: any[] }) {
 
   if(!drivers || drivers.length === 0) {
