@@ -302,6 +302,10 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     allRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50).map(r => r.driver_id)
   ).size;
 
+  const totalActiveVehiclesCount = activeVehicles.length;
+  const totalMaintenanceVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'maintenance' } });
+  const totalInactiveVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'inactive' } });
+
   const avgCaPerRun = allRuns.length > 0 ? (totalRevenue / allRuns.length).toFixed(2) : "0.00";
   const avgCostPerRun = allRuns.length > 0 ? (totalCosts / allRuns.length).toFixed(2) : "0.00";
   const avgMarginPerRun = allRuns.length > 0 ? (totalMargin / allRuns.length).toFixed(2) : "0.00";
@@ -499,7 +503,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         </div>
 
         {/* KPIs Row */}
-        <div className="grid gap-5 grid-cols-2 lg:grid-cols-5 mb-8">
+        <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-6 mb-8">
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">CA Période</h3>
             <div>
@@ -538,9 +542,9 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             </div>
           </Card>
 
-          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
+          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Effectifs Chauffeurs</h3>
-            <div className="flex justify-between items-center h-full pb-2">
+            <div className="flex justify-between items-center pb-2">
               <div className="text-center">
                 <div className="text-xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
                 <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">Actifs</div>
@@ -552,6 +556,24 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
               <div className="text-center">
                 <div className="text-xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
                 <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">Absents</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Effectifs Véhicules</h3>
+            <div className="flex justify-between items-center pb-2">
+              <div className="text-center">
+                <div className="text-xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">Actifs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
+              </div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">Inactifs</div>
               </div>
             </div>
           </Card>
