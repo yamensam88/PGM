@@ -2140,6 +2140,32 @@ export async function updateDriverAbsence(formData: FormData) {
 }
 
 /**
+ * Server Action: Supprimer (Annuler) une absence existante (RH)
+ */
+export async function deleteDriverAbsence(eventId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    if (!eventId) throw new Error("ID de l'événement manquant.");
+
+    await prisma.hrEvent.deleteMany({
+      where: {
+        id: eventId,
+        organization_id: orgId
+      }
+    });
+
+    revalidatePath("/dispatch/hr");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur deleteDriverAbsence:", error);
+    return { success: false, error: error.message || "Erreur lors de la suppression de l'événement." };
+  }
+}
+
+/**
  * Server Action: Obtenir l'historique financier et les totaux d'un chauffeur
  */
 export async function getDriverFinancialHistory(driverId: string, filterStr?: string, fromStr?: string, toStr?: string) {

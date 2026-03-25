@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { updateDriverAbsence } from "@/lib/actions";
+import { updateDriverAbsence, deleteDriverAbsence } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,24 @@ export function EditAbsenceForm({ event, drivers, onSuccess }: EditAbsenceFormPr
           if (onSuccess) onSuccess();
         } else {
           setError((result as any).error || "Erreur lors de la modification.");
+        }
+      } catch (err: any) {
+        setError(err.message || "Erreur inattendue.");
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    if (!confirm("Voulez-vous vraiment annuler cet événement RH de manière définitive ?")) return;
+    
+    setError(null);
+    startTransition(async () => {
+      try {
+        const result = await deleteDriverAbsence(event.id);
+        if (result.success) {
+          if (onSuccess) onSuccess();
+        } else {
+          setError((result as any).error || "Erreur lors de la suppression.");
         }
       } catch (err: any) {
         setError(err.message || "Erreur inattendue.");
@@ -103,19 +121,30 @@ export function EditAbsenceForm({ event, drivers, onSuccess }: EditAbsenceFormPr
         </div>
       )}
 
-      <div className="flex justify-end gap-3 mt-4">
+      <div className="flex justify-between mt-6 pt-4 border-t border-slate-100">
         <Button 
           type="button" 
-          variant="outline" 
-          onClick={() => { if(onSuccess) onSuccess() }}
+          variant="destructive"
+          onClick={handleDelete}
           disabled={isPending}
-          className="border-slate-200 bg-transparent text-slate-600 hover:bg-white hover:text-slate-900"
+          className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-semibold border-0"
         >
-          Annuler
+          Annuler l'événement
         </Button>
-        <Button type="submit" disabled={isPending} className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm shadow-blue-900/20">
-          {isPending ? "Modification..." : "Modifier l'événement"}
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => { if(onSuccess) onSuccess() }}
+            disabled={isPending}
+            className="border-slate-200 bg-transparent text-slate-600 hover:bg-white hover:text-slate-900 shadow-sm"
+          >
+            Fermer
+          </Button>
+          <Button type="submit" disabled={isPending} className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20">
+            {isPending ? "Modification..." : "Modifier l'événement"}
+          </Button>
+        </div>
       </div>
     </form>
   );
