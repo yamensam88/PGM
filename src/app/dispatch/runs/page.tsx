@@ -346,8 +346,48 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
            const avgKmPerRun = completedRuns.length > 0 ? (totalKm / completedRuns.length).toFixed(0) : "0";
 
            return (
-             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-               <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
+             <>
+               {/* Effectifs Top Bar */}
+               <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 min-w-[340px] flex-1 max-w-md">
+                     <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Chauffeurs</h3>
+                     <div className="flex justify-between items-center text-center">
+                       <div className="flex-1">
+                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{actifsChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Actifs</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Présents</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{absentsChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Absents</div>
+                       </div>
+                     </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 min-w-[340px] flex-1 max-w-md">
+                     <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Véhicules</h3>
+                     <div className="flex justify-between items-center text-center">
+                       <div className="flex-1">
+                         <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
+                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Actif</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
+                         <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">En Maint.</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
+                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Inactif</div>
+                       </div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                 <div className="bg-white dark:bg-white p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Taux de Livraison</h3>
                   <p className="text-3xl font-bold text-emerald-600">{txLivraison}%</p>
                   <p className="text-xs text-slate-500 mt-1">{totalDelivered} livrés / {totalLoaded} chargés</p>
@@ -383,7 +423,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      {Object.keys(zonesStats).length === 0 && <span className="text-sm text-slate-500">Aucune data</span>}
                   </div>
                </div>
-             </div>
+               </div>
+             </>
            );
         })()}
 
@@ -409,24 +450,6 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                   <h2 className="text-xl font-bold tracking-tight">Gestion des Chauffeurs Actifs</h2>
                   <p className="text-slate-500 mt-1">Gérez facilement les comptes et accès de vos chauffeurs.</p>
                 </div>
-                
-                <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 p-4 w-full md:w-[360px]">
-                   <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Chauffeurs</h3>
-                   <div className="flex justify-between items-center text-center">
-                     <div className="flex-1">
-                       <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-700">{actifsChauffeurs}</div>
-                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Actifs</div>
-                     </div>
-                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
-                       <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
-                       <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Présents</div>
-                     </div>
-                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
-                       <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-700">{absentsChauffeurs}</div>
-                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Absents</div>
-                     </div>
-                   </div>
-                </div>
              </header>
 
             <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 overflow-hidden">
@@ -442,24 +465,6 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                   <div className="mt-4">
                     <CreateVehicleModal />
                   </div>
-                </div>
-
-                <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 p-4 w-full md:w-[360px]">
-                   <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Véhicules</h3>
-                   <div className="flex justify-between items-center text-center">
-                     <div className="flex-1">
-                       <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
-                       <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Actif</div>
-                     </div>
-                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
-                       <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
-                       <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">En Maint.</div>
-                     </div>
-                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
-                       <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
-                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Inactif</div>
-                     </div>
-                   </div>
                 </div>
              </header>
 
