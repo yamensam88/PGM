@@ -2659,14 +2659,21 @@ export async function updateVehicle(formData: FormData) {
     const ownershipType = formData.get("ownership_type") as string;
     const lessorName = formData.get("lessor_name") as string;
     
-    // Convert costs correctly
+    // Convert costs correctly natively handling commas
+    const parseNumber = (val: any) => {
+      if (!val) return 0;
+      const cleanVal = String(val).replace(',', '.');
+      const num = Number(cleanVal);
+      return isNaN(num) ? 0 : num;
+    };
+    
     const fixedCostInput = formData.get("fixed_monthly_cost");
     const rentalCostInput = formData.get("rental_monthly_cost");
     const insuranceCostInput = formData.get("insurance_monthly_cost");
     
-    const fixedCost = fixedCostInput ? Number(fixedCostInput) : 0;
-    const rentalCost = rentalCostInput ? Number(rentalCostInput) : 0;
-    const insuranceCost = insuranceCostInput ? Number(insuranceCostInput) : 0;
+    const fixedCost = parseNumber(fixedCostInput);
+    const rentalCost = parseNumber(rentalCostInput);
+    const insuranceCost = parseNumber(insuranceCostInput);
 
     if (!vehicleId || !plateNumber) {
       throw new Error("L'identifiant du véhicule et la plaque sont requis.");

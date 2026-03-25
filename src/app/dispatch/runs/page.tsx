@@ -496,7 +496,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                  )}
                               </TableCell>
                               <TableCell className="text-right text-slate-500">
-                                {Number(vehicle.fixed_monthly_cost).toFixed(2)}
+                                {Number(vehicle.ownership_type === 'rented' ? vehicle.rental_monthly_cost : vehicle.fixed_monthly_cost).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-center p-1 align-top">
                                 <VehicleAppointmentCell vehicle={vehicle} />
