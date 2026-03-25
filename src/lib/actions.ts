@@ -211,12 +211,18 @@ export async function updateEmployee(formData: FormData) {
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
     const justifiedAbsencesStr = formData.get("justifiedAbsences") as string;
     const unjustifiedAbsencesStr = formData.get("unjustifiedAbsences") as string;
+    
+    const status = formData.get("status") as string || "active";
+    const departureDateStr = formData.get("departureDate") as string;
+    const departureReason = formData.get("departureReason") as string;
+    const departureComments = formData.get("departureComments") as string;
 
     if (!driverId || !firstName || !lastName || !jobTitle || !employmentType || !hireDateStr) {
        throw new Error("Tous les champs obligatoires doivent être remplis.");
     }
 
     const hireDate = new Date(hireDateStr);
+    const departureDate = departureDateStr ? new Date(departureDateStr) : null;
 
     // Fetch existing driver to find linked user
     const existingDriver = await prisma.driver.findFirst({
@@ -270,6 +276,10 @@ export async function updateEmployee(formData: FormData) {
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
              justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,
              unjustified_absences: unjustifiedAbsencesStr ? Number(unjustifiedAbsencesStr) : 0,
+             status: status,
+             departure_date: departureDate,
+             departure_reason: departureReason || null,
+             departure_comments: departureComments || null,
           } as any
        });
     });

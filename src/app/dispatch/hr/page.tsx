@@ -211,6 +211,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                 <TabsTrigger value="directory" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Suivi Présence & Effectif</TabsTrigger>
                 <TabsTrigger value="admin" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Administratif & Paie</TabsTrigger>
                 <TabsTrigger value="absences" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Congés & Incidents</TabsTrigger>
+                <TabsTrigger value="archives" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Anciens Salariés</TabsTrigger>
               </TabsList>
            </div>
 
@@ -230,7 +231,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                           </tr>
                        </thead>
                        <tbody className="divide-y divide-[#27272a]/50">
-                          {drivers.map(driver => {
+                          {drivers.filter(d => d.status === 'active').map(driver => {
                              const now = new Date();
                              const currentMonthRuns = (driver.daily_runs || []).filter(r => 
                                  new Date(r.date).getMonth() === now.getMonth() && 
@@ -297,7 +298,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                           </tr>
                        </thead>
                        <tbody className="divide-y divide-[#27272a]/50">
-                          {drivers.map(driver => {
+                          {drivers.filter(d => d.status === 'active').map(driver => {
                              // Use EXACT stored monthly cost (in hourly_cost) if available, otherwise fallback to multiplying daily by 25.33
                              const monthlyCost = driver.hourly_cost ? Number(driver.hourly_cost) : (Number(driver.daily_base_cost || 0) * 25.33);
                              // Use DB value if exists, else fallback to 75% estimation
@@ -457,6 +458,67 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                <td colSpan={5} className="px-6 py-8 text-center text-slate-500 font-medium">Aucun événement RH enregistré (absences, maladies, sanctions).</td>
                             </tr>
                           )}
+                       </tbody>
+                     </table>
+                  </div>
+              </Card>
+           </TabsContent>
+
+           <TabsContent value="archives" className="space-y-4">
+              <Card className="border-slate-200 bg-white shadow-none overflow-hidden rounded-xl">
+                  <div className="overflow-x-auto">
+                     <table className="w-full text-[13px] text-left">
+                        <thead className="text-[11px] text-slate-500 uppercase tracking-wider bg-[#f8f9fc] border-b border-slate-200">
+                          <tr>
+                            <th className="px-6 py-4 font-semibold">Salarié Archivé</th>
+                            <th className="px-6 py-4 font-semibold">Poste</th>
+                            <th className="px-6 py-4 font-semibold">Date de Sortie</th>
+                            <th className="px-6 py-4 font-semibold">Motif</th>
+                            <th className="px-6 py-4 font-semibold">Notes & Commentaires</th>
+                            <th className="px-6 py-4 font-semibold text-right">In/Out</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-[#27272a]/50">
+                          {drivers.filter(d => d.status === 'inactive').map(driver => (
+                             <tr key={driver.id} className="bg-slate-50/50 hover:bg-slate-100/50 transition-colors opacity-80 hover:opacity-100">
+                                <td className="px-6 py-4">
+                                  <div className="flex items-start justify-between min-w-[200px]">
+                                    <div>
+                                      <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
+                                      <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
+                                    </div>
+                                    <div className="pl-2">
+                                      <EditEmployeeDialog employee={driver} />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 space-y-1.5">
+                                  <Badge variant="outline" className="bg-white text-slate-500 border-slate-300">
+                                    {(driver as any).job_title || 'Chauffeur'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-slate-600 font-medium">
+                                  {(driver as any).departure_date ? format(new Date((driver as any).departure_date), 'dd/MM/yyyy') : '-'}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge className="bg-slate-100 text-slate-600 border border-slate-200 shadow-none font-medium text-[11px]">
+                                     {(driver as any).departure_reason || 'Raison inconnue'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-slate-500 text-[11px] max-w-xs truncate">
+                                  {(driver as any).departure_comments || '-'}
+                                </td>
+                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                   <p className="text-slate-600 text-[11px]">In : {driver.hire_date ? format(new Date(driver.hire_date), 'dd/MM/yy') : '-'}</p>
+                                   <p className="text-slate-600 text-[11px]">Out : {(driver as any).departure_date ? format(new Date((driver as any).departure_date), 'dd/MM/yy') : '-'}</p>
+                                </td>
+                             </tr>
+                           ))}
+                           {drivers.filter(d => d.status === 'inactive').length === 0 && (
+                             <tr>
+                                <td colSpan={6} className="px-6 py-8 text-center text-slate-500 font-medium bg-slate-50/50">Aucun ancien salarié archivé.</td>
+                             </tr>
+                           )}
                        </tbody>
                      </table>
                   </div>

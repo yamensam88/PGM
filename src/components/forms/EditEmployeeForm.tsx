@@ -11,6 +11,7 @@ import { toast } from "sonner";
 export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuccess?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>(employee.status || "active");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -93,10 +94,57 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
         </div>
       </div>
 
-      <div className="space-y-2">
-         <Label htmlFor="hireDate" className="text-[13px] font-medium text-slate-600">Date d'entrée *</Label>
-         <Input id="hireDate" name="hireDate" type="date" defaultValue={formattedHireDate} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+      <div className="grid grid-cols-2 gap-4">
+         <div className="space-y-2">
+            <Label htmlFor="hireDate" className="text-[13px] font-medium text-slate-600">Date d'entrée *</Label>
+            <Input id="hireDate" name="hireDate" type="date" defaultValue={formattedHireDate} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+         </div>
+         <div className="space-y-2">
+            <Label htmlFor="status" className="text-[13px] font-medium text-slate-600">Statut *</Label>
+            <Select name="status" value={status} onValueChange={(v) => setStatus(v || "active")} required>
+               <SelectTrigger className={`w-full bg-white border-slate-200 focus-visible:ring-zinc-600 ${status === "active" ? "text-emerald-600 font-semibold" : "text-slate-500 font-semibold"}`}>
+                  <SelectValue placeholder="Statut" />
+               </SelectTrigger>
+               <SelectContent className="bg-white border-slate-200 text-slate-700">
+                  <SelectItem value="active" className="text-emerald-600 font-medium">Actif (En poste)</SelectItem>
+                  <SelectItem value="inactive" className="text-slate-600 font-medium">Archivé (A quitté l'entreprise)</SelectItem>
+               </SelectContent>
+            </Select>
+         </div>
       </div>
+
+      {status === "inactive" && (
+         <div className="space-y-4 p-5 mt-4 border border-slate-200 bg-slate-50/50 rounded-xl">
+            <h4 className="text-[13px] font-semibold text-slate-700">Détails de sortie</h4>
+            <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-2">
+                  <Label htmlFor="departureDate" className="text-[11px] font-medium text-slate-500 uppercase">Date de sortie *</Label>
+                  <Input id="departureDate" name="departureDate" type="date" defaultValue={employee.departure_date ? new Date(employee.departure_date).toISOString().split('T')[0] : ''} required className="bg-white border-slate-200" />
+               </div>
+               <div className="space-y-2">
+                  <Label htmlFor="departureReason" className="text-[11px] font-medium text-slate-500 uppercase">Motif principal *</Label>
+                  <Select name="departureReason" defaultValue={employee.departure_reason || "Demission"} required>
+                     <SelectTrigger className="w-full bg-white border-slate-200">
+                        <SelectValue placeholder="Choisir le motif" />
+                     </SelectTrigger>
+                     <SelectContent className="bg-white border-slate-200">
+                        <SelectItem value="Demission">Démission</SelectItem>
+                        <SelectItem value="Licenciement simple">Licenciement (Simple)</SelectItem>
+                        <SelectItem value="Licenciement pour faute legere">Licenciement (Faute légère)</SelectItem>
+                        <SelectItem value="Licenciement pour faute grave">Licenciement (Faute grave/lourde)</SelectItem>
+                        <SelectItem value="Fin de CDD / Contrat">Fin de contrat / CDD</SelectItem>
+                        <SelectItem value="Rupture conventionnelle">Rupture conventionnelle</SelectItem>
+                        <SelectItem value="Autre">Autre</SelectItem>
+                     </SelectContent>
+                  </Select>
+               </div>
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="departureComments" className="text-[11px] font-medium text-slate-500 uppercase">Commentaires / Informations supplémentaires</Label>
+               <Input id="departureComments" name="departureComments" type="text" placeholder="Causes spécifiques, notes internes, etc." defaultValue={employee.departure_comments || ''} className="bg-white border-slate-200" />
+            </div>
+         </div>
+      )}
 
       <div className="space-y-4 p-5 mt-4 border border-slate-200 bg-emerald-50/50 rounded-xl">
          <h4 className="text-[13px] font-semibold text-slate-700">Mise à jour des compteurs</h4>

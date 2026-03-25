@@ -93,6 +93,10 @@ model Driver {
   justified_absences       Decimal?     @default(0) @db.Decimal(5, 2)
   unjustified_absences     Decimal?     @default(0) @db.Decimal(5, 2)
 
+  departure_date           DateTime?    @db.Date
+  departure_reason         String?      @db.VarChar(100) // démission, licenciement faute grave, etc.
+  departure_comments       String?
+
   created_at               DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at               DateTime?    @default(now()) @db.Timestamptz(6)
   deleted_at               DateTime?    @db.Timestamptz(6)
