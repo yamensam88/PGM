@@ -22,6 +22,7 @@ interface CostBreakdownChartProps {
   totalDamageCost?: number;
   totalPenaltyCost?: number;
   totalAbsenceCost?: number;
+  totalBonusCost?: number;
 }
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#f43f5e', '#f97316', '#10b981', '#0ea5e9', '#14b8a6'];
@@ -31,7 +32,8 @@ export function CostBreakdownChart({
   totalMaintenanceCost, 
   totalDamageCost,
   totalPenaltyCost,
-  totalAbsenceCost 
+  totalAbsenceCost,
+  totalBonusCost
 }: CostBreakdownChartProps) {
   const chartData = useMemo(() => {
     let driverCost = 0;
@@ -46,7 +48,7 @@ export function CostBreakdownChart({
 
     const total = driverCost + vehicleCost + fuelCost + 
                  (totalMaintenanceCost || 0) + (totalDamageCost || 0) +
-                 (totalPenaltyCost || 0) + (totalAbsenceCost || 0);
+                 (totalPenaltyCost || 0) + (totalAbsenceCost || 0) + (totalBonusCost || 0);
 
     if (total === 0) return [];
 
@@ -68,9 +70,12 @@ export function CostBreakdownChart({
     if (totalAbsenceCost && totalAbsenceCost > 0) {
       data.push({ name: 'Absences RH', value: Number(totalAbsenceCost.toFixed(2)) });
     }
+    if (totalBonusCost && totalBonusCost > 0) {
+      data.push({ name: 'Primes Validées', value: Number(totalBonusCost.toFixed(2)) });
+    }
 
     return data;
-  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost]);
+  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost, totalBonusCost]);
 
   if (chartData.length === 0) {
     return (

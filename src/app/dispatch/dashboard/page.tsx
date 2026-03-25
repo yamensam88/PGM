@@ -241,6 +241,17 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     }
   });
 
+  // 4c. Fetch Granted Bonuses
+  const grantedBonuses = await prisma.hrEvent.findMany({
+    where: {
+      organization_id: orgId,
+      event_type: 'bonus',
+      status: 'granted',
+      start_date: { gte: startDate, lte: endDate }
+    }
+  });
+  const totalBonusCost = grantedBonuses.reduce((sum, b) => sum + Number(b.notes || 0), 0);
+
   // 5. Aggregations (Period)
   const totalRevenue = allRuns.reduce((sum, r) => sum + r.revenue_calculated, 0);
   const totalFuelCost = allRuns.reduce((sum, r) => sum + r.cost_fuel, 0);
@@ -256,15 +267,20 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const totalVehicleFixedCostPeriod = activeVehicles.reduce((sum, v) => sum + ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30), 0) * dateDiffDays;
 
   const activeDriversData = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const totalDriverFixedCostPeriod = activeDriversData.reduce((sum, d) => sum + Number(d.daily_base_cost||0), 0) * dateDiffDays;
+  const totalDriverFixedCostPeriod = activeDriversData.reduce((sum, d) => {
+     const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
+     const calendarDailyCost = explicitMonthly / 30.44;
+     return sum + calendarDailyCost;
+  }, 0) * dateDiffDays;
 
   const monthlyFixedCostAdmin = orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0;
   const periodAdminFixedCosts = (monthlyFixedCostAdmin / 30.44) * dateDiffDays;
 
-  // New true Margin : Revenue - (Variable Fleet + Fuel + Admin + Global Drivers + Global Vehicles + Interventions + HR Absences)
-  const totalMargin = totalRevenue - totalVariableVehicleCost - totalFuelCost - totalVehicleFixedCostPeriod - totalDriverFixedCostPeriod - periodAdminFixedCosts - totalDamageCost - totalMaintenanceCost - totalPenaltyCost - totalAbsenceCost;
+  // New true Margin : Revenue - (Variable Fleet + Fuel + Admin + Global Drivers + Global Vehicles + Interventions + Bonuses)
+  // Removed totalAbsenceCost from deductions to avoid double counting the provisioned salary.
+  const totalMargin = totalRevenue - totalVariableVehicleCost - totalFuelCost - totalVehicleFixedCostPeriod - totalDriverFixedCostPeriod - periodAdminFixedCosts - totalDamageCost - totalMaintenanceCost - totalPenaltyCost - totalBonusCost;
 
-  const totalCosts = totalVariableVehicleCost + totalFuelCost + totalVehicleFixedCostPeriod + totalDriverFixedCostPeriod + periodAdminFixedCosts + totalDamageCost + totalMaintenanceCost + totalPenaltyCost + totalAbsenceCost;
+  const totalCosts = totalVariableVehicleCost + totalFuelCost + totalVehicleFixedCostPeriod + totalDriverFixedCostPeriod + periodAdminFixedCosts + totalDamageCost + totalMaintenanceCost + totalPenaltyCost + totalBonusCost;
 
   const totalPackages = allRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0), 0);
   const totalAdvised = allRuns.reduce((sum, r) => sum + Number(r.packages_advised || 0), 0);
@@ -576,6 +592,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                   totalDamageCost={totalDamageCost}
                   totalPenaltyCost={totalPenaltyCost}
                   totalAbsenceCost={totalAbsenceCost}
+                  totalBonusCost={totalBonusCost}
                  />
               </div>
             </CardContent>
