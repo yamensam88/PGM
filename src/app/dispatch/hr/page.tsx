@@ -17,6 +17,7 @@ import { HrDocumentManager } from "@/components/hr/HrDocumentManager";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { EditNetSalaryForm } from "@/components/forms/EditNetSalaryForm";
 import { EditGlobalCostForm } from "@/components/forms/EditGlobalCostForm";
+import { EditEmployeeDialog } from "@/components/hr/EditEmployeeDialog";
 
 export const dynamic = 'force-dynamic';
 
@@ -244,8 +245,15 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              return (
                              <tr key={driver.id} className="hover:bg-white/[0.02] transition-colors">
                                 <td className="px-6 py-4">
-                                  <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
-                                  <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
+                                  <div className="flex items-start justify-between min-w-[200px]">
+                                    <div>
+                                      <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
+                                      <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
+                                    </div>
+                                    <div className="pl-2">
+                                      <EditEmployeeDialog employee={driver} />
+                                    </div>
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 space-y-1.5">
                                   <Badge variant="outline" className={driver.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white text-slate-500 border-slate-300'}>

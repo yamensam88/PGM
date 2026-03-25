@@ -191,6 +191,101 @@ export async function createEmployee(formData: FormData) {
 }
 
 /**
+ * Server Action: Update Employee (Salarié)
+ */
+export async function updateEmployee(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    const driverId = formData.get("driverId") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const phone = formData.get("phone") as string;
+    const email = formData.get("email") as string; // Optional custom email update for Driver profile
+    const jobTitle = formData.get("jobTitle") as string;
+    const employmentType = formData.get("employmentType") as string;
+    const hireDateStr = formData.get("hireDate") as string;
+    
+    const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
+    const justifiedAbsencesStr = formData.get("justifiedAbsences") as string;
+    const unjustifiedAbsencesStr = formData.get("unjustifiedAbsences") as string;
+
+    if (!driverId || !firstName || !lastName || !jobTitle || !employmentType || !hireDateStr) {
+       throw new Error("Tous les champs obligatoires doivent être remplis.");
+    }
+
+    const hireDate = new Date(hireDateStr);
+
+    // Fetch existing driver to find linked user
+    const existingDriver = await prisma.driver.findFirst({
+       where: { id: driverId, organization_id: orgId }
+    });
+
+    if (!existingDriver) throw new Error("Salarié introuvable.");
+
+    let newEmail = email ? email.trim() : null;
+
+    await prisma.$transaction(async (tx) => {
+       // Update User if it exists and email has changed
+       if (existingDriver.user_id && newEmail && newEmail !== existingDriver.email) {
+          // Check if new email already explicitly taken by someone else
+          const emailCheck = await tx.user.findFirst({
+             where: { email: newEmail, id: { not: existingDriver.user_id } }
+          });
+          if (emailCheck) {
+             throw new Error("Cet email est déjà utilisé par un autre compte utilisateur.");
+          }
+          await tx.user.update({
+             where: { id: existingDriver.user_id },
+             data: {
+                first_name: firstName,
+                last_name: lastName,
+                email: newEmail
+             }
+          });
+       } else if (existingDriver.user_id) {
+          // Just update names
+          await tx.user.update({
+             where: { id: existingDriver.user_id },
+             data: {
+                first_name: firstName,
+                last_name: lastName,
+             }
+          });
+       }
+
+       // Update Driver
+       await tx.driver.update({
+          where: { id: driverId },
+          data: {
+             first_name: firstName,
+             last_name: lastName,
+             email: newEmail || null,
+             phone: phone || null,
+             job_title: jobTitle,
+             employment_type: employmentType,
+             hire_date: hireDate,
+             paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
+             justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,
+             unjustified_absences: unjustifiedAbsencesStr ? Number(unjustifiedAbsencesStr) : 0,
+          } as any
+       });
+    });
+
+    revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/drivers");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateEmployee:", error);
+    return { success: false, error: error.message || "Erreur lors de la mise à jour." };
+  }
+}
+
+/**
  * Server Action: Create Admin/HR/Dispatch User
  */
 export async function createAdminUser(formData: FormData) {
