@@ -2643,3 +2643,78 @@ export async function updateRun(formData: FormData) {
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
+
+/**
+ * Server Action: Update Vehicle
+ */
+export async function updateVehicle(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    const vehicleId = formData.get("vehicleId") as string;
+    const plateNumber = formData.get("plate_number") as string;
+    const category = formData.get("category") as string;
+    const ownershipType = formData.get("ownership_type") as string;
+    const lessorName = formData.get("lessor_name") as string;
+    
+    // Convert costs correctly
+    const fixedCostInput = formData.get("fixed_monthly_cost");
+    const rentalCostInput = formData.get("rental_monthly_cost");
+    const insuranceCostInput = formData.get("insurance_monthly_cost");
+    
+    const fixedCost = fixedCostInput ? Number(fixedCostInput) : 0;
+    const rentalCost = rentalCostInput ? Number(rentalCostInput) : 0;
+    const insuranceCost = insuranceCostInput ? Number(insuranceCostInput) : 0;
+
+    if (!vehicleId || !plateNumber) {
+      throw new Error("L'identifiant du véhicule et la plaque sont requis.");
+    }
+
+    await prisma.vehicle.update({
+      where: { id: vehicleId, organization_id: orgId },
+      data: {
+        plate_number: plateNumber,
+        category: category || null,
+        ownership_type: ownershipType || "owned",
+        lessor_name: ownershipType === "rented" ? lessorName || null : null,
+        fixed_monthly_cost: ownershipType === "owned" ? fixedCost : 0,
+        rental_monthly_cost: ownershipType === "rented" ? rentalCost : 0,
+        insurance_monthly_cost: insuranceCost,
+      } as any
+    });
+
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateVehicle:", error);
+    return { success: false, error: error.message || "Erreur lors de la mise à jour." };
+  }
+}
+
+/**
+ * Server Action: Archive Vehicle
+ */
+export async function archiveVehicle(vehicleId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    if (!vehicleId) throw new Error("ID du véhicule manquant.");
+
+    await prisma.vehicle.update({
+      where: { id: vehicleId, organization_id: orgId },
+      data: { status: "archived" }
+    });
+
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur archiveVehicle:", error);
+    return { success: false, error: error.message || "Erreur lors de l'archivage." };
+  }
+}

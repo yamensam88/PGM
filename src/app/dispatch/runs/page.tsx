@@ -138,6 +138,9 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
      financial_entries: v.financial_entries.map(f => ({ ...f, amount: Number(f.amount) }))
   }));
 
+  const activeVehicles = vehicles.filter(v => v.status !== 'archived');
+  const archivedVehicles = vehicles.filter(v => v.status === 'archived');
+
   const rawDrivers = await prisma.driver.findMany({
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
     include: {
@@ -429,80 +432,97 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
              </header>
 
             <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto w-full">
-                <Table>
-                  <TableHeader className="bg-zinc-50 dark:bg-slate-50">
-                    <TableRow>
-                      <TableHead>Plaque d'Immatriculation</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Kilométrage</TableHead>
-                      <TableHead className="text-right">Propriété</TableHead>
-                      <TableHead className="text-right">Coût Fixe Mensuel (€)</TableHead>
-                      <TableHead className="text-center px-0">RDV / Intervention Prévue</TableHead>
-                      <TableHead className="text-right text-orange-600 font-semibold">Entretien (€)</TableHead>
-                      <TableHead className="text-right text-red-600 font-semibold">Sinistres (€)</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vehicles.map((vehicle) => (
-                      <TableRow key={vehicle.id} className="hover:bg-zinc-50 dark:hover:bg-white/30 transition-colors">
-                        <TableCell className="font-bold tracking-widest text-zinc-700 dark:text-slate-600">
-                          <span className="bg-zinc-100 dark:bg-white px-3 py-1.5 rounded-md border border-zinc-200 dark:border-slate-300">
-                            {vehicle.plate_number}
-                          </span>
-                        </TableCell>
-                         <TableCell className="capitalize text-zinc-600 dark:text-slate-500">
-                          {vehicle.category || 'Non spécifié'}
-                        </TableCell>
-                        <TableCell>
-                          {vehicle.status === 'active' ? (
-                            <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300">Actif</Badge>
-                          ) : vehicle.status === 'maintenance' ? (
-                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300">Maintenance</Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-white dark:text-slate-600">{vehicle.status}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-zinc-600 dark:text-slate-500">
-                           {vehicle.current_km?.toLocaleString('fr-FR')} km
-                        </TableCell>
-                        <TableCell className="text-right">
-                           {(vehicle as any).ownership_type === 'rented' ? (
-                             <div className="flex flex-col items-end">
-                               <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">Locatier</span>
-                               <span className="text-xs text-slate-500">{(vehicle as any).lessor_name}</span>
-                             </div>
-                           ) : (
-                             <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">En Propre</span>
-                           )}
-                        </TableCell>
-                        <TableCell className="text-right text-slate-500">
-                          {Number(vehicle.fixed_monthly_cost).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-center p-1 align-top">
-                          <VehicleAppointmentCell vehicle={vehicle} />
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-orange-600">
-                          {vehicle.financial_entries.filter(e => e.category === 'maintenance_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-red-600">
-                          {vehicle.financial_entries.filter(e => e.category === 'damage_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-center w-40">
-                          <ErrorBoundary>
-                            <VehicleRowActions 
-                               vehicle={JSON.parse(JSON.stringify(vehicle))} 
-                               drivers={JSON.parse(JSON.stringify(drivers))} 
-                            />
-                          </ErrorBoundary>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <Tabs defaultValue="active" className="w-full">
+                <div className="border-b border-zinc-200 dark:border-slate-200 px-4 py-3">
+                  <TabsList>
+                    <TabsTrigger value="active" className="px-6">Flotte Active</TabsTrigger>
+                    <TabsTrigger value="archived" className="px-6">Anciens Véhicules</TabsTrigger>
+                  </TabsList>
+                </div>
+                {[
+                  { value: "active", data: activeVehicles },
+                  { value: "archived", data: archivedVehicles }
+                ].map((tab) => (
+                  <TabsContent key={tab.value} value={tab.value} className="m-0">
+                    <div className="overflow-x-auto w-full">
+                      <Table>
+                        <TableHeader className="bg-zinc-50 dark:bg-slate-50">
+                          <TableRow>
+                            <TableHead>Plaque d'Immatriculation</TableHead>
+                            <TableHead>Catégorie</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead className="text-right">Kilométrage</TableHead>
+                            <TableHead className="text-right">Propriété</TableHead>
+                            <TableHead className="text-right">Coût Fixe Mensuel (€)</TableHead>
+                            <TableHead className="text-center px-0">RDV / Intervention Prévue</TableHead>
+                            <TableHead className="text-right text-orange-600 font-semibold">Entretien (€)</TableHead>
+                            <TableHead className="text-right text-red-600 font-semibold">Sinistres (€)</TableHead>
+                            <TableHead className="text-center">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tab.data.map((vehicle) => (
+                            <TableRow key={vehicle.id} className="hover:bg-zinc-50 dark:hover:bg-white/30 transition-colors">
+                              <TableCell className="font-bold tracking-widest text-zinc-700 dark:text-slate-600">
+                                <span className="bg-zinc-100 dark:bg-white px-3 py-1.5 rounded-md border border-zinc-200 dark:border-slate-300">
+                                  {vehicle.plate_number}
+                                </span>
+                              </TableCell>
+                               <TableCell className="capitalize text-zinc-600 dark:text-slate-500">
+                                {vehicle.category || 'Non spécifié'}
+                              </TableCell>
+                              <TableCell>
+                                {vehicle.status === 'active' ? (
+                                  <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300">Actif</Badge>
+                                ) : vehicle.status === 'maintenance' ? (
+                                  <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300">Maintenance</Badge>
+                                ) : vehicle.status === 'archived' ? (
+                                  <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300">Archivé</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-white dark:text-slate-600">{vehicle.status}</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-zinc-600 dark:text-slate-500">
+                                 {vehicle.current_km?.toLocaleString('fr-FR')} km
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 {(vehicle as any).ownership_type === 'rented' ? (
+                                   <div className="flex flex-col items-end">
+                                     <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">Locatier</span>
+                                     <span className="text-xs text-slate-500">{(vehicle as any).lessor_name}</span>
+                                   </div>
+                                 ) : (
+                                   <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">En Propre</span>
+                                 )}
+                              </TableCell>
+                              <TableCell className="text-right text-slate-500">
+                                {Number(vehicle.fixed_monthly_cost).toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-center p-1 align-top">
+                                <VehicleAppointmentCell vehicle={vehicle} />
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-orange-600">
+                                {vehicle.financial_entries.filter(e => e.category === 'maintenance_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-red-600">
+                                {vehicle.financial_entries.filter(e => e.category === 'damage_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-center w-40">
+                                <ErrorBoundary>
+                                  <VehicleRowActions 
+                                     vehicle={JSON.parse(JSON.stringify(vehicle))} 
+                                     drivers={JSON.parse(JSON.stringify(drivers))} 
+                                  />
+                                </ErrorBoundary>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
             </div>
           </TabsContent>
         </Tabs>
