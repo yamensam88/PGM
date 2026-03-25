@@ -1487,11 +1487,19 @@ export async function addVehicle(formData: FormData) {
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
 
+    const parseNumber = (val: any) => {
+      if (!val) return 0;
+      const cleanVal = String(val).replace(',', '.');
+      const num = Number(cleanVal);
+      return isNaN(num) ? 0 : num;
+    };
+
     const plate_number = formData.get("plate_number") as string;
     const category = formData.get("category") as string;
-    const fixed_monthly_cost = Number(formData.get("fixed_monthly_cost") || 0);
-    const rental_monthly_cost = Number(formData.get("rental_monthly_cost") || 0);
-    const insurance_monthly_cost = Number(formData.get("insurance_monthly_cost") || 0);
+    const current_km = Number(formData.get("current_km") || 0);
+    const fixed_monthly_cost = parseNumber(formData.get("fixed_monthly_cost"));
+    const rental_monthly_cost = parseNumber(formData.get("rental_monthly_cost"));
+    const insurance_monthly_cost = parseNumber(formData.get("insurance_monthly_cost"));
     const ownership_type = formData.get("ownership_type") as string;
     const lessor_name = formData.get("lessor_name") as string;
 
@@ -1502,8 +1510,9 @@ export async function addVehicle(formData: FormData) {
         organization_id: orgId,
         plate_number,
         category,
-        fixed_monthly_cost,
-        rental_monthly_cost,
+        current_km,
+        fixed_monthly_cost: ownership_type === 'owned' ? fixed_monthly_cost : 0,
+        rental_monthly_cost: ownership_type === 'rented' ? rental_monthly_cost : 0,
         insurance_monthly_cost,
         ownership_type: ownership_type || 'owned',
         lessor_name: ownership_type === 'rented' ? lessor_name : null,
@@ -2656,6 +2665,8 @@ export async function updateVehicle(formData: FormData) {
     const vehicleId = formData.get("vehicleId") as string;
     const plateNumber = formData.get("plate_number") as string;
     const category = formData.get("category") as string;
+    const currentKmInput = formData.get("current_km");
+    const currentKm = currentKmInput ? Number(currentKmInput) : undefined;
     const ownershipType = formData.get("ownership_type") as string;
     const lessorName = formData.get("lessor_name") as string;
     
@@ -2684,6 +2695,7 @@ export async function updateVehicle(formData: FormData) {
       data: {
         plate_number: plateNumber,
         category: category || null,
+        current_km: currentKm,
         ownership_type: ownershipType || "owned",
         lessor_name: ownershipType === "rented" ? lessorName || null : null,
         fixed_monthly_cost: ownershipType === "owned" ? fixedCost : 0,

@@ -47,6 +47,11 @@ export function CreateVehicleForm({ onSuccess }: CreateVehicleFormProps) {
       </div>
 
       <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="current_km" className="text-right">Kilométrage</Label>
+        <Input id="current_km" name="current_km" type="number" placeholder="Ex: 154000" className="col-span-3" />
+      </div>
+
+      <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="ownership_type" className="text-right">Propriété</Label>
         <select 
           id="ownership_type" 
