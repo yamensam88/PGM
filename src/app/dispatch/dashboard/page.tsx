@@ -593,6 +593,9 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                   totalPenaltyCost={totalPenaltyCost}
                   totalAbsenceCost={totalAbsenceCost}
                   totalBonusCost={totalBonusCost}
+                  totalVehicleFixedCostPeriod={totalVehicleFixedCostPeriod}
+                  totalDriverFixedCostPeriod={totalDriverFixedCostPeriod}
+                  periodAdminFixedCosts={periodAdminFixedCosts}
                  />
               </div>
             </CardContent>

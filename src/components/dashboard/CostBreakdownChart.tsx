@@ -23,6 +23,9 @@ interface CostBreakdownChartProps {
   totalPenaltyCost?: number;
   totalAbsenceCost?: number;
   totalBonusCost?: number;
+  totalVehicleFixedCostPeriod?: number;
+  totalDriverFixedCostPeriod?: number;
+  periodAdminFixedCosts?: number;
 }
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#f43f5e', '#f97316', '#10b981', '#0ea5e9', '#14b8a6'];
@@ -33,30 +36,45 @@ export function CostBreakdownChart({
   totalDamageCost,
   totalPenaltyCost,
   totalAbsenceCost,
-  totalBonusCost
+  totalBonusCost,
+  totalVehicleFixedCostPeriod,
+  totalDriverFixedCostPeriod,
+  periodAdminFixedCosts
 }: CostBreakdownChartProps) {
   const chartData = useMemo(() => {
-    let driverCost = 0;
-    let vehicleCost = 0;
+    let driverVariableCost = 0;
+    let vehicleVariableCost = 0;
     let fuelCost = 0;
 
     runs.forEach(run => {
-      driverCost += Number(run.cost_driver || 0);
-      vehicleCost += Number(run.cost_vehicle || 0);
+      driverVariableCost += Number(run.cost_driver || 0);
+      vehicleVariableCost += Number(run.cost_vehicle || 0);
       fuelCost += Number(run.cost_fuel || 0);
     });
 
-    const total = driverCost + vehicleCost + fuelCost + 
+    const driverTotal = driverVariableCost + (totalDriverFixedCostPeriod || 0);
+    const vehicleTotal = vehicleVariableCost + (totalVehicleFixedCostPeriod || 0);
+
+    const total = driverTotal + vehicleTotal + fuelCost + 
                  (totalMaintenanceCost || 0) + (totalDamageCost || 0) +
-                 (totalPenaltyCost || 0) + (totalAbsenceCost || 0) + (totalBonusCost || 0);
+                 (totalPenaltyCost || 0) + (totalAbsenceCost || 0) + (totalBonusCost || 0) +
+                 (periodAdminFixedCosts || 0);
 
     if (total === 0) return [];
 
     const data = [
-      { name: 'Chauffeurs', value: Number(driverCost.toFixed(2)) },
-      { name: 'Flotte (usure)', value: Number(vehicleCost.toFixed(2)) },
       { name: 'Carburant', value: Number(fuelCost.toFixed(2)) }
     ];
+
+    if (driverTotal > 0) {
+      data.push({ name: 'Chauffeurs (Base+Var)', value: Number(driverTotal.toFixed(2)) });
+    }
+    if (vehicleTotal > 0) {
+      data.push({ name: 'Flotte (Loyers+Usure)', value: Number(vehicleTotal.toFixed(2)) });
+    }
+    if (periodAdminFixedCosts && periodAdminFixedCosts > 0) {
+      data.push({ name: 'Charges Exploit. (Admin, etc.)', value: Number(periodAdminFixedCosts.toFixed(2)) });
+    }
 
     if (totalMaintenanceCost && totalMaintenanceCost > 0) {
       data.push({ name: 'Entretien', value: Number(totalMaintenanceCost.toFixed(2)) });
@@ -75,7 +93,7 @@ export function CostBreakdownChart({
     }
 
     return data;
-  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost, totalBonusCost]);
+  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost, totalBonusCost, totalVehicleFixedCostPeriod, totalDriverFixedCostPeriod, periodAdminFixedCosts]);
 
   if (chartData.length === 0) {
     return (
