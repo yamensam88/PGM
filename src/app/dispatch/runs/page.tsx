@@ -142,6 +142,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const activeVehicles = vehicles.filter(v => v.status !== 'archived');
   const archivedVehicles = vehicles.filter(v => v.status === 'archived');
 
+  const actifsVehicules = activeVehicles.filter(v => v.status === 'active').length;
+  const maintenanceVehicules = activeVehicles.filter(v => v.status === 'maintenance').length;
+  const inactifsVehicules = activeVehicles.filter(v => v.status === 'inactive').length;
+
   const rawDrivers = await prisma.driver.findMany({
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
     include: {
@@ -178,6 +182,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     performance_score: d.performance_score ? Number(d.performance_score) : 0,
     financial_entries: d.financial_entries.map(e => ({ ...e, amount: Number(e.amount) }))
   }));
+
+  const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
+  const presentsChauffeurs = new Set(runs.map(r => r.driver_id).filter(Boolean)).size;
+  const absentsChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs);
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
@@ -396,10 +404,28 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
           </TabsContent>
 
           <TabsContent value="drivers" className="space-y-6 mt-0">
-             <header className="flex justify-between items-end pb-4">
+             <header className="flex flex-col md:flex-row justify-between items-start md:items-end pb-4 gap-4">
                 <div>
                   <h2 className="text-xl font-bold tracking-tight">Gestion des Chauffeurs Actifs</h2>
                   <p className="text-slate-500 mt-1">Gérez facilement les comptes et accès de vos chauffeurs.</p>
+                </div>
+                
+                <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 p-4 w-full md:w-[360px]">
+                   <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Chauffeurs</h3>
+                   <div className="flex justify-between items-center text-center">
+                     <div className="flex-1">
+                       <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-700">{actifsChauffeurs}</div>
+                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Actifs</div>
+                     </div>
+                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
+                       <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
+                       <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Présents</div>
+                     </div>
+                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
+                       <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-700">{absentsChauffeurs}</div>
+                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Absents</div>
+                     </div>
+                   </div>
                 </div>
              </header>
 
@@ -409,12 +435,32 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
           </TabsContent>
 
           <TabsContent value="vehicles" className="space-y-6 mt-0">
-             <header className="flex justify-between items-end pb-4">
+             <header className="flex flex-col md:flex-row justify-between items-start md:items-end pb-4 gap-4">
                 <div>
                   <h2 className="text-xl font-bold tracking-tight">Gestion du Parc Automobile</h2>
                   <p className="text-slate-500 mt-1">Gérez l'ensemble des véhicules et leurs coûts</p>
+                  <div className="mt-4">
+                    <CreateVehicleModal />
+                  </div>
                 </div>
-                <CreateVehicleModal />
+
+                <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 p-4 w-full md:w-[360px]">
+                   <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Véhicules</h3>
+                   <div className="flex justify-between items-center text-center">
+                     <div className="flex-1">
+                       <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
+                       <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Actif</div>
+                     </div>
+                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
+                       <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
+                       <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">En Maint.</div>
+                     </div>
+                     <div className="flex-1 border-l border-zinc-200 dark:border-slate-200">
+                       <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
+                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Inactif</div>
+                     </div>
+                   </div>
+                </div>
              </header>
 
             <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 overflow-hidden">
