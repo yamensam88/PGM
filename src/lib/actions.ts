@@ -507,6 +507,106 @@ export async function updateDriverGlobalCost(formData: FormData) {
 }
 
 /**
+ * Server Action: Update Driver Bonus Amount (HR)
+ */
+export async function updateDriverBonusAmount(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    const driverId = formData.get("driverId") as string;
+    const amountStr = formData.get("amount") as string;
+    
+    if (!driverId || !amountStr) throw new Error("Données manquantes.");
+
+    const base_bonus_amount = Number(amountStr);
+    if (isNaN(base_bonus_amount) || base_bonus_amount < 0) {
+       throw new Error("Montant invalide.");
+    }
+
+    await prisma.driver.update({
+       where: { id: driverId, organization_id: orgId },
+       data: { base_bonus_amount } as any
+    });
+
+    revalidatePath("/dispatch/hr");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateDriverBonusAmount:", error);
+    return { success: false, error: error.message || "Erreur." };
+  }
+}
+
+/**
+ * Server Action: Toggle Monthly Bonus (HR)
+ */
+export async function toggleMonthlyBonus(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    const driverId = formData.get("driverId") as string;
+    const action = formData.get("action") as string; // grant, refuse, revoke
+    const month = Number(formData.get("month")); // 0-based
+    const year = Number(formData.get("year"));
+    const amountStr = formData.get("amount") as string;
+
+    if (!driverId || !action || isNaN(month) || isNaN(year)) throw new Error("Données manquantes.");
+
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+    await prisma.$transaction(async (tx) => {
+       const existingEvents = await tx.hrEvent.findMany({
+          where: {
+             driver_id: driverId,
+             event_type: 'bonus',
+             start_date: { gte: startDate, lte: endDate }
+          }
+       });
+
+       if (existingEvents.length > 0) {
+          await tx.hrEvent.deleteMany({
+             where: { id: { in: existingEvents.map((e: any) => e.id) } }
+          });
+       }
+
+       if (action === "grant") {
+          await tx.hrEvent.create({
+             data: {
+                organization_id: orgId,
+                driver_id: driverId,
+                event_type: 'bonus',
+                start_date: startDate, 
+                status: 'granted',
+                notes: amountStr || "0"
+             } as any
+          });
+       } else if (action === "refuse") {
+          await tx.hrEvent.create({
+             data: {
+                organization_id: orgId,
+                driver_id: driverId,
+                event_type: 'bonus',
+                start_date: startDate,
+                status: 'refused',
+                notes: "0"
+             } as any
+          });
+       }
+    });
+
+    revalidatePath("/dispatch/hr");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur toggleMonthlyBonus:", error);
+    return { success: false, error: error.message || "Erreur." };
+  }
+}
+
+/**
  * Server Action: Finish Daily Run
  * Uses Prisma Transactions to ensure atomicity.
  */

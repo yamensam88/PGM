@@ -18,6 +18,8 @@ import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { EditNetSalaryForm } from "@/components/forms/EditNetSalaryForm";
 import { EditGlobalCostForm } from "@/components/forms/EditGlobalCostForm";
 import { EditEmployeeDialog } from "@/components/hr/EditEmployeeDialog";
+import { EditBonusForm } from "@/components/forms/EditBonusForm";
+import { BonusActions } from "@/components/hr/BonusActions";
 
 export const dynamic = 'force-dynamic';
 
@@ -211,6 +213,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                 <TabsTrigger value="directory" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Suivi Présence & Effectif</TabsTrigger>
                 <TabsTrigger value="admin" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Administratif & Paie</TabsTrigger>
                 <TabsTrigger value="absences" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Congés & Incidents</TabsTrigger>
+                <TabsTrigger value="primes" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Droit Prime</TabsTrigger>
                 <TabsTrigger value="archives" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Anciens Salariés</TabsTrigger>
               </TabsList>
            </div>
@@ -458,6 +461,94 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                <td colSpan={5} className="px-6 py-8 text-center text-slate-500 font-medium">Aucun événement RH enregistré (absences, maladies, sanctions).</td>
                             </tr>
                           )}
+                       </tbody>
+                     </table>
+                  </div>
+              </Card>
+           </TabsContent>
+
+           <TabsContent value="primes" className="space-y-4">
+              <Card className="border-slate-200 bg-white shadow-none overflow-hidden rounded-xl">
+                  <div className="overflow-x-auto">
+                     <table className="w-full text-[13px] text-left">
+                        <thead className="text-[11px] text-slate-500 uppercase tracking-wider bg-[#f8f9fc] border-b border-slate-200">
+                          <tr>
+                            <th className="px-6 py-4 font-semibold">Salarié</th>
+                            <th className="px-6 py-4 font-semibold">Cible Prime / Mois</th>
+                            <th className="px-6 py-4 font-semibold text-center">Éligibilité Automatique</th>
+                            <th className="px-6 py-4 font-semibold text-right">Décision (Mois Courant)</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-[#27272a]/50">
+                          {drivers.filter(d => d.status === 'active').map(driver => {
+                             const now = new Date();
+                             const currentMonthRuns = (driver.daily_runs || []).filter(r => 
+                                 new Date(r.date).getMonth() === now.getMonth() && 
+                                 new Date(r.date).getFullYear() === now.getFullYear()
+                             );
+                             const presentDays = currentMonthRuns.length;
+                             const sickDays = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sick_leave').length * 2;
+                             const sanctions = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length;
+                             
+                             const getsBonus = sickDays === 0 && sanctions === 0 && presentDays >= 10;
+                             const defaultBonusAmt = (driver as any).base_bonus_amount ? Number((driver as any).base_bonus_amount) : 0;
+                             
+                             // Find the current month's decision
+                             const bonusEvents = ((driver as any).hr_events || []).filter((e: any) => 
+                                 e.event_type === 'bonus' && 
+                                 new Date(e.start_date).getMonth() === now.getMonth() &&
+                                 new Date(e.start_date).getFullYear() === now.getFullYear()
+                             );
+                             const currentBonusEvent = bonusEvents.length > 0 ? bonusEvents[0] : null;
+
+                             return (
+                             <tr key={driver.id} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="px-6 py-4">
+                                  <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
+                                  <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <div className="flex items-center gap-2">
+                                      <span className="font-bold text-blue-600">
+                                         {defaultBonusAmt.toFixed(2)} €
+                                      </span>
+                                      <Dialog>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>
+                                           Modifier
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-sm bg-white border-slate-200 text-slate-800">
+                                           <DialogHeader>
+                                              <DialogTitle className="text-slate-800">Prime cible : {driver.first_name}</DialogTitle>
+                                              <DialogDescription className="text-slate-500">
+                                                Définissez le montant de base de la prime mensuelle (objectif à 100%).
+                                              </DialogDescription>
+                                           </DialogHeader>
+                                           <EditBonusForm driverId={driver.id} initialAmount={defaultBonusAmt} />
+                                        </DialogContent>
+                                      </Dialog>
+                                   </div>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-1">
+                                      {getsBonus ? (
+                                         <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200/50 shadow-none font-medium text-xs">Favorable</Badge>
+                                      ) : (
+                                         <Badge className="bg-orange-50 text-orange-600 border border-orange-200/50 shadow-none font-medium text-xs">Défavorable</Badge>
+                                      )}
+                                      <span className="text-[10px] text-slate-400">({presentDays}j prés. / {sickDays} abs. / {sanctions} sanct.)</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 flex justify-end">
+                                   <BonusActions 
+                                      driverId={driver.id}
+                                      currentMonth={now.getMonth()}
+                                      currentYear={now.getFullYear()}
+                                      amount={defaultBonusAmt}
+                                      currentStatus={currentBonusEvent ? currentBonusEvent.status : null}
+                                   />
+                                </td>
+                             </tr>
+                           )})}
                        </tbody>
                      </table>
                   </div>
