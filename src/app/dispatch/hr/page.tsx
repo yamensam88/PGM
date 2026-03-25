@@ -228,6 +228,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                             <th className="px-6 py-4 font-semibold">Poste & Contrat</th>
                             <th className="px-6 py-4 font-semibold text-center">J. Présence (Mois)</th>
                             <th className="px-6 py-4 font-semibold text-center">J. Maladie</th>
+                            <th className="px-6 py-4 font-semibold text-center">Abs. Injustifiées</th>
                             <th className="px-6 py-4 font-semibold text-center">Congés Restants</th>
                             <th className="px-6 py-4 font-semibold text-center">Droit Prime</th>
                             <th className="px-6 py-4 font-semibold text-right">Entrée / Sortie</th>
@@ -243,6 +244,11 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              const presentDays = currentMonthRuns.length;
                              
                              const sickDays = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sick_leave').length * 2;
+                             const unjustifiedAbs = ((driver as any).hr_events || []).filter((e: any) => 
+                                 e.event_type === 'absence' && 
+                                 new Date(e.start_date).getMonth() === now.getMonth() &&
+                                 new Date(e.start_date).getFullYear() === now.getFullYear()
+                             ).length;
                              const leaveBalance = 25 - (((driver as any).hr_events || []).filter((e: any) => e.event_type === 'vacation').length * 5);
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
@@ -267,6 +273,18 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 </td>
                                 <td className="px-6 py-4 font-medium text-center text-slate-600">{presentDays} j</td>
                                 <td className="px-6 py-4 font-medium text-center text-red-400">{sickDays > 0 ? `${sickDays} j` : '-'}</td>
+                                <td className="px-6 py-4 text-center">
+                                  {unjustifiedAbs > 0 ? (
+                                    <div className="flex flex-col items-center">
+                                      <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded text-[11px]">{unjustifiedAbs} j</span>
+                                      <span className="text-[10px] text-red-500 font-semibold mt-1">
+                                        -{(unjustifiedAbs * Number(driver.daily_base_cost || 0)).toFixed(2)}€
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="font-medium text-slate-400">-</span>
+                                  )}
+                                </td>
                                 <td className="px-6 py-4 font-medium text-center text-blue-400">{leaveBalance > 0 ? `${leaveBalance} j` : '0 j'}</td>
                                 <td className="px-6 py-4 text-center">
                                     {getsBonus ? (
@@ -487,6 +505,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                  new Date(r.date).getFullYear() === now.getFullYear()
                              );
                              const presentDays = currentMonthRuns.length;
+                             
                              const sickDays = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sick_leave').length * 2;
                              const sanctions = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length;
                              
