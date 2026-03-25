@@ -43,7 +43,10 @@ export default async function DispatchDriversPage() {
   }
 
   const drivers = await prisma.driver.findMany({
-    where: { organization_id: session.user.organization_id },
+    where: { 
+      organization_id: session.user.organization_id,
+      status: 'active' 
+    },
     orderBy: { created_at: "desc" },
   });
 
@@ -81,7 +84,6 @@ export default async function DispatchDriversPage() {
                   <TableHead className="text-right">Coût / Jour (€)</TableHead>
                   <TableHead className="text-right">Score Productivité</TableHead>
                   <TableHead className="text-right">Score Qualité</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,27 +112,6 @@ export default async function DispatchDriversPage() {
                       ) : (
                          <span className="text-emerald-500">{Number(driver.quality_rating).toFixed(2)}</span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="h-8 w-8 p-0 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-white transition-colors focus:outline-none mx-auto">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4 text-slate-500" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions Chauffeur</DropdownMenuLabel>
-                          <DropdownMenuItem>
-                            <Activity className="mr-2 h-4 w-4" /> Voir les Statistiques
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" /> Modifier le profil
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600 dark:text-red-400">
-                            <UserX className="mr-2 h-4 w-4" /> Désactiver le compte
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
