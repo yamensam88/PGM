@@ -97,8 +97,11 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
   const presenceRate = totalDrivers > 0 ? Math.round((activeDrivers / totalDrivers) * 100) : 0;
   
   // Total cost calculation based on daily base cost (Mon-Sat, 6 days a week - holidays = ~25.33 days/month)
-  const dailyPayrollBase = drivers.reduce((sum, d) => sum + Number(d.daily_base_cost || 0), 0);
-  const estimatedMonthlyPayroll = dailyPayrollBase * 25.33; // 25.33 working days avg
+  const activeDriversOnly = drivers.filter(d => d.status === 'active');
+  const estimatedMonthlyPayroll = activeDriversOnly.reduce((sum, d) => {
+     return sum + (d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33));
+  }, 0);
+  const dailyPayrollBase = estimatedMonthlyPayroll / 30.44;
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] text-slate-800 p-6 md:p-8 font-sans antialiased">
@@ -199,8 +202,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                      <Receipt className="w-4 h-4 text-blue-500" />
                   </div>
                   <div>
-                    <div className="text-3xl font-bold tracking-tight text-blue-400">{estimatedMonthlyPayroll.toLocaleString('fr-FR')} €</div>
-                    <p className="text-[11px] text-blue-500/70 mt-1 font-medium">Base: {dailyPayrollBase} €/j</p>
+                    <div className="text-3xl font-bold tracking-tight text-blue-400">{estimatedMonthlyPayroll.toLocaleString('fr-FR', {maximumFractionDigits: 0})} €</div>
+                    <p className="text-[11px] text-blue-500/70 mt-1 font-medium">Base Lissée: {dailyPayrollBase.toFixed(2)} €/j calendaire</p>
                   </div>
                 </Card>
               </div>
