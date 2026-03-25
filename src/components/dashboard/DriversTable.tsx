@@ -8,37 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { deleteDriver } from "@/lib/actions";
-import { useState, useTransition } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
 export function DriversTable({ drivers }: { drivers: any[] }) {
-  const [isPending, startTransition] = useTransition();
-
-  const handleDelete = (id: string, name: string) => {
-    startTransition(async () => {
-      const result = await deleteDriver(id);
-      if (result.success) {
-        toast.success(`Chauffeur ${name} supprimé avec succès.`);
-      } else {
-        toast.error(result.error || "Erreur lors de la suppression.");
-      }
-    });
-  };
 
   if(!drivers || drivers.length === 0) {
     return (
@@ -59,7 +29,6 @@ export function DriversTable({ drivers }: { drivers: any[] }) {
             <TableHead className="font-semibold text-zinc-600">Statut</TableHead>
             <TableHead className="text-right font-semibold text-orange-600">Entretien (€)</TableHead>
             <TableHead className="text-right font-semibold text-red-600">Sinistres (€)</TableHead>
-            <TableHead className="text-right font-semibold text-zinc-600">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -87,32 +56,6 @@ export function DriversTable({ drivers }: { drivers: any[] }) {
                 </TableCell>
                 <TableCell className="text-right font-semibold text-red-600">
                   {driver.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(2) || '0.00'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <AlertDialog>
-                    <AlertDialogTrigger>
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                         <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. Elle supprimera définitivement le profil de {driver.first_name} {driver.last_name} et ses accès.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDelete(driver.id, `${driver.first_name} ${driver.last_name}`)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {isPending ? "Suppression..." : "Oui, supprimer"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                   </AlertDialog>
                 </TableCell>
              </TableRow>
             );
