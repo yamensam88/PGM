@@ -22,6 +22,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { DriversTable } from "@/components/dashboard/DriversTable";
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
+import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
 
 export const dynamic = 'force-dynamic';
 
@@ -413,22 +414,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                   <h2 className="text-xl font-bold tracking-tight">Gestion du Parc Automobile</h2>
                   <p className="text-slate-500 mt-1">Gérez l'ensemble des véhicules et leurs coûts</p>
                 </div>
-                <Dialog>
-                  <DialogTrigger>
-                    <Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 font-medium shadow-sm transition-colors">
-                      + Nouveau Véhicule
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Ajouter un véhicule</DialogTitle>
-                      <DialogDescription>
-                        Ajoutez un nouveau véhicule à votre flotte pour vos opérations quotidiennes.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CreateVehicleForm />
-                  </DialogContent>
-                </Dialog>
+                <CreateVehicleModal />
              </header>
 
             <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-zinc-200 dark:border-slate-200 overflow-hidden">
