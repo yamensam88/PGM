@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { CreateEmployeeForm } from "@/components/forms/CreateEmployeeForm";
 import { CreatePenaltyForm } from "@/components/forms/CreatePenaltyForm";
 import { CreateAbsenceForm } from "@/components/forms/CreateAbsenceForm";
+import { EditAbsenceForm } from "@/components/forms/EditAbsenceForm";
 import { HrDocumentManager } from "@/components/hr/HrDocumentManager";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { EditNetSalaryForm } from "@/components/forms/EditNetSalaryForm";
@@ -439,8 +440,9 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                             <th className="px-6 py-4 font-semibold">Type d'Événement</th>
                             <th className="px-6 py-4 font-semibold">Période</th>
                             <th className="px-6 py-4 font-semibold">Notes</th>
-                            <th className="px-6 py-4 font-semibold">Statut</th>
-                          </tr>
+                             <th className="px-6 py-4 font-semibold">Statut</th>
+                             <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                           </tr>
                        </thead>
                        <tbody className="divide-y divide-[#27272a]/50">
                           {drivers.flatMap(d => ((d as any).hr_events || []).map((e: any) => ({...e, driver: d})))
@@ -472,11 +474,25 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 <td className="px-6 py-4">
                                    <span className="capitalize text-[11px] font-semibold tracking-wider text-slate-500">{event.status}</span>
                                 </td>
+                                <td className="px-6 py-4 flex justify-end">
+                                  {['sick_leave', 'vacation', 'absence'].includes(event.event_type) && (
+                                    <Dialog>
+                                      <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>Modifier</DialogTrigger>
+                                      <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
+                                        <DialogHeader>
+                                          <DialogTitle className="text-blue-500">Modifier l'événement</DialogTitle>
+                                          <DialogDescription className="text-slate-500">Mettez à jour les dates ou le type d'absence.</DialogDescription>
+                                        </DialogHeader>
+                                        <EditAbsenceForm event={event} drivers={drivers} />
+                                      </DialogContent>
+                                    </Dialog>
+                                  )}
+                                </td>
                              </tr>
                           ))}
                           {drivers.flatMap(d => (d as any).hr_events || []).length === 0 && (
                             <tr>
-                               <td colSpan={5} className="px-6 py-8 text-center text-slate-500 font-medium">Aucun événement RH enregistré (absences, maladies, sanctions).</td>
+                               <td colSpan={6} className="px-6 py-8 text-center text-slate-500 font-medium">Aucun événement RH enregistré (absences, maladies, sanctions).</td>
                             </tr>
                           )}
                        </tbody>

@@ -2014,11 +2014,41 @@ export async function recordDriverAbsence(formData: FormData) {
     const driver_id = formData.get("driver_id") as string;
     const event_type = formData.get("event_type") as string;
     const start_date = formData.get("start_date") as string;
-    const end_date = formData.get("end_date") as string;
+    const raw_end_date = formData.get("end_date") as string;
+    const end_date = raw_end_date?.trim() || null;
     const notes = formData.get("notes") as string;
 
     if (!driver_id || !start_date || !event_type) {
       throw new Error("Veuillez remplir les informations requises.");
+    }
+
+    const newStart = new Date(start_date);
+    const newEnd = end_date ? new Date(end_date) : newStart;
+
+    if (newEnd < newStart) {
+      throw new Error("La date de fin ne peut pas être antérieure à la date de début.");
+    }
+
+    // Checking for collisions
+    const overlap = await prisma.hrEvent.findFirst({
+      where: {
+        driver_id: driver_id,
+        event_type: { in: ['sick_leave', 'vacation', 'absence'] },
+        OR: [
+          {
+            start_date: { lte: newEnd },
+            end_date: { not: null, gte: newStart }
+          },
+          {
+            end_date: null,
+            start_date: { gte: newStart, lte: newEnd }
+          }
+        ]
+      }
+    });
+
+    if (overlap) {
+      throw new Error("Une absence, maladie ou congé existe déjà sur cette période pour ce chauffeur.");
     }
 
     await prisma.hrEvent.create({
@@ -2026,7 +2056,7 @@ export async function recordDriverAbsence(formData: FormData) {
         organization_id: orgId,
         driver_id: driver_id,
         event_type: event_type,
-        start_date: new Date(start_date),
+        start_date: newStart,
         end_date: end_date ? new Date(end_date) : null,
         notes: notes || null,
         status: 'active'
@@ -2038,6 +2068,74 @@ export async function recordDriverAbsence(formData: FormData) {
   } catch (error: any) {
     console.error("Erreur recordDriverAbsence:", error);
     return { success: false, error: error.message || "Erreur lors de l'enregistrement de l'absence." };
+  }
+}
+
+/**
+ * Server Action: Mettre à jour une absence existante (RH)
+ */
+export async function updateDriverAbsence(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const event_id = formData.get("event_id") as string;
+    const driver_id = formData.get("driver_id") as string;
+    const event_type = formData.get("event_type") as string;
+    const start_date = formData.get("start_date") as string;
+    const raw_end_date = formData.get("end_date") as string;
+    const end_date = raw_end_date?.trim() || null;
+    const notes = formData.get("notes") as string;
+
+    if (!event_id || !driver_id || !start_date || !event_type) {
+      throw new Error("Veuillez remplir les informations requises.");
+    }
+
+    const newStart = new Date(start_date);
+    const newEnd = end_date ? new Date(end_date) : newStart;
+
+    if (newEnd < newStart) {
+      throw new Error("La date de fin ne peut pas être antérieure à la date de début.");
+    }
+
+    const overlap = await prisma.hrEvent.findFirst({
+      where: {
+        id: { not: event_id },
+        driver_id: driver_id,
+        event_type: { in: ['sick_leave', 'vacation', 'absence'] },
+        OR: [
+          {
+            start_date: { lte: newEnd },
+            end_date: { not: null, gte: newStart }
+          },
+          {
+            end_date: null,
+            start_date: { gte: newStart, lte: newEnd }
+          }
+        ]
+      }
+    });
+
+    if (overlap) {
+      throw new Error("Une autre absence existe déjà sur cette période pour ce chauffeur.");
+    }
+
+    await prisma.hrEvent.updateMany({
+      where: { id: event_id, organization_id: orgId },
+      data: {
+        event_type,
+        start_date: newStart,
+        end_date: end_date ? new Date(end_date) : null,
+        notes: notes || null
+      }
+    });
+
+    revalidatePath("/dispatch/hr");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateDriverAbsence:", error);
+    return { success: false, error: error.message || "Erreur lors de la modification de l'absence." };
   }
 }
 
