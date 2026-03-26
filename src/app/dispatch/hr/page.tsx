@@ -61,10 +61,18 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     include: {
       hr_events: {
         where: {
-          start_date: { lte: endDate },
           OR: [
-            { end_date: { gte: startDate } },
-            { end_date: null }
+            {
+              start_date: { lte: endDate },
+              OR: [
+                { end_date: { gte: startDate } },
+                { end_date: null }
+              ]
+            },
+            {
+              event_type: { in: ['vacation', 'sick_leave'] },
+              start_date: { gt: endDate }
+            }
           ]
         },
         orderBy: { start_date: 'desc' }
@@ -138,13 +146,25 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
         {/* KPIs Section (Premium Dark View) */}
         {(() => {
-          const sickLeaves = drivers.flatMap(d => d.hr_events).filter(e => e.event_type === 'sick_leave');
-          const unjustifiedAbsences = drivers.flatMap(d => d.hr_events).filter(e => e.event_type === 'absence');
+          const periodHrEvents = drivers.flatMap(d => d.hr_events).filter(e => 
+            new Date(e.start_date).getTime() <= endDate.getTime() && 
+            (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
+          );
+
+          const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
+          const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
           const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + Number((d as any).paid_leave_balance || 0), 0);
-          const totalAbsences = drivers.flatMap(d => d.hr_events).filter(e => e.event_type !== 'presence');
-          const sanctions = drivers.flatMap(d => d.hr_events).filter(e => ['sanction', 'warning'].includes(e.event_type));
+          const totalAbsences = periodHrEvents.filter(e => e.event_type !== 'presence');
+          const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
+          
+          const tonight = new Date(); tonight.setHours(23,59,59,999);
           const currentlyAbsent = drivers.filter(d => 
-            (d as any).hr_events?.some((e: any) => e.status === 'active' && e.event_type !== 'presence')
+            (d as any).hr_events?.some((e: any) => 
+               e.status === 'active' && 
+               e.event_type !== 'presence' &&
+               new Date(e.start_date).getTime() <= tonight.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= today.getTime())
+            )
           ).length;
           const realAvailability = totalDrivers > 0 ? (((totalDrivers - currentlyAbsent) / totalDrivers) * 100).toFixed(1) : "0.0";
 

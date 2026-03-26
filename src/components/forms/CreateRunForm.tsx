@@ -81,10 +81,13 @@ export function CreateRunForm({
           <select id="driver_id" name="driver_id" required className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
              <option value="">Assigner un chauffeur</option>
              {drivers.map(d => {
-                const dt = new Date(selectedDate);
+                const [y, m, day] = selectedDate.split('-');
+                const dt = new Date(Number(y), Number(m)-1, Number(day), 12, 0, 0, 0);
+
                 const isOnLeave = (d.hr_events || []).find((e: any) => {
                    const s = new Date(e.start_date); s.setHours(0,0,0,0);
-                   const end = e.end_date ? new Date(e.end_date) : s; end.setHours(23,59,59,999);
+                   const end = e.end_date ? new Date(e.end_date) : new Date(e.start_date); 
+                   end.setHours(23,59,59,999);
                    return dt >= s && dt <= end;
                 });
                 
