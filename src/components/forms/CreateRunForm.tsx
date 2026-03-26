@@ -27,6 +27,7 @@ export function CreateRunForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ export function CreateRunForm({
         {/* Ligne 1 */}
         <div className="space-y-2">
           <Label htmlFor="date">Date de livraison prévue</Label>
-          <Input id="date" name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} />
+          <Input id="date" name="date" type="date" required value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="client_id">Client / Commanditaire</Label>
@@ -79,7 +80,19 @@ export function CreateRunForm({
           <Label htmlFor="driver_id">Chauffeur Assigné</Label>
           <select id="driver_id" name="driver_id" required className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
              <option value="">Assigner un chauffeur</option>
-             {drivers.map(d => <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>)}
+             {drivers.map(d => {
+                const dt = new Date(selectedDate);
+                const isOnLeave = (d.hr_events || []).find((e: any) => {
+                   const s = new Date(e.start_date); s.setHours(0,0,0,0);
+                   const end = e.end_date ? new Date(e.end_date) : s; end.setHours(23,59,59,999);
+                   return dt >= s && dt <= end;
+                });
+                
+                if (isOnLeave) {
+                   return <option key={d.id} value={d.id}>⚠️ {d.first_name} {d.last_name} (En {isOnLeave.event_type === 'vacation' ? 'Congés' : 'Arrêt'})</option>;
+                }
+                return <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>;
+             })}
           </select>
         </div>
         <div className="space-y-2">

@@ -149,6 +149,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const rawDrivers = await prisma.driver.findMany({
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
     include: {
+      hr_events: {
+        where: { event_type: { in: ["vacation", "sick_leave"] } },
+        select: { start_date: true, end_date: true, event_type: true }
+      },
       financial_entries: {
         where: { category: { in: ["maintenance_cost", "damage_cost"] }, entry_date: { gte: startDate, lte: endDate } },
         orderBy: { entry_date: "desc" }

@@ -280,6 +280,24 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              const leaveBalance = 25 - (((driver as any).hr_events || []).filter((e: any) => e.event_type === 'vacation').length * 5);
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
+                             const todayObj = new Date();
+                             todayObj.setHours(0,0,0,0);
+                             const tonightObj = new Date();
+                             tonightObj.setHours(23,59,59,999);
+
+                             const upcomingLeaves = ((driver as any).hr_events || []).filter((e: any) => 
+                               ['vacation', 'sick_leave'].includes(e.event_type) && 
+                               new Date(e.start_date).getTime() > tonightObj.getTime()
+                             ).sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+                             const nextLeave = upcomingLeaves.length > 0 ? upcomingLeaves[0] : null;
+
+                             const currentLeaves = ((driver as any).hr_events || []).filter((e: any) => 
+                               ['vacation', 'sick_leave'].includes(e.event_type) && 
+                               new Date(e.start_date).getTime() <= tonightObj.getTime() &&
+                               (!e.end_date || new Date(e.end_date).getTime() >= todayObj.getTime())
+                             );
+                             const currentLeave = currentLeaves.length > 0 ? currentLeaves[0] : null;
+
                              return (
                              <tr key={driver.id} className="hover:bg-white/[0.02] transition-colors">
                                 <td className="px-6 py-4">
@@ -287,6 +305,17 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                     <div>
                                       <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
                                       <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
+                                      {currentLeave ? (
+                                        <Badge className="mt-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200 shadow-none text-[10px] font-bold px-1.5 py-0 leading-tight">
+                                          {currentLeave.event_type === 'vacation' ? '⛱️ En congés' : '🤒 En arrêt'} {currentLeave.end_date ? `jusqu'au ${format(new Date(currentLeave.end_date), 'dd/MM')}` : ''}
+                                        </Badge>
+                                      ) : nextLeave ? (
+                                        <div className="flex">
+                                          <Badge className="mt-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200 shadow-none text-[10px] font-bold px-1.5 py-0 leading-tight">
+                                            🔜 {nextLeave.event_type === 'vacation' ? 'Congés' : 'Arrêt'} à partir du {format(new Date(nextLeave.start_date), 'dd/MM')}
+                                          </Badge>
+                                        </div>
+                                      ) : null}
                                     </div>
                                     <div className="pl-2">
                                       <EditEmployeeDialog employee={driver} />
