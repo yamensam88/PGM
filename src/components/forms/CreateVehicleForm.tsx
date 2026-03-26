@@ -20,6 +20,23 @@ export function CreateVehicleForm({ onSuccess }: CreateVehicleFormProps) {
     setError(null);
     const formData = new FormData(e.currentTarget);
 
+    // Safety Net: Anomaly Detection for Delegation
+    const rent = Number(formData.get("rental_monthly_cost")) || 0;
+    const fixed = Number(formData.get("fixed_monthly_cost")) || 0;
+    const insurance = Number(formData.get("insurance_monthly_cost")) || 0;
+    const totalCost = ownershipType === 'rented' ? rent : fixed;
+    const category = String(formData.get("category") || "").toLowerCase();
+
+    if (totalCost > 2500) {
+       if (!window.confirm(`⚠️ ATTENTION : Le coût mensuel saisi est extrêmement élevé (${totalCost} €). Êtes-vous certain de cette valeur pour la rentabilité ?`)) return;
+    } else if (totalCost > 1000 && (category.includes('kangoo') || category.includes('3m3') || category.includes('clio') || category.includes('caddy'))) {
+       if (!window.confirm(`⚠️ ANOMALIE DÉTECTÉE : Un loyer de ${totalCost} € semble très excessif pour un petit utilitaire (${formData.get("category")}). Voulez-vous vraiment enregistrer cette saisie ?`)) return;
+    }
+
+    if (insurance > 500) {
+       if (!window.confirm(`⚠️ ATTENTION : L'assurance mensuelle (${insurance} €) est très au-dessus des standards. Confirmer ?`)) return;
+    }
+
     startTransition(async () => {
       try {
         const result = await addVehicle(formData);
@@ -90,11 +107,6 @@ export function CreateVehicleForm({ onSuccess }: CreateVehicleFormProps) {
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="insurance_monthly_cost" className="text-right">Assurance Mensuelle (€)</Label>
         <Input id="insurance_monthly_cost" name="insurance_monthly_cost" type="number" step="0.01" defaultValue={0} className="col-span-3" />
-      </div>
-
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="internal_cost_per_km" className="text-right">Coût / KM (€)</Label>
-        <Input id="internal_cost_per_km" name="internal_cost_per_km" type="number" step="0.001" defaultValue={0.15} className="col-span-3" />
       </div>
 
       {error && (
