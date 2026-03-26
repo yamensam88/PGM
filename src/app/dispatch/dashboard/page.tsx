@@ -16,6 +16,7 @@ import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { RunsTable } from "@/components/dashboard/RunsTable";
 import { DriverSynthesisTable } from "@/components/dashboard/DriverSynthesisTable";
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
+import { FleetRadarAlerts } from "@/components/dashboard/FleetRadarAlerts";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -480,6 +481,89 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     return marginB - marginA;
   });
 
+  // 9. Radar des Anomalies (Fuel, Damages, Maintenance Usure)
+  // 9a. Anomalies Carburant (Fuel)
+  const fuelStatsMap: Record<string, { driverName: string, totalKm: number, totalFuel: number }> = {};
+  allRuns.forEach(r => {
+    if (r.driver_id && r.driver && r.vehicle) {
+      const fuel = r.fuel_consumed_liters || 0;
+      const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
+      if (km > 0 && fuel > 0) {
+         if (!fuelStatsMap[r.driver_id]) {
+            fuelStatsMap[r.driver_id] = { driverName: `${r.driver.first_name} ${r.driver.last_name}`, totalKm: 0, totalFuel: 0 };
+         }
+         fuelStatsMap[r.driver_id].totalKm += km;
+         fuelStatsMap[r.driver_id].totalFuel += fuel;
+      }
+    }
+  });
+  
+  const fuelAnomaliesConfigured = Object.values(fuelStatsMap)
+    .filter(s => s.totalKm > 50) 
+    .map(s => ({
+       driverName: s.driverName,
+       avgConsumption: (s.totalFuel / s.totalKm) * 100,
+       totalKm: s.totalKm
+    }))
+    .filter(s => s.avgConsumption > 12) // Seuil d'alerte à 12L/100
+    .sort((a, b) => b.avgConsumption - a.avgConsumption)
+    .slice(0, 5);
+
+  // 9b. Anomalies Casses (Damage)
+  // damageCosts est déjà défini haut (ligne ~196)
+  const damageStatsMap: Record<string, { driverName: string, count: number, totalCost: number }> = {};
+  damageCosts.forEach(cost => {
+     if (cost.driver_id && cost.driver) {
+        if (!damageStatsMap[cost.driver_id]) {
+           damageStatsMap[cost.driver_id] = { driverName: `${cost.driver.first_name} ${cost.driver.last_name}`, count: 0, totalCost: 0 };
+        }
+        damageStatsMap[cost.driver_id].count += 1;
+        damageStatsMap[cost.driver_id].totalCost += Number(cost.amount || 0);
+     }
+  });
+  const damageAnomaliesConfigured = Object.values(damageStatsMap)
+    .sort((a, b) => b.totalCost - a.totalCost)
+    .slice(0, 3); // Garder le top 3 brise-fer
+
+  // 9c. Usure Prématurée (Entretien pneus, freins)
+  const wearKeywords = ['pneu', 'plaquette', 'disque', 'frein', 'embrayage'];
+  const prematureWearCosts = maintenanceCosts.filter(cost => {
+     const desc = cost.description?.toLowerCase() || '';
+     return wearKeywords.some(kw => desc.includes(kw));
+  });
+
+  const maintenanceAnomaliesConfigured: { driverName: string, vehiclePlate: string, cost: number, reason: string }[] = [];
+  
+  // Assigner l'usure au chauffeur ayant fait le plus de km avec ce véhicule
+  prematureWearCosts.forEach(cost => {
+     if (cost.vehicle_id) {
+        const driversForVehicle: Record<string, {name: string, km: number}> = {};
+        allRuns.forEach(r => {
+           if (r.vehicle_id === cost.vehicle_id && r.driver_id && r.driver) {
+              const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
+              if (!driversForVehicle[r.driver_id]) driversForVehicle[r.driver_id] = {name: `${r.driver.first_name} ${r.driver.last_name}`, km: 0};
+              driversForVehicle[r.driver_id].km += km;
+           }
+        });
+        
+        let primaryDriver = 'Chauffeur Inconnu';
+        let maxKm = 0;
+        for (const [did, data] of Object.entries(driversForVehicle)) {
+           if (data.km > maxKm) { maxKm = data.km; primaryDriver = data.name; }
+        }
+
+        const vehiclePlate = activeVehicles.find(v => v.id === cost.vehicle_id)?.plate_number || 'Vehicule';
+        
+        maintenanceAnomaliesConfigured.push({
+           driverName: primaryDriver,
+           vehiclePlate,
+           cost: Number(cost.amount || 0),
+           reason: cost.description || 'Usure Pièces Moteur/Structure'
+        });
+     }
+  });
+  maintenanceAnomaliesConfigured.sort((a,b) => b.cost - a.cost);
+
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-800 p-6 md:p-8 font-sans antialiased selection:bg-orange-100 selection:text-orange-900">
       <div className="max-w-[1600px] mx-auto space-y-8 pb-12">
@@ -675,6 +759,13 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             </div>
           </CardContent>
         </Card>
+
+        {/* Fleet Radar Alerts Component */}
+        <FleetRadarAlerts 
+          fuelAnomalies={fuelAnomaliesConfigured}
+          damageAnomalies={damageAnomaliesConfigured}
+          maintenanceAnomalies={maintenanceAnomaliesConfigured.slice(0, 4)} 
+        />
 
         {/* AI Report */}
         <div className="mb-10">
