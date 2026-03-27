@@ -11,7 +11,8 @@ import {
   ShieldAlert,
   BarChart3,
   Settings,
-  Briefcase
+  Briefcase,
+  CreditCard
 } from "lucide-react";
 
 const navItems = [
@@ -19,12 +20,14 @@ const navItems = [
   { name: "Exploitation & Flotte", href: "/dispatch/runs", icon: Route },
   { name: "RH", href: "/dispatch/hr", icon: Users },
   { name: "Paramètres", href: "/dispatch/settings", icon: Settings },
+  { name: "Abonnement", href: "/dispatch/settings/billing", icon: CreditCard },
+  { name: "Super Admin", href: "/super-admin", icon: ShieldAlert },
   { name: "Interface Chauffeur", href: "/driver", icon: Truck },
 ];
 
 const allowedPaths: Record<string, string[]> = {
-  admin: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/driver'],
-  owner: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/driver'],
+  admin: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/driver'],
+  owner: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/super-admin', '/driver'],
   dispatcher: ['/dispatch/runs', '/driver'],
   manager: ['/dispatch/runs', '/driver'],
   hr: ['/dispatch/hr'],
