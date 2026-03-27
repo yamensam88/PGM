@@ -9,6 +9,51 @@ import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 /**
+ * Server Action: SaaS B2B Client Registration
+ */
+export async function registerOrganization(formData: FormData) {
+  try {
+    const companyName = formData.get("companyName") as string;
+    const adminFirstName = formData.get("adminFirstName") as string;
+    const adminLastName = formData.get("adminLastName") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!companyName || !adminFirstName || !adminLastName || !email || !password) {
+      throw new Error("Veuillez remplir tous les champs.");
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) throw new Error("Cet email est déjà utilisé sur la plateforme.");
+
+    const organization = await prisma.organization.create({
+      data: {
+        name: companyName,
+        subscription_plan: 'pro',
+        subscription_status: 'active'
+      }
+    });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.create({
+      data: {
+        email,
+        password_hash: hashedPassword,
+        first_name: adminFirstName,
+        last_name: adminLastName,
+        role: "owner",
+        organization_id: organization.id
+      }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur registerOrganization:", error);
+    return { success: false, error: error.message || "Erreur de création." };
+  }
+}
+
+/**
  * Server Action: Create Driver & User
  */
 export async function createDriver(formData: FormData) {
