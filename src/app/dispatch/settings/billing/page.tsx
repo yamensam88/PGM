@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, CreditCard, Receipt, Zap } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
@@ -110,9 +109,9 @@ export default async function BillingPage() {
                      </div>
                      <span className="text-2xl font-bold text-blue-600">{activeDriversCount} / {currentTierMax}</span>
                   </div>
-                  
-                  <Progress value={progressPercentage} className="h-3 bg-slate-100 rounded-full *:bg-blue-600" />
-                  
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                     <div className="h-full bg-blue-600 transition-all duration-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }} />
+                  </div>
                   <div className="mt-4 flex items-start gap-2 text-[13px] text-slate-600 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                      <Zap className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
                      <p>

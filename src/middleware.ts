@@ -32,10 +32,9 @@ export async function middleware(request: NextRequest) {
   if (isAuthPage || isRootPage) {
     if (isAuth && token.role) {
       const defaultPath = DEFAULT_PATHS[token.role as string] || '/dispatch/dashboard';
-      return NextResponse.redirect(new URL(defaultPath, request.url));
-    }
-    if (isRootPage && !isAuth) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      if (isAuthPage || isRootPage) {
+         return NextResponse.redirect(new URL(defaultPath, request.url));
+      }
     }
     return null;
   }
