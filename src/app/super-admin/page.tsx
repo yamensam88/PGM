@@ -26,7 +26,13 @@ export default async function SuperAdminPage() {
     redirect("/login");
   }
 
-  // NOTE: Sécurité Super-Admin. Pour la transition, on accepte les "owner". Dans le futur, exiger 'super_admin' strict.
+  // NOTE: Sécurité Super-Admin stricte ! Seule l'organisation créatrice du système a accès.
+  const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' }, select: { id: true } });
+  
+  if (session.user.organization_id !== masterOrg?.id) {
+    redirect("/dispatch/dashboard");
+  }
+
   if (session.user.role !== 'owner' && session.user.role !== 'super_admin') {
     redirect("/dispatch/dashboard");
   }

@@ -34,15 +34,15 @@ const allowedPaths: Record<string, string[]> = {
   finance: ['/dispatch/dashboard'],
 };
 
-export function Sidebar({ userRole = 'dispatcher' }: { userRole?: string }) {
+export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false }: { userRole?: string, isSuperAdmin?: boolean }) {
   return (
     <Suspense fallback={<div className="w-64 bg-white border-r border-slate-100/60 h-screen fixed hidden md:block"></div>}>
-      <SidebarContent userRole={userRole} />
+      <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} />
     </Suspense>
   );
 }
 
-function SidebarContent({ userRole }: { userRole: string }) {
+function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperAdmin: boolean }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -75,6 +75,10 @@ function SidebarContent({ userRole }: { userRole: string }) {
           const isActive = pathname.startsWith(item.href);
           const isAllowed = allowedPaths[userRole]?.includes(item.href) || false;
           const Icon = item.icon;
+
+          if (item.name === "Super Admin" && !isSuperAdmin) {
+             return null;
+          }
 
           if (!isAllowed) {
              return (
