@@ -54,6 +54,41 @@ export async function registerOrganization(formData: FormData) {
 }
 
 /**
+ * Server Action: Super-Admin toggle organization status
+ */
+export async function toggleSaaSClientStatus(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const orgId = session?.user?.organization_id;
+    if (!orgId) throw new Error("Non autorisé.");
+
+    // Security check: Must be Super Admin (Master Org)
+    const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
+    if (masterOrg?.id !== orgId) {
+      throw new Error("Action réservée au Super Admin.");
+    }
+
+    const targetOrgId = formData.get("orgId") as string;
+    const action = formData.get("action") as string; // 'suspend' or 'activate'
+
+    if (!targetOrgId || !action) throw new Error("Paramètres manquants.");
+
+    const newStatus = action === 'suspend' ? 'suspended' : 'active';
+
+    await prisma.organization.update({
+      where: { id: targetOrgId },
+      data: { subscription_status: newStatus }
+    });
+
+    revalidatePath("/super-admin");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur toggleSaaSClientStatus:", error);
+    return { success: false, error: error.message || "Erreur de mise à jour." };
+  }
+}
+
+/**
  * Server Action: Create Driver & User
  */
 export async function createDriver(formData: FormData) {

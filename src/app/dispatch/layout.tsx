@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Lock, AlertCircle, ArrowRight } from "lucide-react";
+import { Lock, AlertCircle, ArrowRight, Ban } from "lucide-react";
 
 export default async function DispatchLayout({
   children,
@@ -18,7 +18,7 @@ export default async function DispatchLayout({
   const userRole = session?.user?.role || "dispatcher";
   const orgId = session?.user?.organization_id;
 
-  const headersList = headers();
+  const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isBillingPage = pathname.includes('/settings/billing');
 
@@ -26,6 +26,7 @@ export default async function DispatchLayout({
   let remainingTrialDays = 0;
   let isTrialLocked = false;
   let isTrialing = false;
+  let isSuspended = false;
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
@@ -35,6 +36,10 @@ export default async function DispatchLayout({
       if (masterOrg?.id === orgId) {
         isSuperAdmin = true;
       }
+    }
+
+    if (org?.subscription_status === 'suspended') {
+       isSuspended = true;
     }
 
     if (org?.subscription_status === 'trialing' && org.created_at) {
@@ -68,7 +73,20 @@ export default async function DispatchLayout({
         <Header />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
-          {isTrialLocked && !isBillingPage ? (
+          {isSuspended ? (
+            <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-red-200 rounded-2xl shadow-xl p-8 max-w-2xl mx-auto mt-12 relative z-10">
+               <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-2 mx-auto"><Ban className="w-12 h-12" /></div>
+               <div>
+                  <h2 className="text-3xl font-black text-red-600 tracking-tight">Compte Désactivé</h2>
+                  <p className="text-slate-600 max-w-md mx-auto text-[16px] mt-4 leading-relaxed font-medium">
+                    Votre espace de travail a été suspendu par l'administration du service. Vous n'avez temporairement plus accès à l'exploitation PGM.
+                  </p>
+                  <p className="text-slate-500 max-w-sm mx-auto text-[14px] mt-4">
+                    Veuillez contacter le support ou vérifier vos impayés pour réactiver votre abonnement.
+                  </p>
+               </div>
+            </div>
+          ) : isTrialLocked && !isBillingPage ? (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-red-100 rounded-2xl shadow-sm p-8 max-w-2xl mx-auto mt-12 relative z-10">
                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-2 mx-auto"><Lock className="w-10 h-10" /></div>
                <div>

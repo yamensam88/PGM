@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, DollarSign, Activity, Settings2, ArrowUpRight, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Building2, Users, DollarSign, Activity, Settings2, ArrowUpRight, CheckCircle2, ArrowLeft, Power, PowerOff } from "lucide-react";
+import { toggleSaaSClientStatus } from "@/lib/actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -191,14 +192,36 @@ export default async function SuperAdminPage() {
                         <td className="px-6 py-4 text-center">
                           {org.subscription_status === 'active' ? (
                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-none">Actif</Badge>
+                          ) : org.subscription_status === 'trialing' ? (
+                             <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20 shadow-none">En Essai</Badge>
+                          ) : org.subscription_status === 'suspended' ? (
+                             <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 shadow-none">Désactivé</Badge>
                           ) : (
-                             <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 shadow-none">{org.subscription_status}</Badge>
+                             <Badge variant="outline" className="bg-zinc-500/10 text-zinc-400 shadow-none">{org.subscription_status}</Badge>
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800">
-                             <Settings2 className="w-4 h-4" />
-                          </Button>
+                          <form action={toggleSaaSClientStatus as any} className="inline-block">
+                             <input type="hidden" name="orgId" value={org.id} />
+                             {org.subscription_status === 'suspended' ? (
+                                <input type="hidden" name="action" value="activate" />
+                             ) : (
+                                <input type="hidden" name="action" value="suspend" />
+                             )}
+                             <Button 
+                                type="submit" 
+                                variant="ghost" 
+                                size="sm" 
+                                className={org.subscription_status === 'suspended' ? "text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10" : "text-red-500 hover:text-red-400 hover:bg-red-500/10"}
+                                disabled={org.id === masterOrg?.id} // Ne pas s'auto-suspendre
+                             >
+                                {org.subscription_status === 'suspended' ? (
+                                  <><Power className="w-4 h-4 mr-2" /> Réactiver</>
+                                ) : (
+                                  <><PowerOff className="w-4 h-4 mr-2" /> Suspendre</>
+                                )}
+                             </Button>
+                          </form>
                         </td>
                       </tr>
                     );
