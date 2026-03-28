@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerOrganization } from "@/lib/actions";
-import { Truck, ArrowRight, ShieldCheck, Mail, Lock, Building, User } from "lucide-react";
+import { Truck, ArrowLeft, ArrowRight, ShieldCheck, Mail, Lock, Building, User } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,16 +29,18 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#030712] text-zinc-50 flex font-sans">
       
-      {/* Left Panel: Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24">
-         <div className="max-w-md w-full mx-auto">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 relative">
+         <Link href="/" className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-medium">
+            <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
+         </Link>
+         <div className="max-w-md w-full mx-auto mt-12 md:mt-0">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 mb-12 w-fit">
+            <div className="flex items-center gap-2 mb-12 w-fit">
                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center">
                   <Truck className="w-4 h-4 text-white" />
                </div>
                <span className="text-xl font-extrabold tracking-tight text-white">PGM</span>
-            </Link>
+            </div>
 
             <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Créer votre espace</h1>
             <p className="text-zinc-400 mb-8 leading-relaxed">

@@ -3,10 +3,10 @@
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-// Removed Shadcn Button to use native button for maximum reliability
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Briefcase } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -102,7 +102,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[#f8f9fc] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8f9fc] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      <Link href="/" className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium">
+        <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
+      </Link>
       <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center mb-6">
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center">
