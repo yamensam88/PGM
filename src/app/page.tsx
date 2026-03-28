@@ -61,32 +61,35 @@ export default function LandingPage() {
 
          {/* Dashboard Preview / Mockup */}
          <section className="max-w-6xl mx-auto px-6 mb-32 relative">
-            <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-2 backdrop-blur-sm shadow-2xl relative overflow-hidden group">
+            <div className="rounded-2xl border border-white/20 bg-white/5 p-2 backdrop-blur-sm shadow-2xl relative overflow-hidden group">
                <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent z-10" />
-               <div className="rounded-xl border border-white/5 bg-[#09090b] aspect-[16/9] flex flex-col overflow-hidden relative z-0">
+               <div className="rounded-xl border border-slate-200 bg-zinc-50 aspect-[16/9] flex flex-col overflow-hidden relative z-0">
                   {/* Fake App UI Header */}
-                  <div className="h-12 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-950/50">
+                  <div className="h-12 border-b border-slate-200 flex items-center px-4 gap-4 bg-white">
                      <div className="flex gap-1.5">
-                       <div className="w-3 h-3 rounded-full bg-zinc-800" />
-                       <div className="w-3 h-3 rounded-full bg-zinc-800" />
-                       <div className="w-3 h-3 rounded-full bg-zinc-800" />
+                       <div className="w-3 h-3 rounded-full bg-slate-300" />
+                       <div className="w-3 h-3 rounded-full bg-slate-300" />
+                       <div className="w-3 h-3 rounded-full bg-slate-300" />
                      </div>
-                     <div className="h-6 w-64 bg-zinc-800/50 rounded-md" />
+                     <div className="h-6 w-64 bg-slate-100 rounded-md" />
                   </div>
                   {/* Fake App Body */}
-                  <div className="flex-1 p-6 grid grid-cols-4 gap-6">
-                     <div className="col-span-1 border-r border-white/5 pr-6 space-y-4">
-                        <div className="h-8 w-full bg-zinc-800/30 rounded-md" />
-                        <div className="h-8 w-3/4 bg-orange-500/10 rounded-md" />
-                        <div className="h-8 w-5/6 bg-zinc-800/30 rounded-md" />
+                  <div className="flex-1 p-6 grid grid-cols-4 gap-6 bg-[#f8f9fc]">
+                     <div className="col-span-1 border-r border-slate-200 pr-6 space-y-4">
+                        <div className="h-8 w-full bg-blue-100 rounded-md" />
+                        <div className="h-8 w-3/4 bg-slate-200/50 rounded-md" />
+                        <div className="h-8 w-5/6 bg-slate-200/50 rounded-md" />
                      </div>
                      <div className="col-span-3 space-y-6">
                         <div className="grid grid-cols-3 gap-4">
-                           <div className="h-24 bg-emerald-500/5 border border-emerald-500/10 rounded-xl" />
-                           <div className="h-24 bg-zinc-800/30 rounded-xl" />
-                           <div className="h-24 bg-red-500/5 border border-red-500/10 rounded-xl" />
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
                         </div>
-                        <div className="h-64 bg-zinc-800/20 rounded-xl" />
+                        <div className="h-64 bg-white border border-slate-200 shadow-sm rounded-xl relative overflow-hidden">
+                           <div className="absolute top-4 left-4 h-6 w-48 bg-slate-100 rounded" />
+                           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-tr from-blue-50 to-transparent" />
+                        </div>
                      </div>
                   </div>
                </div>
