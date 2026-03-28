@@ -30,7 +30,7 @@ export async function registerOrganization(formData: FormData) {
       data: {
         name: companyName,
         subscription_plan: 'pro',
-        subscription_status: 'active'
+        subscription_status: 'trialing'
       }
     });
 
