@@ -90,9 +90,10 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
           }
 
           const targetHref = item.href.startsWith("/dispatch") ? `${item.href}${queryString}` : item.href;
+          const safeId = `tour-nav-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
 
           return (
-            <Link key={item.name} href={targetHref} className="block group">
+            <Link key={item.name} href={targetHref} id={safeId} className="block group">
               <span
                 className={`flex items-center px-4 py-3 text-[13px] font-semibold rounded-xl transition-all relative ${
                   isActive

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -74,7 +75,8 @@ export default async function DispatchLayout({
     <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-[#f8f9fc]">
       <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} />
       <div className="flex flex-col flex-1 w-full md:pl-64 transition-all duration-300">
-        
+        <OnboardingTour />
+
         {isTrialing && !isTrialLocked && (
           <div className="bg-orange-500 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-orange-600/50">
              <div className="flex items-center gap-2">
