@@ -27,6 +27,7 @@ export default async function DispatchLayout({
   let isTrialLocked = false;
   let isTrialing = false;
   let isSuspended = false;
+  let renewalDaysRemaining: number | null = null;
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
@@ -40,6 +41,22 @@ export default async function DispatchLayout({
 
     if (org?.subscription_status === 'suspended') {
        isSuspended = true;
+    }
+
+    if (org?.subscription_status === 'active') {
+       // Check settings_json for a simulated or injected current_period_end
+       const settings = typeof org.settings_json === 'string' 
+          ? JSON.parse(org.settings_json) 
+          : (org.settings_json as any || {});
+       
+       if (settings?.current_period_end) {
+          const endMs = new Date(settings.current_period_end).getTime();
+          const nowMs = Date.now();
+          const diffDays = Math.ceil((endMs - nowMs) / (1000 * 3600 * 24));
+          if (diffDays <= 7 && diffDays > 0) {
+             renewalDaysRemaining = diffDays;
+          }
+       }
     }
 
     if (org?.subscription_status === 'trialing' && org.created_at) {
@@ -64,13 +81,25 @@ export default async function DispatchLayout({
                <AlertCircle className="w-4 h-4 hidden sm:block" />
                <span>Période d'essai en cours : Il vous reste {remainingTrialDays} jour{remainingTrialDays > 1 ? 's' : ''}.</span>
              </div>
-             <Link href="/dispatch/settings/billing" className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors text-xs font-bold uppercase tracking-wider ml-auto sm:ml-4 border border-white/10">
-                Prendre l'abonnement <ArrowRight className="w-3 h-3" />
-             </Link>
-          </div>
-        )}
+              <Link href="/dispatch/settings/billing" className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors text-xs font-bold uppercase tracking-wider ml-auto sm:ml-4 border border-white/10">
+                 Prendre l'abonnement <ArrowRight className="w-3 h-3" />
+              </Link>
+           </div>
+         )}
 
-        <Header />
+         {renewalDaysRemaining !== null && (
+           <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-blue-700/50">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 hidden sm:block" />
+                <span>Votre cycle de facturation se renouvelle dans {renewalDaysRemaining} jour{renewalDaysRemaining > 1 ? 's' : ''}.</span>
+              </div>
+              <Link href="/dispatch/settings/billing" className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 transition-colors text-xs font-bold uppercase tracking-wider ml-auto sm:ml-4 border border-blue-400">
+                 Gérer mon forfait <ArrowRight className="w-3 h-3" />
+              </Link>
+           </div>
+         )}
+ 
+         <Header />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (

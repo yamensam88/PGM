@@ -89,6 +89,33 @@ export async function toggleSaaSClientStatus(formData: FormData) {
 }
 
 /**
+ * Server Action: Update Billing Interval (Monthly / Annual)
+ */
+export async function updateBillingInterval(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const orgId = session?.user?.organization_id;
+    if (!orgId) throw new Error("Non autorisé.");
+
+    const plan = formData.get("plan") as string;
+    if (plan !== "pro-monthly" && plan !== "pro-annual") {
+       throw new Error("Plan invalide.");
+    }
+
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: { subscription_plan: plan }
+    });
+
+    revalidatePath("/dispatch/settings/billing");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateBillingInterval:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Server Action: Create Driver & User
  */
 export async function createDriver(formData: FormData) {
