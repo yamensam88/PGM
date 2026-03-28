@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || "re_missing_api_key");
 const fromEmail = "TransportOS <onboarding@resend.dev>"; 
 // Note: onboarding@resend.dev can only send to the verified Resend account email for testing.
 
