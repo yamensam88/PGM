@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/emails";
 
 /**
  * Server Action: SaaS B2B Client Registration
@@ -35,7 +36,7 @@ export async function registerOrganization(formData: FormData) {
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.user.create({
+    const orgAdmin = await prisma.user.create({
       data: {
         email,
         password_hash: hashedPassword,
@@ -45,6 +46,9 @@ export async function registerOrganization(formData: FormData) {
         organization_id: organization.id
       }
     });
+
+    // Send the welcome email
+    sendWelcomeEmail(email, adminFirstName, companyName).catch(e => console.error("Could not send welcome email", e));
 
     return { success: true };
   } catch (error: any) {

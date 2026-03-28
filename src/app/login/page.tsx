@@ -76,6 +76,11 @@ function LoginForm() {
             className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-blue-500 px-3 text-base rounded-lg"
           />
         </div>
+        <div className="flex justify-end pt-1">
+          <Link href="/forgot-password" className="text-[13px] font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+            Mot de passe oublié ?
+          </Link>
+        </div>
       </div>
 
       {error && (
