@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { Joyride } from "react-joyride";
+import type { EventData, Step } from "react-joyride";
 import { useLocalStorage } from "react-use";
 
 export function OnboardingTour() {
@@ -31,7 +32,7 @@ export function OnboardingTour() {
           <p className="text-slate-600 text-sm">Commençons cette courte visite guidée pour vous aider à prendre en main votre nouvel espace de pilotage de tournées et gestion RH en 2 minutes chrono.</p>
         </div>
       ),
-      disableBeacon: true,
+      skipBeacon: true,
     },
     {
       target: "#tour-nav-direction",
@@ -75,9 +76,9 @@ export function OnboardingTour() {
     }
   ];
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = (data: EventData) => {
     const { status } = data;
-    const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
+    const finishedStatuses: string[] = ['finished', 'skipped'];
     
     if (finishedStatuses.includes(status)) {
       setHasCompletedTour(true);
@@ -94,16 +95,17 @@ export function OnboardingTour() {
       run={run}
       continuous
       scrollToFirstStep
-      showProgress
-      showSkipButton
-      callback={handleJoyrideCallback}
+      onEvent={handleJoyrideCallback}
+      options={{
+        showProgress: true,
+        // Enforce the skip button in the UI
+        buttons: ['back', 'close', 'primary', 'skip'],
+        primaryColor: '#ea580c', // orange-600
+        textColor: '#334155',    // slate-700
+        zIndex: 10000,
+      }}
       styles={{
-        options: {
-          primaryColor: '#ea580c', // orange-600
-          textColor: '#334155',    // slate-700
-          zIndex: 10000,
-        },
-        buttonNext: {
+        buttonPrimary: {
           backgroundColor: '#ea580c',
           borderRadius: 6,
         },
