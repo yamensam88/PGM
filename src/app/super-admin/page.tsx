@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, DollarSign, Activity, Settings2, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Building2, Users, DollarSign, Activity, Settings2, ArrowUpRight, CheckCircle2, ArrowLeft } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,9 +59,15 @@ export default async function SuperAdminPage() {
         
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-zinc-800 pb-6">
           <div>
-            <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-none mb-3">
-              HQ PLATFORM CONTROL
-            </Badge>
+            <Link href="/dispatch/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 text-sm font-medium transition-colors">
+               <ArrowLeft className="w-4 h-4" />
+               Retour au Dashboard Exploitation
+            </Link>
+            <div className="block">
+              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-none mb-3">
+                HQ PLATFORM CONTROL
+              </Badge>
+            </div>
             <h1 className="text-3xl font-bold flex items-center gap-3 tracking-tight">
               SaaS Central Admin
             </h1>
