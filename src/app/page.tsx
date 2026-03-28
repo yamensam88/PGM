@@ -82,13 +82,40 @@ export default function LandingPage() {
                      </div>
                      <div className="col-span-3 space-y-6">
                         <div className="grid grid-cols-3 gap-4">
-                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
-                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
-                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl" />
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+                              <div className="flex justify-between items-center"><div className="w-1/2 h-2.5 bg-slate-200 rounded-full"></div><div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center"><div className="w-3 h-3 text-blue-500 rounded-full border border-blue-200"></div></div></div>
+                              <div><div className="w-3/4 h-5 bg-slate-800 rounded-md mb-2"></div><div className="w-1/3 h-2 bg-emerald-400 rounded-full"></div></div>
+                           </div>
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+                              <div className="flex justify-between items-center"><div className="w-1/2 h-2.5 bg-slate-200 rounded-full"></div><div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center"><div className="w-3 h-3 text-emerald-500 rounded-full border border-emerald-200"></div></div></div>
+                              <div><div className="w-3/4 h-5 bg-slate-800 rounded-md mb-2"></div><div className="w-1/3 h-2 bg-emerald-400 rounded-full"></div></div>
+                           </div>
+                           <div className="h-24 bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+                              <div className="flex justify-between items-center"><div className="w-1/2 h-2.5 bg-slate-200 rounded-full"></div><div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center"><div className="w-3 h-3 text-orange-500 rounded-full border border-orange-200"></div></div></div>
+                              <div><div className="w-1/2 h-5 bg-slate-800 rounded-md mb-2"></div><div className="w-1/2 h-2 bg-red-400 rounded-full"></div></div>
+                           </div>
                         </div>
-                        <div className="h-64 bg-white border border-slate-200 shadow-sm rounded-xl relative overflow-hidden">
-                           <div className="absolute top-4 left-4 h-6 w-48 bg-slate-100 rounded" />
-                           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-tr from-blue-50 to-transparent" />
+                        <div className="h-64 bg-white border border-slate-200 shadow-sm rounded-xl relative overflow-hidden flex flex-col p-5">
+                           <div className="flex justify-between items-center mb-6">
+                              <div className="h-4 w-48 bg-slate-200 rounded-full"></div>
+                              <div className="flex gap-2">
+                                 <div className="h-6 w-16 bg-slate-100 rounded-full"></div>
+                                 <div className="h-6 w-16 bg-blue-50 rounded-full border border-blue-100"></div>
+                              </div>
+                           </div>
+                           {/* Fake Chart Lines */}
+                           <div className="flex-1 border-b border-l border-slate-100 relative mt-4">
+                              <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-blue-500/10 to-transparent clip-path-chart z-0"></div>
+                              <div className="absolute bottom-[20%] left-[10%] w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+                              <div className="absolute bottom-[40%] left-[30%] w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+                              <div className="absolute bottom-[30%] left-[50%] w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+                              <div className="absolute bottom-[70%] left-[70%] w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+                              <div className="absolute bottom-[60%] left-[90%] w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+                           </div>
+                           <div className="flex justify-between mt-3 px-2">
+                              {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'].map(d => <div key={d} className="text-[10px] font-medium text-slate-400">{d}</div>)}
+                           </div>
+                           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#030712] to-transparent pointer-events-none z-20" />
                         </div>
                      </div>
                   </div>
