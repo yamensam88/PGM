@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, ShieldAlert, Zap, Truck, Users, LayoutDashboard, CheckCircle2 } from "lucide-react";
+import { ArrowRight, BarChart3, ShieldAlert, Zap, Route, Users, LayoutDashboard, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
@@ -15,9 +15,12 @@ export default function LandingPage() {
          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center">
-                  <Truck className="w-4 h-4 text-white" />
+                  <Route className="w-5 h-5 text-white" />
                </div>
-               <span className="text-xl font-extrabold tracking-tight text-white">PGM</span>
+               <div className="flex flex-col">
+                 <span className="text-xl font-extrabold tracking-tight text-white leading-none">PGM</span>
+                 <span className="text-[9px] text-zinc-400 font-medium tracking-widest mt-1">PILOTAGE • GESTION • MAÎTRISE</span>
+               </div>
             </div>
             <div className="flex items-center gap-4">
                <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">

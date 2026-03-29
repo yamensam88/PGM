@@ -6,7 +6,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Route } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -113,12 +113,15 @@ export default function LoginPage() {
       </Link>
       <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center mb-6">
         <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-sm flex items-center justify-center">
+               <Route className="w-6 h-6 text-white" />
+            </div>
             <span className="text-4xl font-extrabold tracking-tight text-[#0A2540]">
               PGM
             </span>
           </div>
-          <p className="mt-1 text-sm font-medium text-slate-500 tracking-wide uppercase">
+          <p className="mt-2 text-sm font-bold text-[#ea580c] tracking-wider uppercase">
             Pilotage • Gestion • Maîtrise
           </p>
           <p className="mt-2 text-xs text-slate-500 text-center max-w-xs">

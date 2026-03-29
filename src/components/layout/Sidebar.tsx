@@ -62,10 +62,13 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
       {/* Brand */}
       <div className="flex h-[72px] items-center px-6 border-b border-slate-100/60">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center shrink-0">
              <Route className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-extrabold tracking-tight text-slate-900">PGM</span>
+          <div className="flex flex-col justify-center truncate">
+            <span className="text-xl font-extrabold tracking-tight text-slate-900 leading-none">PGM</span>
+            <span className="text-[10px] font-bold tracking-widest text-[#ea580c] mt-1 truncate uppercase">Pilotage • Gestion • Maîtrise</span>
+          </div>
         </div>
       </div>
 
