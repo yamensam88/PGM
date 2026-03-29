@@ -3024,3 +3024,40 @@ export async function deleteRateCard(formData: FormData) {
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
+
+/**
+ * Server Action: Update Rate Card
+ */
+export async function updateRateCard(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const id = formData.get("id") as string;
+    const name = formData.get("name") as string;
+    const unit_price_package = Number(formData.get("unit_price_package") || 0);
+    const unit_price_stop = Number(formData.get("unit_price_stop") || 0);
+    const base_daily_flat = Number(formData.get("base_daily_flat") || 0);
+    const bonus_relay_point = Number(formData.get("bonus_relay_point") || 0);
+
+    if (!id || !name) throw new Error("ID et Nom requis.");
+
+    await prisma.rateCard.update({
+      where: { id, organization_id: orgId },
+      data: {
+        name,
+        unit_price_package,
+        unit_price_stop,
+        base_daily_flat,
+        bonus_relay_point,
+      }
+    });
+
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateRateCard:", error);
+    return { success: false, error: error.message || "Erreur serveur" };
+  }
+}

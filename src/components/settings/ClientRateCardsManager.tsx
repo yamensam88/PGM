@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateClientForm } from "@/components/forms/CreateClientForm";
-import { CreateRateCardForm, DeleteRateCardForm } from "@/components/forms/RateCardForms";
+import { CreateRateCardForm, DeleteRateCardForm, EditRateCardForm } from "@/components/forms/RateCardForms";
 
 export function ClientRateCardsManager({ clients }: { clients: any[] }) {
   return (
@@ -58,7 +58,21 @@ export function ClientRateCardsManager({ clients }: { clients: any[] }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {client.rate_cards.map((rc: any) => (
                         <div key={rc.id} className="bg-white border border-indigo-100 rounded-md p-3 relative shadow-sm">
-                          <h4 className="font-semibold text-sm text-indigo-900 mb-2 truncate pr-6">{rc.name}</h4>
+                          <div className="absolute top-3 right-3 flex items-center gap-2">
+                             <Dialog>
+                               <DialogTrigger className="text-slate-400 hover:text-indigo-600 transition-colors">
+                                 <Edit className="w-3.5 h-3.5" />
+                               </DialogTrigger>
+                               <DialogContent>
+                                 <DialogHeader>
+                                   <DialogTitle>Modifier la Grille Tarifaire</DialogTitle>
+                                   <DialogDescription>Ajustez les tarifs de la grille "{rc.name}".</DialogDescription>
+                                 </DialogHeader>
+                                 <EditRateCardForm rateCard={rc} />
+                               </DialogContent>
+                             </Dialog>
+                          </div>
+                          <h4 className="font-semibold text-sm text-indigo-900 mb-2 truncate pr-16">{rc.name}</h4>
                           <div className="space-y-1 text-xs text-slate-600">
                             <div className="flex justify-between">
                               <span>Forfait Jour:</span>
