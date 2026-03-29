@@ -29,12 +29,12 @@ function LoginForm() {
         password,
       });
 
-      setLoading(false);
-
       if (!res?.error) {
+        // Leave loading as true so the button stays on "Connexion en cours..."
         // Rediriger vers la racine, le middleware se chargera de la bonne route selon le rôle
         window.location.href = "/";
       } else {
+        setLoading(false);
         setError("Email ou mot de passe incorrect.");
       }
     } catch (err: any) {
