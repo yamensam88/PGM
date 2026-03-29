@@ -36,17 +36,17 @@ export default function LandingPage() {
             {/* Soft background glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-orange-500/20 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-            <Badge className="mb-6 bg-white/5 text-orange-400 border-white/10 px-3 py-1 font-medium tracking-wide shadow-none" variant="outline">
-              🚀 LA RÉVOLUTION DU TRANSPORT LAST-MILE
+            <Badge className="mb-6 bg-white/5 text-orange-400 border-white/10 px-4 py-1.5 font-semibold tracking-wide shadow-none uppercase text-xs" variant="outline">
+              🚀 La Révolution du Dernier Kilomètre
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-[1.1]">
-              Reprenez le contrôle total <br className="hidden md:block"/> 
-              de vos <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">marges nettes.</span>
+              L'application métier pour <br className="hidden md:block"/> 
+              vos <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">flottes de livraison.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Fini les tableurs complexes et les estimations à vue d'œil. PGM est le premier ERP B2B qui calcule la rentabilité exacte de chaque tournée, détecte les anomalies de carburant et anticipe vos plannings RH en temps réel.
+            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+              Fini les tableurs chaotiques et la navigation à vue. PGM unifie toutes vos données sur une seule plateforme intelligente pour calculer votre rentabilité exacte, traquer les fraudes et piloter vos effectifs RH.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
