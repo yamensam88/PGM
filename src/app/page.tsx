@@ -217,8 +217,9 @@ export default function LandingPage() {
          </section>
       </main>
 
-      <footer className="border-t border-white/5 py-12 text-center text-zinc-500 text-sm">
+      <footer className="border-t border-white/5 py-12 text-center text-zinc-500 text-sm space-y-2">
          <p>© {new Date().getFullYear()} PGM Logiciel SaaS B2B. Propulsé par l'innovation de l'I.A.</p>
+         <p className="text-xs text-zinc-600 font-medium tracking-wide">Développé et créé par <span className="text-zinc-400">SR</span></p>
       </footer>
     </div>
   );
