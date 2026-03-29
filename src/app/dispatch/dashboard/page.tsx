@@ -239,6 +239,20 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
            amount: cost
          });
        }
+    } else if (evt.event_type === 'absence') {
+       // Unjustified absence is unpaid, so it is a direct saving on the provisioned payroll
+       const driverDailyCost = Number(evt.driver?.daily_base_cost || 0);
+       const cost = days * driverDailyCost;
+       totalAbsenceCost += cost; // we track it, but we will subtract it from payroll directly
+       
+       if (cost > 0) {
+         driverAbsenceCosts.push({
+           driver_id: evt.driver_id,
+           driver: evt.driver,
+           amount: cost,
+           is_unpaid: true
+         });
+       }
     }
   });
 
@@ -277,11 +291,17 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const monthlyFixedCostAdmin = orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0;
   const periodAdminFixedCosts = (monthlyFixedCostAdmin / 30.44) * dateDiffDays;
 
-  // New true Margin : Revenue - (Variable Fleet + Fuel + Admin + Global Drivers + Global Vehicles + Interventions + Bonuses)
-  // Removed totalAbsenceCost from deductions to avoid double counting the provisioned salary.
-  const totalMargin = totalRevenue - totalVariableVehicleCost - totalFuelCost - totalVehicleFixedCostPeriod - totalDriverFixedCostPeriod - periodAdminFixedCosts - totalDamageCost - totalMaintenanceCost - totalPenaltyCost - totalBonusCost;
+  // We calculate unpaid absence savings from the driverAbsenceCosts array
+  const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
-  const totalCosts = totalVariableVehicleCost + totalFuelCost + totalVehicleFixedCostPeriod + totalDriverFixedCostPeriod + periodAdminFixedCosts + totalDamageCost + totalMaintenanceCost + totalPenaltyCost + totalBonusCost;
+  // New true Margin : Revenue - (Variable Fleet + Fuel + Admin + Global Drivers + Global Vehicles + Interventions + Bonuses)
+  // Penalties are salary deductions from drivers, so they reduce the total costs (i.e. + margin).
+  // Unpaid absences also reduce the total driver fixed costs.
+  const correctedDriverFixedCost = totalDriverFixedCostPeriod - totalUnpaidSavings - totalPenaltyCost;
+
+  const totalMargin = totalRevenue - totalVariableVehicleCost - totalFuelCost - totalVehicleFixedCostPeriod - correctedDriverFixedCost - periodAdminFixedCosts - totalDamageCost - totalMaintenanceCost - totalBonusCost;
+
+  const totalCosts = totalVariableVehicleCost + totalFuelCost + totalVehicleFixedCostPeriod + correctedDriverFixedCost + periodAdminFixedCosts + totalDamageCost + totalMaintenanceCost + totalBonusCost;
 
   const totalPackages = allRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0), 0);
   const totalAdvised = allRuns.reduce((sum, r) => sum + Number(r.packages_advised || 0), 0);
