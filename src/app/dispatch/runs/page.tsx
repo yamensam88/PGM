@@ -242,8 +242,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
             <h1 className="text-3xl font-extrabold tracking-tight">Exploitation: Tournées</h1>
             <p className="text-slate-500 mt-1">Supervision temps réel : productivité, avisage et classement des chauffeurs.</p>
           </div>
-          <div className="flex flex-col items-end gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full">
               <DateRangePicker />
               
               <Dialog>

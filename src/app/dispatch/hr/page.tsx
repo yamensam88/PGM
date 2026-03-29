@@ -256,13 +256,13 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
         })()}
 
         <Tabs defaultValue="directory" className="space-y-6 pt-4">
-           <div className="flex justify-between items-center">
-              <TabsList className="bg-white border border-slate-200 p-1 rounded-lg">
-                <TabsTrigger value="directory" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Suivi Présence & Effectif</TabsTrigger>
-                <TabsTrigger value="admin" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Administratif & Paie</TabsTrigger>
-                <TabsTrigger value="absences" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Congés & Incidents</TabsTrigger>
-                <TabsTrigger value="primes" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Droit Prime</TabsTrigger>
-                <TabsTrigger value="archives" className="text-xs data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Anciens Salariés</TabsTrigger>
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <TabsList className="bg-white border border-slate-200 p-1 rounded-lg w-full overflow-x-auto justify-start no-scrollbar hide-scrollbar">
+                <TabsTrigger value="directory" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Suivi Présence & Effectif</TabsTrigger>
+                <TabsTrigger value="admin" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Administratif & Paie</TabsTrigger>
+                <TabsTrigger value="absences" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Congés & Incidents</TabsTrigger>
+                <TabsTrigger value="primes" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Droit Prime</TabsTrigger>
+                <TabsTrigger value="archives" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Anciens Salariés</TabsTrigger>
               </TabsList>
            </div>
 

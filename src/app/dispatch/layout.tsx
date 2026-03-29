@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Sidebar, MobileSidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
@@ -101,7 +101,7 @@ export default async function DispatchLayout({
            </div>
          )}
  
-         <Header />
+         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (

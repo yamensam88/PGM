@@ -5,7 +5,7 @@ import { LogOut, User, Bell, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 
-export function Header() {
+export function Header({ mobileMenu }: { mobileMenu?: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
@@ -15,10 +15,11 @@ export function Header() {
   const isAdmin = session?.user?.role === "admin" || session?.user?.role === "owner";
 
   return (
-    <header className="h-[72px] flex flex-shrink-0 items-center justify-between px-8 bg-white/70 backdrop-blur-xl border-b border-slate-100/60 sticky top-0 z-10 w-full shadow-[0_4px_24px_rgba(0,0,0,0.01)] transition-all">
+    <header className="h-[72px] flex flex-shrink-0 items-center justify-between px-4 sm:px-8 bg-white/70 backdrop-blur-xl border-b border-slate-100/60 sticky top-0 z-10 w-full shadow-[0_4px_24px_rgba(0,0,0,0.01)] transition-all">
       
       {/* Left side: Context Switcher etc */}
-      <div className="flex-1 flex items-center gap-4">
+      <div className="flex-1 flex items-center gap-2 sm:gap-4">
+        {mobileMenu}
         {isDriverRoute && isAdmin && (
           <Button 
             variant="outline" 

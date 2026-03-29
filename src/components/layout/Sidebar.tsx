@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import {
   LayoutDashboard,
   Route,
@@ -12,8 +12,11 @@ import {
   BarChart3,
   Settings,
   Briefcase,
-  CreditCard
+  CreditCard,
+  Menu
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { name: "Direction", href: "/dispatch/dashboard", icon: LayoutDashboard },
@@ -37,12 +40,35 @@ const allowedPaths: Record<string, string[]> = {
 export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false }: { userRole?: string, isSuperAdmin?: boolean }) {
   return (
     <Suspense fallback={<div className="w-64 bg-white border-r border-slate-100/60 h-screen fixed hidden md:block"></div>}>
-      <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} />
+      <div className="flex flex-col w-64 bg-white border-r border-slate-100/60 text-slate-600 h-screen fixed top-0 left-0 hidden md:flex z-50 shadow-[4px_0_24px_rgba(0,0,0,0.01)]">
+        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} />
+      </div>
     </Suspense>
   );
 }
 
-function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperAdmin: boolean }) {
+export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false }: { userRole?: string, isSuperAdmin?: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      {/* @ts-ignore */}
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden text-slate-500 hover:text-orange-500 mr-2">
+          <Menu className="w-6 h-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
+        <Suspense fallback={<div className="w-full h-full bg-white"></div>}>
+           <div className="flex flex-col w-full bg-white text-slate-600 h-full">
+             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} onNavItemClick={() => setOpen(false)} />
+           </div>
+        </Suspense>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function SidebarContent({ userRole, isSuperAdmin, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, onNavItemClick?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -58,7 +84,7 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
   }
 
   return (
-    <div className="flex flex-col w-64 bg-white border-r border-slate-100/60 text-slate-600 h-screen fixed top-0 left-0 hidden md:flex z-50 shadow-[4px_0_24px_rgba(0,0,0,0.01)]">
+    <>
       {/* Brand */}
       <div className="flex h-[72px] items-center px-6 border-b border-slate-100/60">
         <div className="flex items-center gap-2.5">
@@ -85,7 +111,7 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
 
           if (!isAllowed) {
              return (
-               <span key={item.name} className="flex items-center px-3 py-2 text-[13px] font-medium rounded-md text-zinc-600 opacity-50 cursor-not-allowed">
+               <span key={item.name} className="flex items-center px-4 py-3 text-[13px] font-medium rounded-xl text-zinc-600 opacity-50 cursor-not-allowed">
                  <Icon className="flex-shrink-0 w-4 h-4 mr-3 text-zinc-600" />
                  {item.name}
                </span>
@@ -96,7 +122,7 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
           const safeId = `tour-nav-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
 
           return (
-            <Link key={item.name} href={targetHref} id={safeId} className="block group">
+            <Link key={item.name} href={targetHref} id={safeId} className="block group" onClick={onNavItemClick}>
               <span
                 className={`flex items-center px-4 py-3 text-[13px] font-semibold rounded-xl transition-all relative ${
                   isActive
@@ -115,6 +141,6 @@ function SidebarContent({ userRole, isSuperAdmin }: { userRole: string, isSuperA
           );
         })}
       </nav>
-    </div>
+    </>
   );
 }
