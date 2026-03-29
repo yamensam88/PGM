@@ -8,6 +8,7 @@ import { Users, Plus, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateClientForm } from "@/components/forms/CreateClientForm";
 import { CreateRateCardForm, DeleteRateCardForm, EditRateCardForm } from "@/components/forms/RateCardForms";
+import { ClientActions } from "@/components/forms/ClientActions";
 
 export function ClientRateCardsManager({ clients }: { clients: any[] }) {
   return (
@@ -40,14 +41,18 @@ export function ClientRateCardsManager({ clients }: { clients: any[] }) {
         ) : (
           <div className="space-y-4">
             {clients.map(client => (
-              <div key={client.id} className="border border-zinc-200 dark:border-slate-300 rounded-lg overflow-hidden bg-zinc-50 dark:bg-slate-50">
+              <div key={client.id} className={`border border-zinc-200 dark:border-slate-300 rounded-lg overflow-hidden transition-all ${client.status === 'suspended' ? 'bg-slate-50 opacity-75 grayscale-[20%]' : 'bg-zinc-50 dark:bg-slate-50'}`}>
                 <div className="bg-white dark:bg-white px-4 py-3 flex justify-between items-center border-b border-zinc-200 dark:border-slate-200">
                   <div>
-                    <h3 className="font-bold text-zinc-900">{client.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`font-bold ${client.status === 'suspended' ? 'text-slate-500 line-through' : 'text-zinc-900'}`}>{client.name}</h3>
+                      {client.status === 'suspended' && <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200 scale-90">Suspendu</Badge>}
+                    </div>
                     {client.client_code && <span className="text-xs text-slate-500">{client.client_code}</span>}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>{client.rate_cards?.length || 0} grilles</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-slate-500 hidden sm:inline-block">{client.rate_cards?.length || 0} grilles</span>
+                    <ClientActions clientId={client.id} clientName={client.name} currentStatus={client.status || "active"} />
                   </div>
                 </div>
                 

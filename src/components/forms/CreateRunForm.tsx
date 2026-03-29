@@ -64,7 +64,7 @@ export function CreateRunForm({
           <Label htmlFor="client_id">Client / Commanditaire</Label>
           <select id="client_id" name="client_id" required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
              <option value="">Sélectionner un client</option>
-             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+             {clients.filter(c => c.status !== 'suspended').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 

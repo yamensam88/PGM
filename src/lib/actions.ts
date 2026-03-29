@@ -2664,11 +2664,34 @@ export async function deleteClient(formData: FormData) {
       where: { id: client_id, organization_id: orgId }
     });
 
-    revalidatePath("/dispatch/runs");
     revalidatePath("/dispatch/settings");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur deleteClient:", error);
+    return { success: false, error: error.message || "Erreur serveur" };
+  }
+}
+
+export async function toggleClientStatus(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const client_id = formData.get("client_id") as string;
+    const new_status = formData.get("status") as string;
+    if (!client_id || !new_status) throw new Error("ID du client et statut requis.");
+
+    await prisma.client.update({
+      where: { id: client_id, organization_id: orgId },
+      data: { status: new_status }
+    });
+
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur toggleClientStatus:", error);
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
