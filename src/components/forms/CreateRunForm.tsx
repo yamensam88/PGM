@@ -28,6 +28,7 @@ export function CreateRunForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedClient, setSelectedClient] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,9 +62,19 @@ export function CreateRunForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="client_id">Client / Commanditaire</Label>
-          <select id="client_id" name="client_id" required className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
+          <select id="client_id" name="client_id" required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
              <option value="">Sélectionner un client</option>
              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="rate_card_id">Grille Tarifaire</Label>
+          <select id="rate_card_id" name="rate_card_id" required disabled={!selectedClient} className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
+             <option value="">Sélectionner une grille</option>
+             {rateCards.filter((rc: any) => rc.client_id === selectedClient).map((rc: any) => (
+                <option key={rc.id} value={rc.id}>{rc.name}</option>
+             ))}
           </select>
         </div>
 

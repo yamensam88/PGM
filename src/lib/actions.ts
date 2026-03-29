@@ -2607,6 +2607,7 @@ export async function createClient(formData: FormData) {
     });
 
     revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/settings");
     return { success: true, clientId: newClient.id };
   } catch (error: any) {
     console.error("Erreur createClient:", error);
@@ -2664,6 +2665,7 @@ export async function deleteClient(formData: FormData) {
     });
 
     revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/settings");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur deleteClient:", error);
@@ -2952,5 +2954,73 @@ export async function archiveVehicle(vehicleId: string) {
   } catch (error: any) {
     console.error("Erreur archiveVehicle:", error);
     return { success: false, error: error.message || "Erreur lors de l'archivage." };
+  }
+}
+
+/**
+ * Server Action: Create Rate Card
+ */
+export async function createRateCard(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const client_id = formData.get("client_id") as string;
+    const name = formData.get("name") as string;
+    const unit_price_package = Number(formData.get("unit_price_package") || 0);
+    const unit_price_stop = Number(formData.get("unit_price_stop") || 0);
+    const base_daily_flat = Number(formData.get("base_daily_flat") || 0);
+    const bonus_relay_point = Number(formData.get("bonus_relay_point") || 0);
+
+    if (!client_id || !name) throw new Error("Client et Nom requis.");
+
+    await prisma.rateCard.create({
+      data: {
+        organization_id: orgId,
+        client_id,
+        name,
+        unit_price_package,
+        unit_price_stop,
+        base_daily_flat,
+        bonus_relay_point,
+        status: "active"
+      }
+    });
+
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur createRateCard:", error);
+    return { success: false, error: error.message || "Erreur serveur" };
+  }
+}
+
+/**
+ * Server Action: Delete Rate Card
+ */
+export async function deleteRateCard(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const id = formData.get("id") as string;
+    if (!id) throw new Error("ID requis.");
+
+    const runsCount = await prisma.dailyRun.count({ where: { rate_card_id: id } });
+    if (runsCount > 0) {
+      throw new Error("Impossible de supprimer cette grille car des tournées l'utilisent.");
+    }
+
+    await prisma.rateCard.delete({
+      where: { id, organization_id: orgId }
+    });
+
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur deleteRateCard:", error);
+    return { success: false, error: error.message || "Erreur serveur" };
   }
 }

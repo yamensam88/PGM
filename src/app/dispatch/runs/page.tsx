@@ -14,9 +14,8 @@ import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
 import { VehicleAppointmentCell } from "@/components/dashboard/VehicleAppointmentCell";
 import { CreateVehicleForm } from "@/components/forms/CreateVehicleForm";
 import { CreateRunForm } from "@/components/forms/CreateRunForm";
-import { CreateClientForm } from "@/components/forms/CreateClientForm";
 import { CreateZoneForm } from "@/components/forms/CreateZoneForm";
-import { DeleteClientForm } from "@/components/forms/DeleteClientForm";
+import { DeleteZoneForm } from "@/components/forms/DeleteZoneForm";
 import { VehicleRowActions } from "@/components/dashboard/VehicleRowActions";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
@@ -248,33 +247,17 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
               <DateRangePicker />
               
               <Dialog>
-                <DialogTrigger className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-200 shadow-sm gap-2 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-zinc-50">
-                  <Plus className="h-4 w-4" />
-                  Client
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Créer un Nouveau Client</DialogTitle>
-                    <DialogDescription>
-                      Ajoutez un nouveau client à votre organisation.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <CreateClientForm />
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
                 <DialogTrigger className="inline-flex h-9 w-9 items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 shadow-sm dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:border-red-800/50 dark:text-red-400">
                   <Trash2 className="h-4 w-4" />
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Supprimer un Client ou une Zone</DialogTitle>
+                    <DialogTitle>Supprimer une Zone</DialogTitle>
                     <DialogDescription>
                       Cette action est irréversible. Les entités liées à des tournées ne peuvent pas être supprimées.
                     </DialogDescription>
                   </DialogHeader>
-                  <DeleteClientForm clients={JSON.parse(JSON.stringify(clients))} zones={JSON.parse(JSON.stringify(zones))} />
+                  <DeleteZoneForm zones={JSON.parse(JSON.stringify(zones))} />
                 </DialogContent>
               </Dialog>
 
