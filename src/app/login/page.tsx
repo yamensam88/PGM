@@ -135,6 +135,10 @@ export default function LoginPage() {
             <LoginForm />
           </Suspense>
         </div>
+        
+        <div className="mt-8 text-center text-xs font-medium tracking-wide text-slate-500">
+          Développé et créé par <span className="text-slate-400">SR</span>
+        </div>
       </div>
     </div>
   );
