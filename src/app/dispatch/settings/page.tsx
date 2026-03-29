@@ -12,6 +12,7 @@ import { Building2, Key, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateUserForm } from "@/components/forms/CreateUserForm";
 import { SettingsForms } from "@/components/settings/SettingsForms";
+import { ClientRateCardsManager } from "@/components/settings/ClientRateCardsManager";
 import { DeleteUserButton } from "@/components/settings/DeleteUserButton";
 import prisma from "@/lib/prisma";
 
@@ -28,21 +29,11 @@ export default async function SettingsPage() {
     where: { id: session.user.organization_id }
   });
 
-  const rawDefaultClient = await prisma.client.findFirst({
+  const clients = await prisma.client.findMany({
     where: { organization_id: session.user.organization_id },
-    include: { rate_cards: true }
+    include: { rate_cards: true },
+    orderBy: { name: 'asc' }
   });
-
-  const defaultClient = rawDefaultClient ? {
-    ...rawDefaultClient,
-    rate_cards: rawDefaultClient.rate_cards.map(r => ({
-      ...r,
-      base_daily_flat: r.base_daily_flat ? Number(r.base_daily_flat) : 0,
-      unit_price_package: r.unit_price_package ? Number(r.unit_price_package) : 0,
-      unit_price_stop: r.unit_price_stop ? Number(r.unit_price_stop) : 0,
-      bonus_relay_point: r.bonus_relay_point ? Number(r.bonus_relay_point) : 0,
-    }))
-  } : undefined;
 
   const users = await prisma.user.findMany({
     where: { 
@@ -147,10 +138,9 @@ export default async function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="finances" className="space-y-4">
-             {/* We delegate the finances tab forms to a Client Component to handle state and toasts */}
+             <ClientRateCardsManager clients={JSON.parse(JSON.stringify(clients))} />
              <SettingsForms 
                initialSettings={organization?.settings_json} 
-               initialRateCard={defaultClient?.rate_cards?.[0]} 
              />
           </TabsContent>
 
