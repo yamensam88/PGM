@@ -1761,6 +1761,12 @@ export async function saveUnifiedDelivery(formData: FormData) {
 
     const driver = await prisma.driver.findUnique({ where: { id: driverId } });
     const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+    
+    let existingRun = null;
+    if (runId) {
+      existingRun = await prisma.dailyRun.findUnique({ where: { id: runId } });
+    }
+
     let client = null;
     if (client_id) {
        client = await prisma.client.findUnique({ where: { id: client_id }, include: { rate_cards: true }});
@@ -1770,10 +1776,15 @@ export async function saveUnifiedDelivery(formData: FormData) {
     if (!client) throw new Error("Un client doit être sélectionné ou exister dans l'organisation");
 
     // Financial Maths Injection
-    const base_flat = Number(client?.rate_cards?.[0]?.base_daily_flat || 0);
-    const price_stop = Number(client?.rate_cards?.[0]?.unit_price_stop || 0);
-    const price_parcel = Number(client?.rate_cards?.[0]?.unit_price_package || 0);
-    const bonus_relay = Number(client?.rate_cards?.[0]?.bonus_relay_point || 0);
+    let rateCardToUse = client?.rate_cards?.[0];
+    if (existingRun && existingRun.rate_card_id) {
+       rateCardToUse = await prisma.rateCard.findUnique({ where: { id: existingRun.rate_card_id } }) || rateCardToUse;
+    }
+
+    const base_flat = Number(rateCardToUse?.base_daily_flat || 0);
+    const price_stop = Number(rateCardToUse?.unit_price_stop || 0);
+    const price_parcel = Number(rateCardToUse?.unit_price_package || 0);
+    const bonus_relay = Number(rateCardToUse?.bonus_relay_point || 0);
     
     // Revenue definition
     const billed_parcels = totalLoaded + relay;
