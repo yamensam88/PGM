@@ -4,14 +4,13 @@ import { Bell, Ban, Lock } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 export default async function DriverLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   
-  if (session?.user && ['admin', 'owner', 'dispatcher', 'manager'].includes(session.user.role as string)) {
-     redirect("/dispatch/dashboard");
-  }
+  const isExploitation = session?.user && ['admin', 'owner', 'dispatcher', 'manager'].includes(session.user.role as string);
 
   const orgId = session?.user?.organization_id;
 
@@ -48,6 +47,11 @@ export default async function DriverLayout({ children }: { children: React.React
            <span className="font-bold text-zinc-900 tracking-tight text-lg">Driver</span>
         </div>
         <div className="flex items-center gap-3">
+           {isExploitation && (
+             <Link href="/dispatch/dashboard" className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1.5 rounded-full border border-blue-200 flex items-center gap-1 shadow-sm whitespace-nowrap">
+               <ChevronLeft className="w-3 h-3" /> Exploit.
+             </Link>
+           )}
            {!isLocked && (
              <button className="text-zinc-400 hover:text-zinc-800 transition-colors p-2 relative bg-zinc-50 rounded-full border border-zinc-100">
                <Bell className="w-[18px] h-[18px]" />
