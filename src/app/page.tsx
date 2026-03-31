@@ -13,8 +13,14 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030712]/80 backdrop-blur-md">
          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-white px-3 py-1.5 rounded-xl">
-               <img src="/logo.png" alt="PGM Logo" className="h-8 w-auto object-contain" />
+            <div className="flex items-center gap-2.5">
+               <div className="w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center p-0.5">
+                  <img src="/logo.png" alt="PGM Icon" className="w-full h-full object-contain" />
+               </div>
+               <div className="flex flex-col">
+                 <span className="text-xl font-extrabold tracking-tight text-white leading-none">PGM</span>
+                 <span className="text-[9px] text-zinc-400 font-medium tracking-widest mt-1">PILOTAGE • GESTION • MAÎTRISE</span>
+               </div>
             </div>
             <div className="flex items-center gap-4">
                <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">

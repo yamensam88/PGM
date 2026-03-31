@@ -113,9 +113,17 @@ export default function LoginPage() {
       </Link>
       <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center mb-6">
         <div className="flex flex-col items-center justify-center">
-          <div className="flex flex-col items-center justify-center mb-6">
-            <img src="/logo.png" alt="PGM Logo" className="h-16 w-auto object-contain" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center border border-slate-100 p-1">
+               <img src="/logo.png" alt="PGM Icon" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-4xl font-extrabold tracking-tight text-[#0A2540]">
+              PGM
+            </span>
           </div>
+          <p className="mt-2 text-sm font-bold text-[#ea580c] tracking-wider uppercase">
+            Pilotage • Gestion • Maîtrise
+          </p>
           <p className="mt-2 text-xs text-slate-500 text-center max-w-xs">
             Pilotez et maîtrisez votre activité transport en temps réel
           </p>
