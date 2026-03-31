@@ -46,7 +46,7 @@ export default function LandingPage() {
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-tight md:leading-[1.1]">
               Ne pilotez plus à l'<br className="block md:hidden" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 inline-block pb-2 pt-2 md:pt-0">aveugle.</span>
+              <span className="text-orange-500 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-orange-400 md:to-red-500 inline-block pb-2 pt-2 md:pt-0">aveugle.</span>
             </h1>
 
             <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-10 leading-relaxed font-light space-y-4">
