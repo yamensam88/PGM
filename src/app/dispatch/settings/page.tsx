@@ -14,6 +14,7 @@ import { CreateUserForm } from "@/components/forms/CreateUserForm";
 import { SettingsForms } from "@/components/settings/SettingsForms";
 import { ClientRateCardsManager } from "@/components/settings/ClientRateCardsManager";
 import { DeleteUserButton } from "@/components/settings/DeleteUserButton";
+import { ChangeUserPasswordButton } from "@/components/settings/ChangeUserPasswordButton";
 import prisma from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
@@ -129,6 +130,10 @@ export default async function SettingsPage() {
                            user.role === 'hr' ? 'RH' :
                            user.role === 'finance' ? 'Finance' : user.role}
                         </Badge>
+                        <ChangeUserPasswordButton 
+                           userId={user.id} 
+                           userName={user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Utilisateur'} 
+                        />
                         <DeleteUserButton userId={user.id} disabled={user.email === session.user?.email} />
                       </div>
                    </div>

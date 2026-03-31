@@ -489,6 +489,39 @@ export async function deleteAdminUser(userId: string) {
 }
 
 /**
+ * Server Action: Update Admin/HR/Dispatch User Password
+ */
+export async function updateAdminUserPassword(userId: string, newPasswordStr: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+
+    if (!userId || !newPasswordStr || newPasswordStr.trim() === "") {
+       throw new Error("Mot de passe invalide.");
+    }
+
+    const targetUser = await prisma.user.findFirst({
+       where: { id: userId, organization_id: orgId }
+    });
+
+    if (!targetUser) throw new Error("Utilisateur introuvable.");
+
+    const hashedPassword = await bcrypt.hash(newPasswordStr, 10);
+
+    await prisma.user.update({
+       where: { id: userId },
+       data: { password_hash: hashedPassword }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateAdminUserPassword:", error);
+    return { success: false, error: error.message || "Erreur lors de la modification du mot de passe." };
+  }
+}
+
+/**
  * Server Action: Delete Driver
  */
 export async function deleteDriver(driverId: string) {
