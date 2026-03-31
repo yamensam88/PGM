@@ -28,9 +28,6 @@ export default async function DriverProfilePage() {
     include: {
       hr_events: {
         where: { event_type: { in: ['vacation', 'sick_leave'] } }
-      },
-      bonuses: {
-        where: { month: { equals: now.getMonth() + 1 }, year: { equals: now.getFullYear() } }
       }
     }
   });
@@ -39,7 +36,7 @@ export default async function DriverProfilePage() {
 
   const vacationsTaken = targetDriver.hr_events.filter(e => e.event_type === 'vacation').length;
   const leaveBalance = Math.max(0, 25 - (vacationsTaken * 5)); // Roughly 25 days / yr 
-  const monthlyBonus = targetDriver.bonuses[0];
+  const monthlyBonus = Number(targetDriver.base_bonus_amount || 0);
 
   return (
     <main className="flex-1 w-full pt-2">
@@ -71,8 +68,8 @@ export default async function DriverProfilePage() {
           <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-3">
             <Award className="w-5 h-5" />
           </div>
-          <span className="text-2xl font-black text-zinc-900 mb-1">{monthlyBonus?.status === 'granted' ? monthlyBonus.amount : '0'} €</span>
-          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Prime Acquise</span>
+          <span className="text-2xl font-black text-zinc-900 mb-1">{monthlyBonus} €</span>
+          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Base Prime</span>
         </div>
       </div>
 
