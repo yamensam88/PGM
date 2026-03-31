@@ -63,25 +63,9 @@ export default async function DriverProfilePage() {
           <span className="text-2xl font-black text-zinc-900 mb-1">{leaveBalance}</span>
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Congés (J)</span>
         </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100 flex flex-col items-center text-center">
-          <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-3">
-            <Award className="w-5 h-5" />
-          </div>
-          <span className="text-2xl font-black text-zinc-900 mb-1">{monthlyBonus} €</span>
-          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Base Prime</span>
-        </div>
       </div>
 
-      {/* Info Card */}
-      <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100 mb-6">
-        <h4 className="font-bold text-blue-900 mb-2 text-sm flex items-center gap-2">
-          <CreditCard className="w-4 h-4" /> Coût de Base
-        </h4>
-        <p className="text-blue-800/80 text-[13px] leading-relaxed">
-          Votre Taux de coût de base est fixé à <strong>{Number(targetDriver.daily_base_cost).toFixed(2)} €/Jour</strong> pour la rentabilité analytique des tournées PGM.
-        </p>
-      </div>
+
     </main>
   );
 }
