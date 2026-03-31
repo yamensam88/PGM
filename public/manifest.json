@@ -2,7 +2,7 @@
   "name": "PGM Transport",
   "short_name": "PGM App",
   "description": "Interface mobile exploitant pour PGM",
-  "start_url": "/driver",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f8f9fc",
   "theme_color": "#ea580c",
