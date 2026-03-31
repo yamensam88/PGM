@@ -33,18 +33,23 @@ export default function LandingPage() {
             {/* Soft background glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-orange-500/20 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-            <Badge className="mb-6 bg-white/5 text-orange-400 border-white/10 px-4 py-1.5 font-semibold tracking-wide shadow-none uppercase text-xs" variant="outline">
-              🚀 La Révolution du Dernier Kilomètre
+            <Badge className="mb-6 bg-white/5 text-orange-400 border-white/10 px-4 py-1.5 font-semibold tracking-wide shadow-none uppercase text-xs gap-2 flex items-center w-fit mx-auto inline-flex" variant="outline">
+              <span className="relative flex h-2 w-2 shadow-[0_0_10px_rgba(249,115,22,0.8)]"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span></span>
+              Né de l'expérience terrain
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-[1.1]">
-              L'application métier pour <br className="hidden md:block"/> 
-              vos <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">flottes de livraison.</span>
+              Ne pilotez plus à l'<span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">aveugle.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-              Fini les tableurs chaotiques et la navigation à vue. PGM unifie toutes vos données sur une seule plateforme intelligente pour calculer votre rentabilité exacte, traquer les fraudes et piloter vos effectifs RH.
-            </p>
+            <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-10 leading-relaxed font-light space-y-4">
+              <p>
+                L'idée de PGM part d'un constat de dirigeant : <strong>« Je pilotais à l'aveugle, je gérais en mode ambulancier, je subissais la situation au lieu de la maîtriser. »</strong>
+              </p>
+              <p className="text-base md:text-lg">
+                Volumes de colis explosifs, gestion des absences, sinistres des véhicules... Le quotidien vous happe. Plus le temps de calculer sa rentabilité réelle, ni d'avoir un discours juste et factuel avec chaque chauffeur. <strong className="text-zinc-200">PGM a été créé pour arrêter de subir et enfin maîtriser (Pilotage • Gestion • Maîtrise).</strong>
+              </p>
+            </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <Link href="/register" className="h-14 px-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(249,115,22,0.5)]">
