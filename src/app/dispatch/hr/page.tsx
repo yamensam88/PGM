@@ -21,6 +21,7 @@ import { EditGlobalCostForm } from "@/components/forms/EditGlobalCostForm";
 import { EditEmployeeDialog } from "@/components/hr/EditEmployeeDialog";
 import { EditBonusForm } from "@/components/forms/EditBonusForm";
 import { BonusActions } from "@/components/hr/BonusActions";
+import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +111,27 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
      return sum + (d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33));
   }, 0);
   const dailyPayrollBase = estimatedMonthlyPayroll / 30.44;
+
+  const calendarEvents = drivers.flatMap(d => (d as any).hr_events?.map((e: any) => {
+     let color = "#3b82f6";
+     let title = d.first_name + " " + d.last_name;
+     if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
+     else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
+     else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
+     else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
+
+     const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+     endDate.setDate(endDate.getDate() + 1); // FullCalendar exclusive end borders need to encompass the next day for full day events
+
+     return {
+        id: e.id,
+        title: title,
+        start: new Date(e.start_date).toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        allDay: true,
+        backgroundColor: color,
+     };
+  }) || []);
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] text-slate-800 p-6 md:p-8 font-sans antialiased">
@@ -261,10 +283,15 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                 <TabsTrigger value="directory" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Suivi Présence & Effectif</TabsTrigger>
                 <TabsTrigger value="admin" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Administratif & Paie</TabsTrigger>
                 <TabsTrigger value="absences" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Congés & Incidents</TabsTrigger>
+                <TabsTrigger value="planning" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Planning Chauffeurs</TabsTrigger>
                 <TabsTrigger value="primes" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Droit Prime</TabsTrigger>
                 <TabsTrigger value="archives" className="text-xs shrink-0 data-[state=active]:bg-[#27272a] data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-md transition-all">Anciens Salariés</TabsTrigger>
               </TabsList>
            </div>
+
+           <TabsContent value="planning" className="space-y-4">
+              <GlobalCalendar events={calendarEvents} />
+           </TabsContent>
 
            <TabsContent value="directory" className="space-y-4">
               <Card className="border-slate-200 bg-white shadow-none overflow-hidden rounded-xl">

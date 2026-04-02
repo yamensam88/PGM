@@ -23,6 +23,7 @@ import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { DriversTable } from "@/components/dashboard/DriversTable";
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
+import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 
 export const dynamic = 'force-dynamic';
 
@@ -150,8 +151,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
     include: {
       hr_events: {
-        where: { event_type: { in: ["vacation", "sick_leave", "presence"] } },
-        select: { start_date: true, end_date: true, event_type: true }
+        where: { event_type: { in: ["vacation", "sick_leave", "presence", "absence"] } },
+        select: { id: true, start_date: true, end_date: true, event_type: true }
       },
       financial_entries: {
         where: { category: { in: ["maintenance_cost", "damage_cost"] }, entry_date: { gte: startDate, lte: endDate } },
@@ -188,6 +189,27 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   }));
 
   const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
+
+  const calendarEvents = rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
+     let color = "#3b82f6";
+     let title = d.first_name + " " + d.last_name;
+     if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
+     else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
+     else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
+     else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
+
+     const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+     endDate.setDate(endDate.getDate() + 1);
+
+     return {
+        id: e.id,
+        title: title,
+        start: new Date(e.start_date).toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        allDay: true,
+        backgroundColor: color,
+     };
+  }));
   
   const manuallyPresentDriversId = rawDrivers.filter(d => {
     return d.hr_events.some((e: any) => 
@@ -448,10 +470,15 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <TabsList>
               <TabsTrigger value="runs" className="text-base px-6">Tournées (Par Date)</TabsTrigger>
+              <TabsTrigger value="planning" className="text-base px-6">Planning & Disponibilité</TabsTrigger>
               <TabsTrigger value="drivers" className="text-base px-6">Chauffeurs</TabsTrigger>
               <TabsTrigger value="vehicles" className="text-base px-6">Flotte de Véhicules</TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="planning" className="space-y-6 mt-0">
+             <GlobalCalendar events={calendarEvents} />
+          </TabsContent>
 
           <TabsContent value="runs" className="space-y-6 mt-0">
             {/* Global Runs Table */}
