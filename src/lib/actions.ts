@@ -177,6 +177,7 @@ export async function createDriver(formData: FormData) {
     revalidatePath("/dispatch/drivers");
     revalidatePath("/dispatch/hr");
     revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
     
   } catch (error: any) {
@@ -398,6 +399,7 @@ export async function updateEmployee(formData: FormData) {
     revalidatePath("/dispatch/hr");
     revalidatePath("/dispatch/runs");
     revalidatePath("/dispatch/drivers");
+    revalidatePath("/dispatch/dashboard");
     
     return { success: true };
   } catch (error: any) {
@@ -569,6 +571,7 @@ export async function deleteDriver(driverId: string) {
     revalidatePath("/dispatch/runs");
     revalidatePath("/dispatch/hr");
     revalidatePath("/dispatch/drivers");
+    revalidatePath("/dispatch/dashboard");
     
     return { success: true };
   } catch (error: any) {
@@ -604,6 +607,7 @@ export async function updateDriverNetSalary(formData: FormData) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateDriverNetSalary:", error);
@@ -643,6 +647,7 @@ export async function updateDriverGlobalCost(formData: FormData) {
 
     revalidatePath("/dispatch/hr");
     revalidatePath("/dispatch/dashboard"); // Since cost impacts dash
+    revalidatePath("/dispatch/runs");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateDriverGlobalCost:", error);
@@ -675,6 +680,7 @@ export async function updateDriverBonusAmount(formData: FormData) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateDriverBonusAmount:", error);
@@ -743,6 +749,7 @@ export async function toggleMonthlyBonus(formData: FormData) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur toggleMonthlyBonus:", error);
@@ -1003,6 +1010,8 @@ export async function finishRun(formData: FormData) {
     console.log(`▶ [finishRun] Succès. Revalidation des chemins.`);
     // Revalidate layout to update dispatch dashboard
     revalidatePath("/dispatch/dashboard");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/hr");
     revalidatePath(`/driver/runs/${runId}/finish`);
     
     return { success: true, message: "Tournée clôturée et calculs de marges appliqués." };
@@ -1094,6 +1103,7 @@ export async function reportIncident(formData: FormData) {
   });
 
   revalidatePath("/dispatch/dashboard");
+  revalidatePath("/dispatch/runs");
   revalidatePath(`/driver/runs/${runId}/incident`);
   
   return { success: true };
@@ -1158,7 +1168,8 @@ export async function startRun(formData: FormData) {
     });
 
     revalidatePath("/dispatch/dashboard");
-revalidatePath("/driver");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/driver");
     revalidatePath(`/driver/runs/${runId}/start`);
 
     return { success: true };
@@ -1701,6 +1712,7 @@ export async function addVehicle(formData: FormData) {
     });
 
     revalidatePath("/dispatch/vehicles");
+    revalidatePath("/dispatch/runs");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur addVehicle:", error);
@@ -1729,6 +1741,7 @@ export async function updateFuelPrice(formData: FormData) {
     });
 
     revalidatePath("/dispatch/analytics");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateFuelPrice:", error);
@@ -2264,6 +2277,8 @@ export async function recordDriverAbsence(formData: FormData) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur recordDriverAbsence:", error);
@@ -2332,6 +2347,8 @@ export async function updateDriverAbsence(formData: FormData) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateDriverAbsence:", error);
@@ -2358,6 +2375,8 @@ export async function deleteDriverAbsence(eventId: string) {
     });
 
     revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur deleteDriverAbsence:", error);
@@ -2586,6 +2605,8 @@ export async function updateGlobalSettings(formData: FormData) {
 
     revalidatePath("/dispatch/settings");
     revalidatePath("/dispatch/dashboard");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/analytics");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateGlobalSettings:", error);
@@ -2743,6 +2764,7 @@ export async function deleteClient(formData: FormData) {
     });
 
     revalidatePath("/dispatch/settings");
+    revalidatePath("/dispatch/runs");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur deleteClient:", error);
@@ -3019,6 +3041,7 @@ export async function updateRun(formData: FormData) {
 
     revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/hr");
     
     return { success: true };
   } catch (error: any) {
@@ -3149,6 +3172,8 @@ export async function createRateCard(formData: FormData) {
     });
 
     revalidatePath("/dispatch/settings");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/driver");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur createRateCard:", error);
@@ -3178,6 +3203,8 @@ export async function deleteRateCard(formData: FormData) {
     });
 
     revalidatePath("/dispatch/settings");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/driver");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur deleteRateCard:", error);
@@ -3215,6 +3242,8 @@ export async function updateRateCard(formData: FormData) {
     });
 
     revalidatePath("/dispatch/settings");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/driver");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur updateRateCard:", error);
