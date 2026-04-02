@@ -28,11 +28,52 @@ export function CreateRunForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [clientsData, setClientsData] = useState<any[]>([{
+    id: crypto.randomUUID(),
+    client_id: "",
+    rate_card_id: "",
+    direct_parcels: 0,
+    colis_collected: 0,
+    packages_delivered: 0,
+    packages_returned: 0,
+    packages_relay: 0
+  }]);
+
+  const addClient = () => {
+    setClientsData([...clientsData, {
+      id: crypto.randomUUID(),
+      client_id: "",
+      rate_card_id: "",
+      direct_parcels: 0,
+      colis_collected: 0,
+      packages_delivered: 0,
+      packages_returned: 0,
+      packages_relay: 0
+    }]);
+  };
+
+  const removeClient = (id: string) => {
+    if (clientsData.length === 1) return;
+    setClientsData(clientsData.filter(c => c.id !== id));
+  };
+
+  const updateClientField = (id: string, field: string, value: string | number) => {
+    setClientsData(clientsData.map(c => 
+      c.id === id ? { ...c, [field]: value } : c
+    ));
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    
+    // Validation pre-submit
+    const invalidClient = clientsData.find(c => !c.client_id || !c.rate_card_id);
+    if (invalidClient) {
+       setError("Veuillez sélectionner un client et une grille tarifaire pour chaque bloc.");
+       return;
+    }
+
     const formData = new FormData(e.currentTarget);
     
     startTransition(async () => {
@@ -53,40 +94,24 @@ export function CreateRunForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <input type="hidden" name="clients_data_json" value={JSON.stringify(clientsData)} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Ligne 1 */}
+        {/* Ligne 1 : Champs Globaux */}
         <div className="space-y-2">
           <Label htmlFor="date">Date de livraison prévue</Label>
           <Input id="date" name="date" type="date" required value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="client_id">Client / Commanditaire</Label>
-          <select id="client_id" name="client_id" required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
-             <option value="">Sélectionner un client</option>
-             {clients.filter(c => c.status !== 'suspended').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="rate_card_id">Grille Tarifaire</Label>
-          <select id="rate_card_id" name="rate_card_id" required disabled={!selectedClient} className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
-             <option value="">Sélectionner une grille</option>
-             {rateCards.filter((rc: any) => rc.client_id === selectedClient).map((rc: any) => (
-                <option key={rc.id} value={rc.id}>{rc.name}</option>
-             ))}
-          </select>
-        </div>
-
-        {/* Ligne 2 */}
-        <div className="space-y-2">
-          <Label htmlFor="zone_id">Zone de livraison</Label>
+          <Label htmlFor="zone_id">Zone de livraison commune</Label>
           <select id="zone_id" name="zone_id" required className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
              <option value="">Sélectionner une zone</option>
              {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
           </select>
         </div>
 
+        {/* Ligne 2 : Actifs */}
         <div className="space-y-2">
           <Label htmlFor="driver_id">Chauffeur Assigné</Label>
           <select id="driver_id" name="driver_id" required className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-200 dark:bg-[#f8f9fc] dark:text-zinc-50 dark:focus:ring-zinc-300">
@@ -103,7 +128,7 @@ export function CreateRunForm({
                 });
                 
                 if (isOnLeave) {
-                   return <option key={d.id} value={d.id}>⚠️ {d.first_name} {d.last_name} (En {isOnLeave.event_type === 'vacation' ? 'Congés' : 'Arrêt'})</option>;
+                   return <option key={d.id} value={d.id}>⚠️ {d.first_name} {d.last_name} (En {isOnLeave.event_type === 'vacation' ? 'Congés' : isOnLeave.event_type === 'sick_leave' ? 'Arrêt' : 'Absence'})</option>;
                 }
                 return <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>;
              })}
@@ -116,33 +141,70 @@ export function CreateRunForm({
              {vehicles.map(v => <option key={v.id} value={v.id}>{v.plate_number} ({v.category || "Standard"})</option>)}
           </select>
         </div>
+      </div>
 
-        {/* Section: Objectifs / Planification */}
-        <div className="col-span-1 md:col-span-2 mt-2 pt-4 border-t border-zinc-200 dark:border-slate-800">
-           <h3 className="text-lg font-bold text-zinc-900 mb-4">Planification / Bilan de la Tournée</h3>
-           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="direct_parcels" className="text-xs font-semibold text-slate-500 uppercase">Colis Prévus / Chargés</Label>
-                <Input id="direct_parcels" name="direct_parcels" type="number" required defaultValue="0" className="h-10" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="colis_collected" className="text-xs font-semibold text-slate-500 uppercase">Colis Collectés</Label>
-                <Input id="colis_collected" name="colis_collected" type="number" required defaultValue="0" className="h-10" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="packages_delivered" className="text-xs font-semibold text-slate-500 uppercase">Colis Livrés</Label>
-                <Input id="packages_delivered" name="packages_delivered" type="number" defaultValue="0" className="h-10" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="packages_returned" className="text-xs font-semibold text-slate-500 uppercase">Colis Retournés</Label>
-                <Input id="packages_returned" name="packages_returned" type="number" defaultValue="0" className="h-10" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="packages_relay" className="text-xs font-semibold text-slate-500 uppercase">Colis Relais</Label>
-                <Input id="packages_relay" name="packages_relay" type="number" defaultValue="0" className="h-10" />
-              </div>
-           </div>
-        </div>
+      {/* Section: Objectifs / Planification Multi-Clients */}
+      <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-slate-800">
+         <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-zinc-900">Clients de la Tournée</h3>
+            <Button type="button" onClick={addClient} variant="outline" size="sm" className="text-xs bg-slate-50 shadow-sm">+ Ajouter un client</Button>
+         </div>
+         
+         <div className="space-y-4">
+            {clientsData.map((clientData, index) => (
+               <div key={clientData.id} className="relative p-4 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800/10 transition-all">
+                  {clientsData.length > 1 && (
+                     <button type="button" onClick={() => removeClient(clientData.id)} className="absolute top-3 right-3 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 bg-red-50 rounded-md border border-red-100">
+                        X Retirer
+                     </button>
+                  )}
+                  <h4 className="text-xs font-bold text-blue-600 mb-3 uppercase tracking-wider">Client {index + 1}</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                     <div className="space-y-2">
+                        <Label className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Nom du Client <span className="text-red-500">*</span></Label>
+                        <select required value={clientData.client_id} onChange={(e) => updateClientField(clientData.id, "client_id", e.target.value)} className="flex h-9 w-full items-center rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-600">
+                           <option value="">Sélectionner</option>
+                           {clients.filter(c => c.status !== 'suspended').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                     </div>
+                     <div className="space-y-2">
+                        <Label className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Grille Tarifaire <span className="text-red-500">*</span></Label>
+                        <select required disabled={!clientData.client_id} value={clientData.rate_card_id} onChange={(e) => updateClientField(clientData.id, "rate_card_id", e.target.value)} className="flex h-9 w-full items-center rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-600 disabled:opacity-50">
+                           <option value="">Sélectionner</option>
+                           {rateCards.filter((rc: any) => rc.client_id === clientData.client_id).map((rc: any) => (
+                              <option key={rc.id} value={rc.id}>{rc.name}</option>
+                           ))}
+                        </select>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                     <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Prévus / Chargés</Label>
+                        <Input type="number" required value={clientData.direct_parcels} onChange={(e) => updateClientField(clientData.id, "direct_parcels", Number(e.target.value))} className="h-8 text-sm bg-white" />
+                     </div>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Collectés</Label>
+                        <Input type="number" required value={clientData.colis_collected} onChange={(e) => updateClientField(clientData.id, "colis_collected", Number(e.target.value))} className="h-8 text-sm bg-white" />
+                     </div>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Livrés</Label>
+                        <Input type="number" value={clientData.packages_delivered} onChange={(e) => updateClientField(clientData.id, "packages_delivered", Number(e.target.value))} className="h-8 text-sm bg-white" />
+                     </div>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Retournés</Label>
+                        <Input type="number" value={clientData.packages_returned} onChange={(e) => updateClientField(clientData.id, "packages_returned", Number(e.target.value))} className="h-8 text-sm bg-white" />
+                     </div>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Relais</Label>
+                        <Input type="number" value={clientData.packages_relay} onChange={(e) => updateClientField(clientData.id, "packages_relay", Number(e.target.value))} className="h-8 text-sm bg-white" />
+                     </div>
+                  </div>
+               </div>
+            ))}
+         </div>
+      </div>
         
         {/* Section: Clôture (Optionnelle) */}
         <div className="col-span-1 md:col-span-2 pt-2">
@@ -177,7 +239,7 @@ export function CreateRunForm({
            </div>
         </div>
 
-        </div>
+
 
       {error && (
         <div className="p-3 bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 text-sm text-red-700 dark:text-red-400">

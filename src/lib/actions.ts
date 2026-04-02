@@ -1158,7 +1158,7 @@ export async function startRun(formData: FormData) {
     });
 
     revalidatePath("/dispatch/dashboard");
-    revalidatePath("/driver");
+revalidatePath("/driver");
     revalidatePath(`/driver/runs/${runId}/start`);
 
     return { success: true };
@@ -1180,17 +1180,9 @@ export async function createRun(formData: FormData) {
 
   const driver_id = formData.get("driver_id") as string;
   const vehicle_id = formData.get("vehicle_id") as string;
-  const client_id = formData.get("client_id") as string;
   const zone_id = formData.get("zone_id") as string;
-  const rate_card_id = formData.get("rate_card_id") as string || undefined;
   const date_input = formData.get("date") as string;
   
-  const direct_parcels = Number(formData.get("direct_parcels") || 0);
-  const colis_collected = Number(formData.get("colis_collected") || 0);
-
-  const packages_delivered = Number(formData.get("packages_delivered") || 0);
-  const packages_returned = Number(formData.get("packages_returned") || 0);
-  const packages_relay = Number(formData.get("packages_relay") || 0);
   const km_start = Number(formData.get("km_start") || 0);
   const km_end = Number(formData.get("km_end") || 0);
   const fuel_liters = Number(formData.get("fuel_liters") || 0);
@@ -1199,188 +1191,230 @@ export async function createRun(formData: FormData) {
   const fuel_receipt = formData.get("fuel_receipt") as File | null;
   const markCompleted = formData.get("mark_completed") === "yes";
 
-  if (!driver_id || !vehicle_id || !client_id || !zone_id || !date_input) {
-    throw new Error("Veuillez remplir tous les champs obligatoires.");
+  if (!driver_id || !vehicle_id || !zone_id || !date_input) {
+    throw new Error("Veuillez remplir tous les champs obligatoires (date, zone, chauffeur, véhicule).");
+  }
+
+  const clientsDataJson = formData.get("clients_data_json") as string;
+  let clientsData: any[] = [];
+  if (clientsDataJson) {
+      clientsData = JSON.parse(clientsDataJson);
+  } else {
+      // Legacy fallback
+      clientsData = [{
+          client_id: formData.get("client_id") as string,
+          rate_card_id: formData.get("rate_card_id") as string || undefined,
+          direct_parcels: Number(formData.get("direct_parcels") || 0),
+          colis_collected: Number(formData.get("colis_collected") || 0),
+          packages_delivered: Number(formData.get("packages_delivered") || 0),
+          packages_returned: Number(formData.get("packages_returned") || 0),
+          packages_relay: Number(formData.get("packages_relay") || 0),
+      }];
+  }
+
+  if (clientsData.length === 0) {
+      throw new Error("Veuillez spécifier au moins un client.");
   }
 
   const localDate = new Date(date_input);
   const utcDate = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
 
-  const isCompleted = markCompleted || km_end > 0 || packages_delivered > 0;
+  // L'indicateur globaux de complétion
+  const isGlobalCompleted = markCompleted || km_end > 0;
+  
+  let isFirstIteration = true;
 
-  let revenue_calculated = 0;
-  let cost_driver = 0;
-  let cost_vehicle = 0;
-  let cost_fuel = 0;
-  let margin_net = 0;
-  let km_diff = 0;
-
-  if (isCompleted) {
-    const driver = await prisma.driver.findUnique({ where: { id: driver_id } });
-    const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicle_id } });
-    
-    let rateCard;
-    if (rate_card_id) {
-       rateCard = await prisma.rateCard.findUnique({ where: { id: rate_card_id } });
-    } else {
-       const client = await prisma.client.findUnique({ where: { id: client_id }, include: { rate_cards: true } });
-       rateCard = client?.rate_cards?.[0];
-    }
-
-    const base_flat = Number(rateCard?.base_daily_flat || 0);
-    const price_stop = Number(rateCard?.unit_price_stop || 0);
-    const price_parcel = Number(rateCard?.unit_price_package || 0);
-    const bonus_relay = Number(rateCard?.bonus_relay_point || 0);
-
-    const billed_parcels = direct_parcels + packages_relay;
-    revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * billed_parcels) + (bonus_relay * packages_relay);
-
-    // Filter double counting for createRun
-    const startOfDay = new Date(utcDate);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(utcDate);
-    endOfDay.setUTCHours(23, 59, 59, 999);
-
-    const priorDriverRuns = await prisma.dailyRun.count({
-      where: { driver_id: driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
-    });
-    cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
-
-    const priorVehicleRuns = await prisma.dailyRun.count({
-      where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
-    });
-    const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
-    km_diff = Math.max(0, km_end - km_start);
-    const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
-    cost_vehicle = base_fleet_cost + variable_fleet_cost;
-    
-    if (fuel_liters > 0) {
-      const org = await prisma.organization.findUnique({ where: { id: orgId } });
-      const actual_fuel_price = fuel_price ? fuel_price : (org?.settings_json ? ((org.settings_json as any).fuel_price_per_liter || 1.80) : 1.80);
-      cost_fuel = fuel_liters * actual_fuel_price;
-    }
-    
-    margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
-  }
-
-  const newRun = await prisma.dailyRun.create({
-    data: {
-      organization_id: orgId,
-      driver_id,
-      vehicle_id,
-      client_id,
-      zone_id,
-      rate_card_id: rate_card_id || null,
-      date: utcDate,
-      status: isCompleted ? 'completed' : 'planned',
+  for (const clientRow of clientsData) {
+      const client_id = clientRow.client_id;
+      const rate_card_id = clientRow.rate_card_id || undefined;
+      const direct_parcels = Number(clientRow.direct_parcels || 0);
+      const colis_collected = Number(clientRow.colis_collected || 0);
       
-      packages_loaded: direct_parcels,
-      stops_planned: colis_collected,
-      packages_delivered: isCompleted ? packages_delivered : null,
-      packages_returned: isCompleted ? packages_returned : null,
-      packages_relay: isCompleted ? packages_relay : null,
-      stops_completed: isCompleted ? colis_collected : null,
-      km_start: isCompleted ? km_start : null,
-      km_end: isCompleted ? km_end : null,
-      km_total: isCompleted ? km_diff : null,
-      fuel_consumed_liters: isCompleted ? fuel_liters : null,
-      return_time: isCompleted ? new Date() : null,
-      
-      revenue_calculated: isCompleted ? revenue_calculated : null,
-      cost_driver: isCompleted ? cost_driver : null,
-      cost_vehicle: isCompleted ? cost_vehicle : null,
-      cost_fuel: isCompleted ? cost_fuel : null,
-      margin_net: isCompleted ? margin_net : null
-    }
-  });
+      const packages_delivered = Number(clientRow.packages_delivered || 0);
+      const packages_returned = Number(clientRow.packages_returned || 0);
+      const packages_relay = Number(clientRow.packages_relay || 0);
 
-  if (isCompleted) {
-      let receiptUrl = null;
-      if (fuel_receipt && fuel_receipt.size > 0) {
-         receiptUrl = `/uploads/${orgId}/${newRun.id}/${fuel_receipt.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      }
+      const isCompleted = isGlobalCompleted || packages_delivered > 0;
 
-      if (fuel_liters > 0) {
-         await prisma.fuelLog.create({
-            data: {
-              organization_id: orgId,
-              vehicle_id,
-              run_id: newRun.id,
-              total_cost: cost_fuel,
-              liters: fuel_liters,
-              price_per_liter: cost_fuel / fuel_liters,
-              fueled_at: new Date(),
-              receipt_url: receiptUrl
+      let revenue_calculated = 0;
+      let cost_driver = 0;
+      let cost_vehicle = 0;
+      let cost_fuel = 0;
+      let margin_net = 0;
+      let km_diff = 0;
+
+      if (isCompleted) {
+        const driver = await prisma.driver.findUnique({ where: { id: driver_id } });
+        const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicle_id } });
+        
+        let rateCard;
+        if (rate_card_id) {
+           rateCard = await prisma.rateCard.findUnique({ where: { id: rate_card_id } });
+        } else {
+           const client = await prisma.client.findUnique({ where: { id: client_id }, include: { rate_cards: true } });
+           rateCard = client?.rate_cards?.[0];
+        }
+
+        const base_flat = Number(rateCard?.base_daily_flat || 0);
+        const price_stop = Number(rateCard?.unit_price_stop || 0);
+        const price_parcel = Number(rateCard?.unit_price_package || 0);
+        const bonus_relay = Number(rateCard?.bonus_relay_point || 0);
+
+        const billed_parcels = direct_parcels + packages_relay;
+        revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * billed_parcels) + (bonus_relay * packages_relay);
+
+        // Filter double counting
+        const startOfDay = new Date(utcDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(utcDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
+        // We only charge the driver/fleet/fuel on the FIRST iteration of a multi-client submission
+        if (isFirstIteration) {
+            const priorDriverRuns = await prisma.dailyRun.count({
+              where: { driver_id: driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
+            });
+            cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
+
+            const priorVehicleRuns = await prisma.dailyRun.count({
+              where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
+            });
+            const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
+            km_diff = Math.max(0, km_end - km_start);
+            const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
+            cost_vehicle = base_fleet_cost + variable_fleet_cost;
+            
+            if (fuel_liters > 0) {
+              const org = await prisma.organization.findUnique({ where: { id: orgId } });
+              const actual_fuel_price = fuel_price ? fuel_price : (org?.settings_json ? ((org.settings_json as any).fuel_price_per_liter || 1.80) : 1.80);
+              cost_fuel = fuel_liters * actual_fuel_price;
             }
-         });
-      } // <-- Added closing brace here
-
-      const ledgerEntries: any[] = [
-          {
-            organization_id: orgId,
-            vehicle_id: vehicle_id,
-            driver_id: driver_id,
-            client_id: client_id,
-            run_id: newRun.id,
-            entry_type: 'revenue',
-            category: 'delivery_revenue',
-            amount: revenue_calculated,
-            entry_date: new Date(),
-            description: `Chiffre d'Affaires - Tournée ${newRun.id}`
-          },
-          {
-            organization_id: orgId,
-            vehicle_id: vehicle_id,
-            driver_id: driver_id,
-            run_id: newRun.id,
-            entry_type: 'cost',
-            category: 'driver_cost',
-            amount: cost_driver,
-            entry_date: new Date(),
-            description: `Coût Chauffeur - Tournée ${newRun.id}`
-          },
-          {
-            organization_id: orgId,
-            vehicle_id: vehicle_id,
-            run_id: newRun.id,
-            entry_type: 'cost',
-            category: 'vehicle_wear_cost',
-            amount: cost_vehicle,
-            entry_date: new Date(),
-            description: `Coût Véhicule (fixe + km) - Tournée ${newRun.id}`
-          }
-      ];
-
-      if (fuel_liters > 0) {
-          ledgerEntries.push({
-            organization_id: orgId,
-            vehicle_id: vehicle_id,
-            run_id: newRun.id,
-            entry_type: 'cost',
-            category: 'fuel_cost',
-            amount: cost_fuel,
-            entry_date: new Date(),
-            description: `Fuel end of run ${newRun.id}`
-          });
+        }
+        
+        margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
       }
 
-      await prisma.financialEntry.createMany({
-          data: ledgerEntries
-      });
-      
-      await prisma.eventsLog.create({
+      const newRun = await prisma.dailyRun.create({
         data: {
           organization_id: orgId,
-          run_id: newRun.id,
-          event_type: 'run_completed',
-          metadata_json: { km_end, stops_completed: colis_collected, revenue_calculated, cost_vehicle, cost_fuel, cost_driver, margin_net }
+          driver_id,
+          vehicle_id,
+          client_id,
+          zone_id,
+          rate_card_id: rate_card_id || null,
+          date: utcDate,
+          status: isCompleted ? 'completed' : 'planned',
+          
+          packages_loaded: direct_parcels,
+          stops_planned: colis_collected,
+          packages_delivered: isCompleted ? packages_delivered : null,
+          packages_returned: isCompleted ? packages_returned : null,
+          packages_relay: isCompleted ? packages_relay : null,
+          stops_completed: isCompleted ? colis_collected : null,
+          km_start: (isCompleted && isFirstIteration) ? km_start : null,
+          km_end: (isCompleted && isFirstIteration) ? km_end : null,
+          km_total: (isCompleted && isFirstIteration) ? km_diff : null,
+          fuel_consumed_liters: (isCompleted && isFirstIteration) ? fuel_liters : null,
+          return_time: isCompleted ? new Date() : null,
+          
+          revenue_calculated: isCompleted ? revenue_calculated : null,
+          cost_driver: isCompleted ? cost_driver : null,
+          cost_vehicle: isCompleted ? cost_vehicle : null,
+          cost_fuel: isCompleted ? cost_fuel : null,
+          margin_net: isCompleted ? margin_net : null
         }
       });
+
+      if (isCompleted) {
+          let receiptUrl = null;
+          // Uniquement l'associer au premier (fuelLog ne sera cree qu'une fois)
+          if (isFirstIteration && fuel_receipt && fuel_receipt.size > 0) {
+             receiptUrl = `/uploads/${orgId}/${newRun.id}/${fuel_receipt.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          }
+
+          if (isFirstIteration && fuel_liters > 0) {
+             await prisma.fuelLog.create({
+                data: {
+                  organization_id: orgId,
+                  vehicle_id,
+                  run_id: newRun.id,
+                  total_cost: cost_fuel,
+                  liters: fuel_liters,
+                  price_per_liter: cost_fuel / fuel_liters,
+                  fueled_at: new Date(),
+                  receipt_url: receiptUrl
+                }
+             });
+          }
+
+          const ledgerEntries: any[] = [
+              {
+                organization_id: orgId,
+                vehicle_id: vehicle_id,
+                driver_id: driver_id,
+                client_id: client_id,
+                run_id: newRun.id,
+                entry_type: 'revenue',
+                category: 'delivery_revenue',
+                amount: revenue_calculated,
+                entry_date: new Date(),
+                description: `Chiffre d'Affaires - Tournée ${newRun.id}`
+              }
+          ];
+
+          if (cost_driver > 0) {
+             ledgerEntries.push({
+                organization_id: orgId,
+                vehicle_id, driver_id, run_id: newRun.id,
+                entry_type: 'cost', category: 'driver_cost',
+                amount: cost_driver, entry_date: new Date(),
+                description: `Coût Chauffeur - Tournée ${newRun.id}`
+             });
+          }
+
+          if (cost_vehicle > 0) {
+             ledgerEntries.push({
+                organization_id: orgId,
+                vehicle_id, run_id: newRun.id,
+                entry_type: 'cost', category: 'vehicle_wear_cost',
+                amount: cost_vehicle, entry_date: new Date(),
+                description: `Coût Véhicule (fixe + km) - Tournée ${newRun.id}`
+             });
+          }
+    
+          if (isFirstIteration && fuel_liters > 0) {
+              ledgerEntries.push({
+                organization_id: orgId,
+                vehicle_id: vehicle_id,
+                run_id: newRun.id,
+                entry_type: 'cost',
+                category: 'fuel_cost',
+                amount: cost_fuel,
+                entry_date: new Date(),
+                description: `Fuel end of run ${newRun.id}`
+              });
+          }
+
+          await prisma.financialEntry.createMany({
+              data: ledgerEntries
+          });
+          
+          await prisma.eventsLog.create({
+            data: {
+              organization_id: orgId,
+              run_id: newRun.id,
+              event_type: 'run_completed',
+              metadata_json: { km_end: (isFirstIteration ? km_end : 0), stops_completed: colis_collected, revenue_calculated, cost_vehicle, cost_fuel, cost_driver, margin_net }
+            }
+          });
+      }
+      
+      isFirstIteration = false;
   }
 
   revalidatePath("/dispatch/dashboard");
   revalidatePath("/dispatch/runs");
-  return { success: true, runId: newRun.id };
+  return { success: true };
 }
 
 /**
