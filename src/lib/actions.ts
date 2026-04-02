@@ -2895,7 +2895,51 @@ export async function updateRun(formData: FormData) {
        const variable_fleet_cost = km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
        const cost_vehicle = base_fleet_cost + variable_fleet_cost;
 
-       const cost_fuel = Number(run.cost_fuel || 0); 
+       let cost_fuel = Number(run.cost_fuel || 0);
+       let final_fuel_liters = Number(run.fuel_consumed_liters || 0);
+
+       const formFuelLiters = formData.get("fuel_liters");
+       const formFuelPrice = formData.get("fuel_price");
+       
+       if (formFuelLiters !== null && formFuelLiters !== undefined && formFuelLiters !== "") {
+          final_fuel_liters = Number(formFuelLiters);
+          dataToUpdate.fuel_consumed_liters = final_fuel_liters;
+
+          if (final_fuel_liters > 0) {
+             const fuel_price_val = formFuelPrice ? Number(formFuelPrice) : null;
+             const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+             const actual_fuel_price = fuel_price_val ? fuel_price_val : (org?.settings_json ? ((org.settings_json as any).fuel_price_per_liter || 1.80) : 1.80);
+             
+             cost_fuel = final_fuel_liters * actual_fuel_price;
+             dataToUpdate.cost_fuel = cost_fuel;
+
+             const existingFuelLog = await prisma.fuelLog.findFirst({ where: { run_id: runId } });
+             if (existingFuelLog) {
+                operations.push(prisma.fuelLog.update({
+                   where: { id: existingFuelLog.id },
+                   data: { liters: final_fuel_liters, total_cost: cost_fuel, price_per_liter: actual_fuel_price }
+                }));
+             } else {
+                operations.push(prisma.fuelLog.create({
+                   data: {
+                     organization_id: orgId,
+                     vehicle_id: activeVehicleId,
+                     run_id: runId,
+                     total_cost: cost_fuel,
+                     liters: final_fuel_liters,
+                     price_per_liter: actual_fuel_price,
+                     fueled_at: run.return_time || new Date()
+                   }
+                }));
+             }
+          } else {
+             // If liters is explicitly set to 0, we can clear the fuel log and costs
+             cost_fuel = 0;
+             dataToUpdate.cost_fuel = 0;
+             operations.push(prisma.fuelLog.deleteMany({ where: { run_id: runId } }));
+          }
+       }
+
        const margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
 
        dataToUpdate.revenue_calculated = revenue_calculated;
@@ -2908,12 +2952,11 @@ export async function updateRun(formData: FormData) {
        operations.push(prisma.financialEntry.deleteMany({
           where: { 
              run_id: runId, 
-             category: { in: ['delivery_revenue', 'driver_cost', 'vehicle_wear_cost'] } 
+             category: { in: ['delivery_revenue', 'driver_cost', 'vehicle_wear_cost', 'fuel_cost'] } 
           }
        }));
 
-       operations.push(prisma.financialEntry.createMany({
-          data: [
+       const ledgerData: any[] = [
             {
                organization_id: orgId,
                vehicle_id: activeVehicleId,
@@ -2947,7 +2990,23 @@ export async function updateRun(formData: FormData) {
                entry_date: run.return_time || new Date(),
                description: `Coût Véhicule (fixe+km) - Tournée ${run.run_code || runId}`
             }
-          ]
+       ];
+
+       if (cost_fuel > 0) {
+           ledgerData.push({
+               organization_id: orgId,
+               vehicle_id: activeVehicleId,
+               run_id: runId,
+               entry_type: 'cost',
+               category: 'fuel_cost',
+               amount: cost_fuel,
+               entry_date: run.return_time || new Date(),
+               description: `Coût Gasoil - Tournée ${run.run_code || runId}`
+           });
+       }
+
+       operations.push(prisma.financialEntry.createMany({
+          data: ledgerData
        }));
     }
 

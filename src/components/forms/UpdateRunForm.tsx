@@ -78,11 +78,22 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="km_start">Km Départ</Label>
-          <Input id="km_start" name="km_start" type="number" step="0.1" defaultValue={initialData.km_start || ""} />
+          <Input id="km_start" name="km_start" type="number" step="0.1" defaultValue={initialData.km_start ?? ""} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="km_end">Km Arrivée</Label>
-          <Input id="km_end" name="km_end" type="number" step="0.1" defaultValue={initialData.km_end || ""} />
+          <Input id="km_end" name="km_end" type="number" step="0.1" defaultValue={initialData.km_end ?? ""} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="fuel_liters">Gasoil ajouté (Litres)</Label>
+          <Input id="fuel_liters" name="fuel_liters" type="number" step="0.01" defaultValue={initialData.fuel_consumed_liters ?? ""} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="fuel_price">Prix Unit. (€/L)</Label>
+          <Input id="fuel_price" name="fuel_price" type="number" step="0.001" placeholder="Ex: 1.85 (Optionnel)" />
         </div>
       </div>
 
