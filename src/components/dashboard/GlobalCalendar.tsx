@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import multiMonthPlugin from "@fullcalendar/multimonth";
 import frLocale from "@fullcalendar/core/locales/fr";
 
 export interface CalendarEvent {
@@ -37,15 +38,23 @@ export function GlobalCalendar({ events }: GlobalCalendarProps) {
         .calendar-wrapper .fc-button-primary { background-color: #3b82f6 !important; border-color: #3b82f6 !important; text-transform: capitalize; font-weight: 600; }
         .calendar-wrapper .fc-button-primary:hover { background-color: #2563eb !important; }
         .calendar-wrapper .fc-button-active { background-color: #1d4ed8 !important; }
+        .calendar-wrapper .fc-multimonth-title { font-weight: bold; color: var(--color-slate-700); }
+        .dark .calendar-wrapper .fc-multimonth-title { color: var(--color-slate-200); }
       `}} />
       <FullCalendar
         ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, multiMonthPlugin]}
         initialView="dayGridMonth"
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "dayGridMonth,timeGridWeek"
+          right: "multiMonthYear,dayGridMonth,timeGridWeek"
+        }}
+        buttonText={{
+          year: "Année",
+          month: "Mois",
+          week: "Semaine",
+          today: "Aujourd'hui"
         }}
         locales={[frLocale]}
         locale="fr"
