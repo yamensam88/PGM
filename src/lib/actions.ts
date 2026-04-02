@@ -2199,7 +2199,7 @@ export async function recordDriverAbsence(formData: FormData) {
     const overlap = await prisma.hrEvent.findFirst({
       where: {
         driver_id: driver_id,
-        event_type: { in: ['sick_leave', 'vacation', 'absence'] },
+        event_type: { in: ['sick_leave', 'vacation', 'absence', 'presence'] },
         OR: [
           {
             start_date: { lte: newEnd },
@@ -2214,7 +2214,7 @@ export async function recordDriverAbsence(formData: FormData) {
     });
 
     if (overlap) {
-      throw new Error("Une absence, maladie ou congé existe déjà sur cette période pour ce chauffeur.");
+      throw new Error("Un événement RH (absence, maladie, congé ou présence manuelle) existe déjà sur cette période pour ce chauffeur.");
     }
 
     await prisma.hrEvent.create({
@@ -2269,7 +2269,7 @@ export async function updateDriverAbsence(formData: FormData) {
       where: {
         id: { not: event_id },
         driver_id: driver_id,
-        event_type: { in: ['sick_leave', 'vacation', 'absence'] },
+        event_type: { in: ['sick_leave', 'vacation', 'absence', 'presence'] },
         OR: [
           {
             start_date: { lte: newEnd },
@@ -2284,7 +2284,7 @@ export async function updateDriverAbsence(formData: FormData) {
     });
 
     if (overlap) {
-      throw new Error("Une autre absence existe déjà sur cette période pour ce chauffeur.");
+      throw new Error("Un autre événement RH existe déjà sur cette période pour ce chauffeur.");
     }
 
     await prisma.hrEvent.updateMany({

@@ -16,6 +16,7 @@ import { CreateVehicleForm } from "@/components/forms/CreateVehicleForm";
 import { CreateRunForm } from "@/components/forms/CreateRunForm";
 import { CreateZoneForm } from "@/components/forms/CreateZoneForm";
 import { DeleteZoneForm } from "@/components/forms/DeleteZoneForm";
+import { CreateAbsenceForm } from "@/components/forms/CreateAbsenceForm";
 import { VehicleRowActions } from "@/components/dashboard/VehicleRowActions";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
@@ -149,7 +150,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
     include: {
       hr_events: {
-        where: { event_type: { in: ["vacation", "sick_leave"] } },
+        where: { event_type: { in: ["vacation", "sick_leave", "presence"] } },
         select: { start_date: true, end_date: true, event_type: true }
       },
       financial_entries: {
@@ -187,7 +188,19 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   }));
 
   const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
-  const presentsChauffeurs = new Set(runs.map(r => r.driver_id).filter(Boolean)).size;
+  
+  const manuallyPresentDriversId = rawDrivers.filter(d => {
+    return d.hr_events.some((e: any) => 
+       e.event_type === 'presence' && 
+       new Date(e.start_date) <= endDate &&
+       (!e.end_date || new Date(e.end_date) >= startDate)
+    );
+  }).map(d => d.id);
+  
+  const runsDriversId = runs.map(r => r.driver_id).filter(Boolean);
+  const presentsChauffeursSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
+  const presentsChauffeurs = presentsChauffeursSet.size;
+  
   const absentsChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs);
 
   const zoneSynthesisMap: Record<string, any> = {};
@@ -274,6 +287,24 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                     </DialogDescription>
                   </DialogHeader>
                   <CreateZoneForm />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-200 shadow-sm gap-2 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-zinc-50">
+                  <Plus className="h-4 w-4" />
+                  Présence / Absence
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
+                  <DialogHeader>
+                    <DialogTitle className="text-blue-500">Déclarer Présence / Absence</DialogTitle>
+                    <DialogDescription className="text-slate-500">
+                      Enregistrez une présence manuelle, une absence ou un arrêt pour un chauffeur.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div>
+                    <CreateAbsenceForm drivers={JSON.parse(JSON.stringify(drivers))} />
+                  </div>
                 </DialogContent>
               </Dialog>
 

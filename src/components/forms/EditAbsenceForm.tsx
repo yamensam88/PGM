@@ -88,6 +88,7 @@ export function EditAbsenceForm({ event, drivers, onSuccess }: EditAbsenceFormPr
           defaultValue={event.event_type}
           className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-colors"
         >
+          <option value="presence">Présence (non affecté / en base)</option>
           <option value="sick_leave">Arrêt Maladie</option>
           <option value="vacation">Congés Payés</option>
           <option value="absence">Absence Injustifiée</option>
