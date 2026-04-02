@@ -48,12 +48,11 @@ export function GlobalCalendar({ events }: GlobalCalendarProps) {
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "multiMonthYear,dayGridMonth,timeGridWeek"
+          right: "multiMonthYear,dayGridMonth"
         }}
         buttonText={{
           year: "Année",
           month: "Mois",
-          week: "Semaine",
           today: "Aujourd'hui"
         }}
         locales={[frLocale]}
