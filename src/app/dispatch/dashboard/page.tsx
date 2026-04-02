@@ -226,10 +226,12 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     const diffTime = evtEnd.getTime() - evtStart.getTime();
     const days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
     
+    const explicitMonthly = evt.driver?.hourly_cost ? Number(evt.driver.hourly_cost) : (Number(evt.driver?.daily_base_cost||0) * 25.33);
+    const calendarDailyCost = explicitMonthly / 30.44;
+
     totalAbsenceDays += days;
     if (evt.event_type === 'sick_leave' || evt.event_type === 'vacation') {
-       const driverDailyCost = Number(evt.driver?.daily_base_cost || 0);
-       const cost = days * driverDailyCost;
+       const cost = days * calendarDailyCost;
        totalAbsenceCost += cost;
        
        if (cost > 0) {
@@ -240,10 +242,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
          });
        }
     } else if (evt.event_type === 'absence') {
-       // Unjustified absence is unpaid, so it is a direct saving on the provisioned payroll
-       const driverDailyCost = Number(evt.driver?.daily_base_cost || 0);
-       const cost = days * driverDailyCost;
-       totalAbsenceCost += cost; // we track it, but we will subtract it from payroll directly
+       const cost = days * calendarDailyCost;
+       totalAbsenceCost += cost;
        
        if (cost > 0) {
          driverAbsenceCosts.push({

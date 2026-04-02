@@ -318,13 +318,25 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              );
                              const presentDays = currentMonthRuns.length;
                              
-                             const sickDays = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sick_leave').length * 2;
+                             const calculateDays = (events: any[], type: string) => events.filter((e: any) => e.event_type === type).reduce((sum: number, e: any) => {
+                               const start = new Date(e.start_date);
+                               const end = e.end_date ? new Date(e.end_date) : start;
+                               const diffTime = end.getTime() - start.getTime();
+                               return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
+                             }, 0);
+
+                             const sickDays = calculateDays(((driver as any).hr_events || []), 'sick_leave');
                              const unjustifiedAbs = ((driver as any).hr_events || []).filter((e: any) => 
                                  e.event_type === 'absence' && 
                                  new Date(e.start_date).getMonth() === now.getMonth() &&
                                  new Date(e.start_date).getFullYear() === now.getFullYear()
-                             ).length;
-                             const leaveBalance = 25 - (((driver as any).hr_events || []).filter((e: any) => e.event_type === 'vacation').length * 5);
+                             ).reduce((sum: number, e: any) => {
+                               const start = new Date(e.start_date);
+                               const end = e.end_date ? new Date(e.end_date) : start;
+                               const diffTime = end.getTime() - start.getTime();
+                               return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
+                             }, 0);
+                             const leaveBalance = 25 - calculateDays(((driver as any).hr_events || []), 'vacation');
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
                              const todayObj = new Date();
