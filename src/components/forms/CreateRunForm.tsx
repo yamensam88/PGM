@@ -31,7 +31,6 @@ export function CreateRunForm({
   const [clientsData, setClientsData] = useState<any[]>([{
     id: crypto.randomUUID(),
     client_id: "",
-    rate_card_id: "",
     direct_parcels: 0,
     colis_collected: 0,
     packages_delivered: 0,
@@ -43,7 +42,6 @@ export function CreateRunForm({
     setClientsData([...clientsData, {
       id: crypto.randomUUID(),
       client_id: "",
-      rate_card_id: "",
       direct_parcels: 0,
       colis_collected: 0,
       packages_delivered: 0,
@@ -68,9 +66,9 @@ export function CreateRunForm({
     setError(null);
     
     // Validation pre-submit
-    const invalidClient = clientsData.find(c => !c.client_id || !c.rate_card_id);
+    const invalidClient = clientsData.find(c => !c.client_id);
     if (invalidClient) {
-       setError("Veuillez sélectionner un client et une grille tarifaire pour chaque bloc.");
+       setError("Veuillez sélectionner un client pour chaque bloc.");
        return;
     }
 
@@ -160,21 +158,12 @@ export function CreateRunForm({
                   )}
                   <h4 className="text-xs font-bold text-blue-600 mb-3 uppercase tracking-wider">Client {index + 1}</h4>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="mb-4">
                      <div className="space-y-2">
                         <Label className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Nom du Client <span className="text-red-500">*</span></Label>
                         <select required value={clientData.client_id} onChange={(e) => updateClientField(clientData.id, "client_id", e.target.value)} className="flex h-9 w-full items-center rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-600">
                            <option value="">Sélectionner</option>
                            {clients.filter(c => c.status !== 'suspended').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                     </div>
-                     <div className="space-y-2">
-                        <Label className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Grille Tarifaire <span className="text-red-500">*</span></Label>
-                        <select required disabled={!clientData.client_id} value={clientData.rate_card_id} onChange={(e) => updateClientField(clientData.id, "rate_card_id", e.target.value)} className="flex h-9 w-full items-center rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-600 disabled:opacity-50">
-                           <option value="">Sélectionner</option>
-                           {rateCards.filter((rc: any) => rc.client_id === clientData.client_id).map((rc: any) => (
-                              <option key={rc.id} value={rc.id}>{rc.name}</option>
-                           ))}
                         </select>
                      </div>
                   </div>
