@@ -33,10 +33,10 @@ const navItems = [
 ];
 
 const allowedPaths: Record<string, string[]> = {
-  admin: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/driver'],
-  owner: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/super-admin', '/driver'],
-  dispatcher: ['/dispatch/runs', '/driver'],
-  manager: ['/dispatch/runs', '/driver'],
+  admin: ['/dispatch/dashboard', '/dispatch/planning', '/dispatch/map', '/dispatch/runs', '/dispatch/crm', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/driver'],
+  owner: ['/dispatch/dashboard', '/dispatch/planning', '/dispatch/map', '/dispatch/runs', '/dispatch/crm', '/dispatch/hr', '/dispatch/settings', '/dispatch/settings/billing', '/super-admin', '/driver'],
+  dispatcher: ['/dispatch/planning', '/dispatch/map', '/dispatch/runs', '/dispatch/crm', '/driver'],
+  manager: ['/dispatch/planning', '/dispatch/map', '/dispatch/runs', '/dispatch/crm', '/driver'],
   hr: ['/dispatch/hr'],
   finance: ['/dispatch/dashboard'],
 };
