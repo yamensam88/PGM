@@ -432,7 +432,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                   </div>
 
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 flex-1 min-w-[340px]">
-                     <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Véhicules</h3>
+                     <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">ÉTAT DU PARC</h3>
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
                          <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
@@ -440,10 +440,11 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
-                         <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
-            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5"/> ÉTAT DU PARC</span>
-            <span className="text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">{totalVehicles}</span>
-          </h2>               <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{inactifsVehicules > 1 ? 'Inactifs' : 'Inactif'}</div>
+                         <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">En Maint.</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
+                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{inactifsVehicules > 1 ? 'Inactifs' : 'Inactif'}</div>
                        </div>
                      </div>
                   </div>
