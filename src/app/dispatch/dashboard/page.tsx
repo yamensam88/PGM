@@ -340,6 +340,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     .map(e => e.driver_id)
   ).size;
 
+  const idleDrivers = Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers);
+
   const driversAtRisk = new Set(
     completedRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50 && activeDriverIds.has(r.driver_id)).map(r => r.driver_id)
   ).size;
@@ -717,15 +719,22 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             <div className="flex justify-between items-center pb-2">
               <div className="text-center">
                 <div className="text-xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">Actifs</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">{totalActiveDrivers > 1 ? 'Actifs' : 'Actif'}</div>
               </div>
+              <div className="w-px bg-slate-200/50 my-1"></div>
               <div className="text-center">
                 <div className="text-xl font-extrabold text-emerald-500">{presentDrivers}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">Présents</div>
+                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{presentDrivers > 1 ? 'Présents' : 'Présent'}</div>
               </div>
+              <div className="w-px bg-slate-200/50 my-1"></div>
               <div className="text-center">
                 <div className="text-xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
-                <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">Absents</div>
+                <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">{absentDrivers > 1 ? 'Absents' : 'Absent'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-xl font-extrabold text-blue-500">{idleDrivers}</div>
+                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Repos</div>
               </div>
             </div>
           </Card>
@@ -735,15 +744,17 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             <div className="flex justify-between items-center pb-2">
               <div className="text-center">
                 <div className="text-xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">Actifs</div>
+                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'}</div>
               </div>
+              <div className="w-px bg-slate-200/50 my-1"></div>
               <div className="text-center">
                 <div className="text-xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
                 <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
               </div>
+              <div className="w-px bg-slate-200/50 my-1"></div>
               <div className="text-center flex flex-col items-center">
                 <div className="text-xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">Inactifs</div>
+                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">{totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'}</div>
               </div>
             </div>
           </Card>

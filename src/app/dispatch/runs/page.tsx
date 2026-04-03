@@ -236,6 +236,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     )
   ).map(d => d.id));
   const absentsChauffeurs = absentsChauffeursSet.size;
+  const idleChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs);
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
@@ -413,15 +414,19 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
                          <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{actifsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Actifs</div>
+                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{actifsChauffeurs > 1 ? 'Actifs' : 'Actif'}</div>
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Présents</div>
+                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">{presentsChauffeurs > 1 ? 'Présents' : 'Présent'}</div>
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{absentsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Absents</div>
+                         <div className="text-3xl font-extrabold text-[#0A1A2F] dark:text-slate-300">{absentsChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-[#0A1A2F]/60 dark:text-slate-500 uppercase tracking-widest mt-1">{absentsChauffeurs > 1 ? 'Absents' : 'Absent'}</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-blue-500">{idleChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">Repos</div>
                        </div>
                      </div>
                   </div>
@@ -431,7 +436,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
                          <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
-                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">Actif</div>
+                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">{actifsVehicules > 1 ? 'Actifs' : 'Actif'}</div>
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
@@ -439,7 +444,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
-                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Inactif</div>
+                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{inactifsVehicules > 1 ? 'Inactifs' : 'Inactif'}</div>
                        </div>
                      </div>
                   </div>
