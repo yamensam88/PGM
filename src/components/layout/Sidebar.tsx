@@ -13,15 +13,19 @@ import {
   Settings,
   Briefcase,
   CreditCard,
-  Menu
+  Menu,
+  Map
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { name: "Direction", href: "/dispatch/dashboard", icon: LayoutDashboard },
-  { name: "Exploitation & Flotte", href: "/dispatch/runs", icon: Route },
-  { name: "RH", href: "/dispatch/hr", icon: Users },
+  { name: "Dashboard", href: "/dispatch/dashboard", icon: LayoutDashboard },
+  { name: "Planification", href: "/dispatch/planning", icon: BarChart3 },
+  { name: "Carte", href: "/dispatch/map", icon: Map },
+  { name: "Suivi Tournées", href: "/dispatch/runs", icon: Route },
+  { name: "CRM Clients", href: "/dispatch/crm", icon: Users },
+  { name: "Flotte & RH", href: "/dispatch/hr", icon: Users },
   { name: "Paramètres", href: "/dispatch/settings", icon: Settings },
   { name: "Abonnement", href: "/dispatch/settings/billing", icon: CreditCard },
   { name: "Super Admin", href: "/super-admin", icon: ShieldAlert },
