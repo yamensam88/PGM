@@ -39,9 +39,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const orgSettings = org?.settings_json as { fuel_price_per_liter?: number; monthly_total_fixed_costs?: number } | null;
   const currentFuelPrice = orgSettings?.fuel_price_per_liter || 1.80;
 
-  // 2. Date filtering logic
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Determine today's date in Paris to align with what the user considers 'Today'
+  const parisFormat = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const parisDateStr = parisFormat.format(new Date());
+  
+  const today = new Date(`${parisDateStr}T00:00:00.000Z`);
 
   let startDate = new Date(today);
   let endDate = new Date(today);

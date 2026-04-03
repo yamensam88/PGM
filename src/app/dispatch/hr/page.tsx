@@ -38,8 +38,10 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
   const fromParam = searchParams.from;
   const toParam = searchParams.to;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const parisFormat = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const parisDateStr = parisFormat.format(new Date());
+  
+  const today = new Date(`${parisDateStr}T00:00:00.000Z`);
   let startDate = new Date(today);
   let endDate = new Date(today);
   endDate.setHours(23, 59, 59, 999);

@@ -40,10 +40,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     redirect("/login");
   }
 
-  let startDate = new Date();
-  startDate.setHours(0, 0, 0, 0);
-  let endDate = new Date();
-  endDate.setHours(23, 59, 59, 999);
+  // Determine today's date in Paris to align with what the user considers 'Today'
+  const parisFormat = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const parisDateStr = parisFormat.format(new Date()); 
+  
+  let startDate = new Date(`${parisDateStr}T00:00:00.000Z`);
+  let endDate = new Date(`${parisDateStr}T23:59:59.999Z`);
 
   if (fromParam || toParam) {
     if (fromParam) startDate = new Date(fromParam);
@@ -225,10 +227,22 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const presentsChauffeursSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
   const presentsChauffeurs = presentsChauffeursSet.size;
   
-  const absenceEventTypes = ['absence', 'sick_leave', 'vacation'];
+  const congesChauffeursSet = new Set(rawDrivers.filter(d => 
+    d.status === 'active' && 
+    !presentsChauffeursSet.has(d.id) &&
+    d.hr_events.some((e: any) => 
+       e.event_type === 'vacation' && 
+       new Date(e.start_date) <= endDate &&
+       (!e.end_date || new Date(e.end_date) >= startDate)
+    )
+  ).map(d => d.id));
+  const congesChauffeurs = congesChauffeursSet.size;
+
+  const absenceEventTypes = ['absence', 'sick_leave'];
   const absentsChauffeursSet = new Set(rawDrivers.filter(d => 
     d.status === 'active' && 
     !presentsChauffeursSet.has(d.id) &&
+    !congesChauffeursSet.has(d.id) &&
     d.hr_events.some((e: any) => 
        absenceEventTypes.includes(e.event_type) && 
        new Date(e.start_date) <= endDate &&
@@ -236,7 +250,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     )
   ).map(d => d.id));
   const absentsChauffeurs = absentsChauffeursSet.size;
-  const idleChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs);
+  const idleChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs - congesChauffeurs);
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
@@ -423,6 +437,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-[#0A1A2F] dark:text-slate-300">{absentsChauffeurs}</div>
                          <div className="text-[10px] font-bold text-[#0A1A2F]/60 dark:text-slate-500 uppercase tracking-widest mt-1">{absentsChauffeurs > 1 ? 'Absents' : 'Absent'}</div>
+                       </div>
+                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
+                         <div className="text-3xl font-extrabold text-teal-500">{congesChauffeurs}</div>
+                         <div className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mt-1">{congesChauffeurs > 1 ? 'Congés' : 'Congé'}</div>
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <div className="text-3xl font-extrabold text-blue-500">{idleChauffeurs}</div>
