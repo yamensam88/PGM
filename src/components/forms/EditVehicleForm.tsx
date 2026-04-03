@@ -19,6 +19,8 @@ export function EditVehicleForm({ vehicle, onSuccess }: EditVehicleFormProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
 
     // Safety Net: Anomaly Detection for Delegation

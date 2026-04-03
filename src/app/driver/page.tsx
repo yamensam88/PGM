@@ -28,12 +28,12 @@ export default async function DriverHome() {
   const now = new Date();
   const todayUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 
-  const currentRun = await prisma.dailyRun.findFirst({
+  const currentRuns = await prisma.dailyRun.findMany({
     where: { driver_id: driver.id, date: todayUtc },
-    orderBy: { created_at: "desc" }
+    orderBy: { created_at: "asc" }
   });
 
-  const isCompleted = currentRun?.status === 'completed';
+  const isCompleted = currentRuns.length > 0 && currentRuns.every(r => r.status === 'completed');
 
   return (
     <div className="space-y-6 pt-2">

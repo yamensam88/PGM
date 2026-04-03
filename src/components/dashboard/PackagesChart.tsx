@@ -25,21 +25,25 @@ interface PackagesChartProps {
 
 export function PackagesChart({ runs }: PackagesChartProps) {
   const chartData = useMemo(() => {
-    const dataByDate: Record<string, { date: string; Chargés: number; Livrés: number; Avisés: number }> = {};
+    const dataByDate: Record<string, { date: string; Chargés: number; Livrés: number; Avisés: number; Retours: number }> = {};
 
     runs.forEach(run => {
       const dateStr = run.date.toISOString().split('T')[0];
       if (!dataByDate[dateStr]) {
-        dataByDate[dateStr] = { date: dateStr, Chargés: 0, Livrés: 0, Avisés: 0 };
+        dataByDate[dateStr] = { date: dateStr, Chargés: 0, Livrés: 0, Avisés: 0, Retours: 0 };
       }
       const loaded = Number(run.packages_loaded || 0);
       const advised = Number(run.packages_advised || 0);
-      const failed = Number(run.stops_failed || 0);
-      const delivered = Math.max(0, loaded - advised - failed);
+      const returned = Number((run as any).packages_returned || 0);
+      const relay = Number((run as any).packages_relay || 0);
+      
+      const realLoaded = loaded + relay;
+      const delivered = Number((run as any).packages_delivered || 0);
 
-      dataByDate[dateStr].Chargés += loaded;
+      dataByDate[dateStr].Chargés += realLoaded;
       dataByDate[dateStr].Livrés += delivered;
       dataByDate[dateStr].Avisés += advised;
+      dataByDate[dateStr].Retours += returned;
     });
 
     return Object.values(dataByDate).sort((a, b) => a.date.localeCompare(b.date)).map(item => ({
@@ -84,6 +88,7 @@ export function PackagesChart({ runs }: PackagesChartProps) {
           <Bar dataKey="Chargés" fill="#e2e8f0" radius={[4, 4, 0, 0]} barSize={12} />
           <Bar dataKey="Livrés" fill="#10b981" radius={[4, 4, 0, 0]} barSize={12} />
           <Bar dataKey="Avisés" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={12} />
+          <Bar dataKey="Retours" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={12} />
         </BarChart>
       </ResponsiveContainer>
     </div>

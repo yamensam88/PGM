@@ -65,6 +65,8 @@ export function CreateEmployeeForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     setSuccessData(null);
     const formData = new FormData(e.currentTarget);
 

@@ -66,15 +66,16 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
   const now = new Date();
   const todayUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 
-  let rawCurrentRun = await prisma.dailyRun.findFirst({
+  let rawCurrentRuns = await prisma.dailyRun.findMany({
     where: {
       driver_id: driver.id,
       date: todayUtc
     },
-    orderBy: { created_at: "desc" }
+    include: { client: { select: { name: true } } },
+    orderBy: { created_at: "asc" }
   });
 
-  let currentRun: any = rawCurrentRun ? {
+  let currentRuns: any[] = rawCurrentRuns.map(rawCurrentRun => ({
     ...rawCurrentRun,
     fuel_consumed_liters: rawCurrentRun.fuel_consumed_liters ? Number(rawCurrentRun.fuel_consumed_liters) : null,
     revenue_calculated: rawCurrentRun.revenue_calculated ? Number(rawCurrentRun.revenue_calculated) : null,
@@ -87,10 +88,10 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
     productivity_index: rawCurrentRun.productivity_index ? Number(rawCurrentRun.productivity_index) : null,
     penalty_risk_score: rawCurrentRun.penalty_risk_score ? Number(rawCurrentRun.penalty_risk_score) : null,
     sst_score: rawCurrentRun.sst_score ? Number(rawCurrentRun.sst_score) : null,
-  } : null;
+  }));
 
   // Auto-Create a planned run if none exists for today
-  if (!currentRun) {
+  if (currentRuns.length === 0) {
     const client = await prisma.client.findFirst({ where: { organization_id: orgId } });
     if (!client) {
       return (
@@ -129,10 +130,11 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
         run_code: runCodeStr,
         stops_planned: 0,
         packages_loaded: 0
-      }
+      },
+      include: { client: { select: { name: true } } }
     });
 
-    currentRun = {
+    currentRuns = [{
       ...freshlyCreatedRun,
       fuel_consumed_liters: 0,
       revenue_calculated: 0,
@@ -145,15 +147,17 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
       productivity_index: null,
       penalty_risk_score: 0,
       sst_score: 0,
-    };
+    }];
   }
 
-  // If completed, show success message
-  if (currentRun?.status === 'completed' && !isEditing) {
+  // If ALL runs are completed, show success message
+  const isFullyCompleted = currentRuns.every(r => r.status === 'completed');
+  if (isFullyCompleted && !isEditing) {
     const nowLocal = new Date();
-    const isToday = currentRun.date.getDate() === nowLocal.getDate() && 
-                    currentRun.date.getMonth() === nowLocal.getMonth() && 
-                    currentRun.date.getFullYear() === nowLocal.getFullYear();
+    const currentRunRef = currentRuns[0];
+    const isToday = currentRunRef.date.getDate() === nowLocal.getDate() && 
+                    currentRunRef.date.getMonth() === nowLocal.getMonth() && 
+                    currentRunRef.date.getFullYear() === nowLocal.getFullYear();
 
     return (
       <main className="flex-1 mt-10 md:mt-16 flex flex-col items-center justify-center text-center">
@@ -212,8 +216,7 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
            driverId={driver.id} 
            vehicles={vehicles} 
            clients={clients}
-           runId={currentRun?.id} 
-           initialData={currentRun}
+           runs={currentRuns} 
         />
       </main>
   );

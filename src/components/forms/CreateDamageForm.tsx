@@ -13,6 +13,8 @@ export function CreateDamageForm({ runId, vehicleId, drivers, onSuccess }: { run
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     formData.append("vehicle_id", vehicleId);
     if (runId) formData.append("run_id", runId);

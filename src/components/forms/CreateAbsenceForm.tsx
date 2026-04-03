@@ -19,6 +19,8 @@ export function CreateAbsenceForm({ drivers, onSuccess }: CreateAbsenceFormProps
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {

@@ -15,6 +15,8 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     formData.append("runId", initialData.id);
     

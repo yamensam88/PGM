@@ -21,6 +21,8 @@ type SynthesisRow = {
   packages_loaded: number;
   packages_delivered: number;
   packages_advised: number;
+  packages_returned: number;
+  packages_relay: number;
   km_utiles: number;
   margin_net: number;
   maintenance_cost: number;
@@ -56,16 +58,17 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Total Colis</TableHead>
             <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-center">Livrés</TableHead>
             <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-center">Avisés</TableHead>
+            <TableHead className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest text-center">Retours</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
-            <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Entretien / Casse</TableHead>
+            <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Entretien / Incidents</TableHead>
             <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-right px-4">Marge Nette</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-100/80">
           {data.map((row) => {
-            const ecart = row.packages_loaded - (row.packages_delivered + row.packages_advised);
+            const ecart = (row.packages_loaded + row.packages_relay) - (row.packages_delivered + row.packages_advised + row.packages_returned);
             const isExpanded = expandedId === row.driver.id;
             const finalMargin = row.margin_net - (row.maintenance_cost || 0) - (row.damage_cost || 0) - (row.penalty_cost || 0);
 
@@ -87,10 +90,13 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
                       {row.runs_count}
                     </span>
                   </TableCell>
-                  
-                  <TableCell className="text-center text-[13px] text-slate-600 font-semibold">{row.packages_loaded}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="text-[13px] text-slate-600 font-semibold">{row.packages_loaded + row.packages_relay}</div>
+                    {row.packages_relay > 0 && <div className="text-[10px] text-slate-400 leading-tight">dont {row.packages_relay} relais</div>}
+                  </TableCell>
                   <TableCell className="text-center text-[13px] text-emerald-600 font-bold">{row.packages_delivered}</TableCell>
                   <TableCell className="text-center text-[13px] text-orange-500 font-bold">{row.packages_advised}</TableCell>
+                  <TableCell className="text-center text-[13px] text-rose-500 font-bold">{row.packages_returned}</TableCell>
                   
                   <TableCell className="text-center">
                     {ecart !== 0 ? (
@@ -118,7 +124,12 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
                            {row.damage_cost.toFixed(0)}€ Casse
                          </span>
                        )}
-                       {row.maintenance_cost === 0 && row.damage_cost === 0 && (
+                       {row.penalty_cost > 0 && (
+                         <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                           {row.penalty_cost.toFixed(0)}€ Pénalité
+                         </span>
+                       )}
+                       {row.maintenance_cost === 0 && row.damage_cost === 0 && row.penalty_cost === 0 && (
                          <span className="text-slate-300 font-medium text-[13px]">-</span>
                        )}
                     </div>

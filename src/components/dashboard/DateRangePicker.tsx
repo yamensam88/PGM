@@ -53,12 +53,12 @@ export function DateRangePicker({
     if (selectedDate?.from) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("filter");
-      params.set("from", startOfDay(selectedDate.from).toISOString());
+      params.set("from", format(selectedDate.from, "yyyy-MM-dd"));
       if (selectedDate.to) {
-        params.set("to", endOfDay(selectedDate.to).toISOString());
+        params.set("to", format(selectedDate.to, "yyyy-MM-dd"));
       } else {
         // If only start date is selected, 'to' is end of that same day
-        params.set("to", endOfDay(selectedDate.from).toISOString());
+        params.set("to", format(selectedDate.from, "yyyy-MM-dd"));
       }
       router.push(`${pathname}?${params.toString()}`);
     }

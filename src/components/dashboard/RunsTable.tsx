@@ -77,10 +77,11 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
     return true;
   });
 
-  const totalLoaded = filteredData.reduce((sum, run) => sum + (run.packages_loaded || 0), 0);
+  const totalLoaded = filteredData.reduce((sum, run) => sum + (run.packages_loaded || 0) + (run.packages_relay || 0), 0);
   const totalDelivered = filteredData.reduce((sum, run) => sum + (run.packages_delivered || 0), 0);
   const totalAdvised = filteredData.reduce((sum, run) => sum + ((run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0), 0);
-  const totalEcart = totalLoaded - (totalDelivered + totalAdvised);
+  const totalReturned = filteredData.reduce((sum, run) => sum + (run.packages_returned || 0), 0);
+  const totalEcart = totalLoaded - (totalDelivered + totalAdvised + totalReturned);
   const totalKm = filteredData.reduce((sum, run) => sum + (run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || 0))), 0);
   
   const totalMaintenance = filteredData.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
@@ -94,10 +95,11 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
   }, {} as Record<string, DailyRunWithRelations[]>) : null;
 
   const renderRunRow = (run: DailyRunWithRelations) => {
-    const loaded = run.packages_loaded || 0;
+    const loaded = (run.packages_loaded || 0) + (run.packages_relay || 0);
     const delivered = run.packages_delivered || 0;
     const advised = (run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0;
-    const ecart = loaded - (delivered + advised);
+    const returned = run.packages_returned || 0;
+    const ecart = loaded - (delivered + advised + returned);
     const kmUtiles = run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || 0));
 
     return (
@@ -128,6 +130,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
         <TableCell className="text-center text-[13px] text-slate-600 font-semibold">{loaded}</TableCell>
         <TableCell className="text-center text-[13px] text-emerald-600 font-bold">{delivered}</TableCell>
         <TableCell className="text-center text-[13px] text-orange-500 font-bold">{advised}</TableCell>
+        <TableCell className="text-center text-[13px] text-rose-500 font-bold">{returned}</TableCell>
         
         <TableCell className="text-center">
           {ecart !== 0 ? (
@@ -290,6 +293,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Total</TableHead>
               <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-center">Livré</TableHead>
               <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-center">Avisé</TableHead>
+              <TableHead className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest text-center">Retour</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Statut</TableHead>
@@ -301,10 +305,11 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
           <TableBody className="divide-y divide-slate-100/80">
             {groupByZone && groupedData ? (
               Object.entries(groupedData as Record<string, DailyRunWithRelations[]>).map(([zoneName, zoneRuns]) => {
-                const zLoaded = zoneRuns.reduce((s, r) => s + (r.packages_loaded || 0), 0);
+                const zLoaded = zoneRuns.reduce((s, r) => s + (r.packages_loaded || 0) + (r.packages_relay || 0), 0);
                 const zDelivered = zoneRuns.reduce((s, r) => s + (r.packages_delivered || 0), 0);
                 const zAdvised = zoneRuns.reduce((s, r) => s + ((r.packages_advised_direct || 0) + (r.packages_advised_relay || 0) || r.packages_advised || 0), 0);
-                const zEcart = zLoaded - (zDelivered + zAdvised);
+                const zReturned = zoneRuns.reduce((s, r) => s + (r.packages_returned || 0), 0);
+                const zEcart = zLoaded - (zDelivered + zAdvised + zReturned);
                 const zKm = zoneRuns.reduce((sum, run) => sum + (run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || 0))), 0);
                 const zMaint = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
                 const zDamages = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
@@ -326,6 +331,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                       <TableCell className="text-center text-[12px] text-slate-700 font-bold">{zLoaded}</TableCell>
                       <TableCell className="text-center text-[12px] text-emerald-600 font-bold">{zDelivered}</TableCell>
                       <TableCell className="text-center text-[12px] text-orange-600 font-bold">{zAdvised}</TableCell>
+                      <TableCell className="text-center text-[12px] text-rose-500 font-bold">{zReturned}</TableCell>
                       <TableCell className="text-center">
                         {zEcart !== 0 ? (
                           <Badge variant="outline" className="border-red-100/80 text-red-600 bg-red-50/80 font-medium rounded-full px-1.5">

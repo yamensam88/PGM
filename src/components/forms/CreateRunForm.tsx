@@ -64,6 +64,8 @@ export function CreateRunForm({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     
     // Validation pre-submit
     const invalidClient = clientsData.find(c => !c.client_id);

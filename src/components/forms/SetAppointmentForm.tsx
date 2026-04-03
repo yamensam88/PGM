@@ -20,6 +20,8 @@ export function SetAppointmentForm({ vehicleId, currentDate, currentNature, onSu
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     const date = formData.get("date") as string;
     const nature = formData.get("nature") as string;

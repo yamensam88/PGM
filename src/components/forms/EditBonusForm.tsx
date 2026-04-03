@@ -14,6 +14,8 @@ export function EditBonusForm({ driverId, initialAmount }: { driverId: string, i
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     formData.append("driverId", driverId);
 

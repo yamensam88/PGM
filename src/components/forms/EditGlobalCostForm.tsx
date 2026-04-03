@@ -17,6 +17,8 @@ export function EditGlobalCostForm({ driverId, initialCost }: { driverId: string
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     setSuccess(false);
     const formData = new FormData(e.currentTarget);
     formData.append("driverId", driverId);

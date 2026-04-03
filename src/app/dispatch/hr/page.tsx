@@ -47,6 +47,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
   if (fromParam && toParam) {
     startDate = new Date(fromParam);
     endDate = new Date(toParam);
+    endDate.setHours(23, 59, 59, 999);
   } else {
     const activeFilter = filter || 'monthly';
     if (activeFilter === 'weekly') {
@@ -173,21 +174,42 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
             (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
           );
 
+          const absenceTypes = ['absence', 'sick_leave', 'vacation'];
           const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
           const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
           const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + Number((d as any).paid_leave_balance || 0), 0);
-          const totalAbsences = periodHrEvents.filter(e => e.event_type !== 'presence');
+          const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
           const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
           
-          const tonight = new Date(); tonight.setHours(23,59,59,999);
-          const currentlyAbsent = drivers.filter(d => 
-            (d as any).hr_events?.some((e: any) => 
+          const currentlyAbsent = drivers.filter(d => {
+            if (d.status !== 'active') return false;
+            
+            // Check if they have an absence event overlapping the period
+            const hasAbsence = (d as any).hr_events?.some((e: any) => 
                e.status === 'active' && 
-               e.event_type !== 'presence' &&
-               new Date(e.start_date).getTime() <= tonight.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= today.getTime())
-            )
-          ).length;
+               ['absence', 'sick_leave', 'vacation'].includes(e.event_type) &&
+               new Date(e.start_date).getTime() <= endDate.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
+            );
+            
+            if (!hasAbsence) return false;
+            
+            // MATH OVERLAP PARITY: If they are absent, BUT they have a daily run in this period OR a manual presence, they are ACTUALLY PRESENT
+            const hasRun = (d as any).daily_runs?.some((r: any) => {
+               const rDate = new Date(r.date).getTime();
+               return rDate >= startDate.getTime() && rDate <= endDate.getTime();
+            });
+            const hasManualPresence = (d as any).hr_events?.some((e: any) => 
+               e.status === 'active' && 
+               e.event_type === 'presence' &&
+               new Date(e.start_date).getTime() <= endDate.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
+            );
+            
+            // If they are physically present, they are excluded from the Absent count
+            return !(hasRun || hasManualPresence);
+          }).length;
+          
           const realAvailability = totalDrivers > 0 ? (((totalDrivers - currentlyAbsent) / totalDrivers) * 100).toFixed(1) : "0.0";
 
           return (

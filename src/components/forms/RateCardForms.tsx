@@ -15,6 +15,8 @@ export function CreateRateCardForm({ clientId, clientName, onSuccess }: { client
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     formData.append('client_id', clientId);
     
@@ -104,6 +106,8 @@ export function EditRateCardForm({ rateCard, onSuccess }: { rateCard: any, onSuc
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     formData.append('id', rateCard.id);
     

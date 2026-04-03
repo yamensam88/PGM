@@ -939,11 +939,24 @@ export async function finishRun(formData: FormData) {
           cost_vehicle: base_and_variable_fleet_cost,
           cost_fuel: final_fuel_amount,
           margin_net: revenue_calculated - cost_driver - base_and_variable_fleet_cost - final_fuel_amount,
+          km_total: Math.max(0, km_end - (final_km_start !== null ? final_km_start : km_end))
         }
       });
 
       if (updateResult.count === 0) {
         throw new Error("Cette tournée a déjà été clôturée ou a été modifiée concurremment.");
+      }
+
+      const new_km_diff = Math.max(0, km_end - (final_km_start !== null ? final_km_start : km_end));
+      const old_km_diff = Number(run.km_total || 0);
+      const km_delta = new_km_diff - old_km_diff;
+
+      if (km_delta !== 0) {
+        console.log(`▶ [finishRun] Maj kilometrage différentiel: ${km_delta}km`);
+        await tx.vehicle.update({
+          where: { id: run.vehicle_id },
+          data: { current_km: Math.max(0, (run.vehicle.current_km || 0) + km_delta) }
+        });
       }
 
       // C. Create Full Financial Entries Ledger for this Run
@@ -1045,6 +1058,16 @@ export async function deleteRun(runId: string) {
        await tx.fuelLog.deleteMany({ where: { run_id: runId } });
        
        await tx.dailyRun.delete({ where: { id: runId } });
+
+       if (run.vehicle_id && run.km_total && run.km_total > 0) {
+           const vehicle = await tx.vehicle.findUnique({ where: { id: run.vehicle_id } });
+           if (vehicle) {
+               await tx.vehicle.update({
+                  where: { id: run.vehicle_id },
+                  data: { current_km: Math.max(0, (vehicle.current_km || 0) - Number(run.km_total)) }
+               });
+           }
+       }
     });
 
     revalidatePath("/dispatch/runs");
@@ -1539,6 +1562,12 @@ export async function addMaintenanceLog(formData: FormData) {
        documentUrl = `/uploads/org_${orgId}/maintenance_${vehicle_id}_${Date.now()}_${document_file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     }
 
+    // SECURITY CHECK: Verify Ownership of Vehicle
+    const targetVehicle = await prisma.vehicle.findUnique({ where: { id: vehicle_id } });
+    if (!targetVehicle || targetVehicle.organization_id !== orgId) {
+      throw new Error("Opération non autorisée. Véhicule introuvable dans votre parc.");
+    }
+
     await prisma.$transaction(async (tx) => {
       // 1. Create Maintenance Log
       await tx.maintenanceLog.create({
@@ -1808,11 +1837,13 @@ export async function saveUnifiedDelivery(formData: FormData) {
 
     const driverId = formData.get("driverId") as string;
     const vehicleId = formData.get("vehicle_id") as string;
-    const runId = formData.get("runId") as string | null;
+    const runIdsStr = formData.get("runIds") as string | null;
+    const runStatsStr = formData.get("runStats") as string | null;
 
-    if (!driverId || !vehicleId) throw new Error("Chauffeur et Véhicule sont requis");
+    if (!runIdsStr || !runStatsStr) {
+      throw new Error("Données de livraison invalides");
+    }
 
-    // Extract numerical fields
     const kmStart = Number(formData.get("km_start")) || 0;
     const kmEnd = Number(formData.get("km_end")) || 0;
     const fuelLiters = Number(formData.get("fuel_liters")) || 0;
@@ -1820,147 +1851,125 @@ export async function saveUnifiedDelivery(formData: FormData) {
     const fuelPriceInput = fuelPriceStr ? Number(fuelPriceStr) : null;
     const fuelReceiptFile = formData.get("fuel_receipt") as File | null;
 
-    const loaded1 = Number(formData.get("client1_loaded")) || 0;
-    const loaded2 = Number(formData.get("client2_loaded")) || 0;
-    const returned1 = Number(formData.get("client1_returned")) || 0;
-    const returned2 = Number(formData.get("client2_returned")) || 0;
-    const relay = Number(formData.get("colis_relay")) || 0;
-    const collected = Number(formData.get("colis_collected")) || 0;
-
-    const totalLoaded = loaded1 + loaded2;
-    const totalReturned = returned1 + returned2;
-    // Client 1 / 2 Delivered is simply Loaded - Returned
-    const delivered1 = loaded1 - returned1;
-    const delivered2 = loaded2 - returned2;
-    const totalDelivered = delivered1 + delivered2;
-
-    const notes = "Client 1 (" + loaded1 + "C/" + delivered1 + "L/" + returned1 + "R) | Client 2 (" + loaded2 + "C/" + delivered2 + "L/" + returned2 + "R)";
-    const routeNumber = formData.get("route_number") as string | null;
-
-    const client_id = formData.get("client_id") as string | null;
-
-    const driver = await prisma.driver.findUnique({ where: { id: driverId } });
-    const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
-    
-    let existingRun = null;
-    if (runId) {
-      existingRun = await prisma.dailyRun.findUnique({ where: { id: runId } });
+    let receiptUrl: string | null = null;
+    if (fuelReceiptFile && fuelReceiptFile.size > 0) {
+       receiptUrl = `/uploads/${orgId}/fuel/${fuelReceiptFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     }
 
-    let client = null;
-    if (client_id) {
-       client = await prisma.client.findUnique({ where: { id: client_id }, include: { rate_cards: true }});
-    } else {
-       client = await prisma.client.findFirst({ where: { organization_id: orgId }, include: { rate_cards: true } });
-    }
-    if (!client) throw new Error("Un client doit être sélectionné ou exister dans l'organisation");
+    const runIds: string[] = JSON.parse(runIdsStr);
+    const runStats: Record<string, { loaded: string, returned: string, relay: string, collected: string }> = JSON.parse(runStatsStr);
 
-    // Financial Maths Injection
-    let rateCardToUse = client?.rate_cards?.[0];
-    if (existingRun && existingRun.rate_card_id) {
-       rateCardToUse = await prisma.rateCard.findUnique({ where: { id: existingRun.rate_card_id } }) || rateCardToUse;
-    }
+    let isFirstIteration = true;
 
-    const base_flat = Number(rateCardToUse?.base_daily_flat || 0);
-    const price_stop = Number(rateCardToUse?.unit_price_stop || 0);
-    const price_parcel = Number(rateCardToUse?.unit_price_package || 0);
-    const bonus_relay = Number(rateCardToUse?.bonus_relay_point || 0);
-    
-    // Revenue definition
-    const billed_parcels = totalLoaded + relay;
-    const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * billed_parcels) + (bonus_relay * relay);
+    for (const id of runIds) {
+      const stats = runStats[id] || { loaded: '0', returned: '0', relay: '0', collected: '0' };
+      const loaded = Number(stats.loaded) || 0;
+      const returned = Number(stats.returned) || 0;
+      const relay = Number(stats.relay) || 0;
+      const collected = Number(stats.collected) || 0;
+      const delivered = Math.max(0, loaded - returned);
 
-    // Driver & Fleet Avoid Double Counting
-    const startOfDay = new Date();
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setUTCHours(23, 59, 59, 999);
+      const notes = `Détails saisis via UnifiedApp: ${loaded}C/${delivered}L/${returned}R - Relais:${relay} - Collectes:${collected}`;
+      const routeNumber = formData.get("route_number") as string | null;
 
-    const priorDriverRuns = await prisma.dailyRun.count({
-      where: { driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: runId ? { not: runId } : undefined, status: 'completed' }
-    });
-    const cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
+      const driver = await prisma.driver.findUnique({ where: { id: driverId } });
+      const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+      
+      const existingRun = await prisma.dailyRun.findUnique({ where: { id } });
+      // SECURITY CHECK: Verify Ownership of Run Entity to prevent Cross-Tenant IDOR bleeding
+      if (!existingRun || existingRun.organization_id !== orgId) continue;
 
-    const priorVehicleRuns = await prisma.dailyRun.count({
-      where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: runId ? { not: runId } : undefined, status: 'completed' }
-    });
+      let client = await prisma.client.findUnique({ where: { id: existingRun.client_id }, include: { rate_cards: true }});
+      if (!client) throw new Error("Client manquant pour la tournée.");
 
-    const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
-    const km_diff = Math.max(0, kmEnd - kmStart);
-    const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
-    const cost_vehicle = base_fleet_cost + variable_fleet_cost;
-    
-    // Gasoil Cost evaluation
-    let cost_fuel = 0;
-    let actual_fuel_price = 1.80;
-    if (fuelLiters > 0) {
-      const org = await prisma.organization.findUnique({ where: { id: orgId } });
-      actual_fuel_price = fuelPriceInput ? fuelPriceInput : (org?.settings_json ? ((org.settings_json as any).fuel_price_per_liter || 1.80) : 1.80);
-      cost_fuel = fuelLiters * actual_fuel_price;
-    }
-    
-    const margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
+      let rateCardToUse = client?.rate_cards?.[0];
+      if (existingRun && existingRun.rate_card_id) {
+         rateCardToUse = await prisma.rateCard.findUnique({ where: { id: existingRun.rate_card_id } }) || rateCardToUse;
+      }
 
-    const runData = {
-      organization_id: orgId,
-      driver_id: driverId,
-      vehicle_id: vehicleId,
-      date: new Date(),
-      status: 'completed',
-      run_code: routeNumber, // Map Zone / Route Number input to run_code
-      km_start: kmStart,
-      km_end: kmEnd,
-      km_total: km_diff,
-      fuel_consumed_liters: fuelLiters,
-      packages_loaded: totalLoaded,
-      packages_returned: totalReturned,
-      packages_delivered: totalDelivered,
-      packages_relay: relay,
-      stops_completed: collected, // using stops_completed for 'collected' in this context
-      notes: notes,
-      return_time: new Date(),
-      revenue_calculated,
-      cost_driver,
-      cost_vehicle,
-      cost_fuel,
-      margin_net,
-      client_id: client.id
-    };
+      const base_flat = Number(rateCardToUse?.base_daily_flat || 0);
+      const price_stop = Number(rateCardToUse?.unit_price_stop || 0);
+      const price_parcel = Number(rateCardToUse?.unit_price_package || 0);
+      const bonus_relay = Number(rateCardToUse?.bonus_relay_point || 0);
+      
+      // Revenue definition
+      const billed_parcels = loaded + relay;
+      const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * billed_parcels) + (bonus_relay * relay);
 
-    let savedRun;
-    
-    // Persist to database
-    if (runId) {
-      savedRun = await prisma.dailyRun.update({
-        where: { id: runId },
+      // Driver & Fleet Avoid Double Counting
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      let cost_driver = 0;
+      let cost_vehicle = 0;
+      let cost_fuel = 0;
+      let km_diff = 0;
+      let actual_fuel_price = 1.80;
+
+      if (isFirstIteration) {
+        const priorDriverRuns = await prisma.dailyRun.count({
+          where: { driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
+        });
+        cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
+
+        const priorVehicleRuns = await prisma.dailyRun.count({
+          where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
+        });
+
+        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
+        km_diff = Math.max(0, kmEnd - kmStart);
+        const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
+        cost_vehicle = base_fleet_cost + variable_fleet_cost;
+        
+        if (fuelLiters > 0) {
+          const org = await prisma.organization.findUnique({ where: { id: orgId } });
+          actual_fuel_price = fuelPriceInput ? fuelPriceInput : (org?.settings_json ? ((org.settings_json as any).fuel_price_per_liter || 1.80) : 1.80);
+          cost_fuel = fuelLiters * actual_fuel_price;
+        }
+
+        if (!receiptUrl) {
+           const existingFuelLog = await prisma.fuelLog.findFirst({ where: { run_id: id } });
+           if (existingFuelLog) receiptUrl = existingFuelLog.receipt_url;
+        }
+      }
+      
+      const margin_net = revenue_calculated - cost_driver - cost_vehicle - cost_fuel;
+
+      const runData = {
+        organization_id: orgId,
+        driver_id: driverId,
+        vehicle_id: vehicleId,
+        date: new Date(),
+        status: 'completed',
+        run_code: routeNumber && routeNumber.trim() !== '' ? routeNumber : (existingRun.run_code || null),
+        km_start: kmStart,
+        km_end: kmEnd,
+        km_total: km_diff,
+        fuel_consumed_liters: isFirstIteration ? fuelLiters : 0,
+        packages_loaded: loaded,
+        packages_returned: returned,
+        packages_delivered: delivered,
+        packages_relay: relay,
+        stops_completed: collected,
+        notes: notes,
+        return_time: new Date(),
+        revenue_calculated,
+        cost_driver,
+        cost_vehicle,
+        cost_fuel,
+        margin_net,
+        client_id: client.id
+      };
+
+      const savedRun = await prisma.dailyRun.update({
+        where: { id },
         data: runData
       });
-    } else {
-      if (!client) throw new Error("Un client doit exister dans l'organisation");
-      savedRun = await prisma.dailyRun.create({
-        data: {
-           ...runData,
-           client_id: client.id, // Mandatory on creation
-        }
-      });
-    }
 
-    // Synchronization of Ledger Entries
-    if (savedRun) {
-      let receiptUrl = null;
-      if (fuelReceiptFile && fuelReceiptFile.size > 0) {
-         receiptUrl = `/uploads/${orgId}/${savedRun.id}/${fuelReceiptFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      }
+      const operations = [];
 
-      // Find existing fuel log to preserve receipt URL if new one isn't uploaded during edit
-      if (runId) {
-         const existingFuelLog = await prisma.fuelLog.findFirst({ where: { run_id: runId } });
-         if (existingFuelLog && !receiptUrl) receiptUrl = existingFuelLog.receipt_url;
-      }
-
-      const operations: any[] = [];
-
-      // Clean up old ledger entries to allow clean idempotent edits
       operations.push(prisma.fuelLog.deleteMany({ where: { run_id: savedRun.id } }));
       operations.push(prisma.financialEntry.deleteMany({ 
           where: { 
@@ -1969,7 +1978,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
           } 
       }));
 
-      if (fuelLiters > 0) {
+      if (isFirstIteration && fuelLiters > 0) {
          operations.push(prisma.fuelLog.create({
             data: {
               organization_id: orgId,
@@ -1984,7 +1993,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
          }));
       }
 
-      const ledgerEntries: any[] = [
+      const ledgerEntries = [
           {
             organization_id: orgId,
             vehicle_id: vehicleId,
@@ -1996,34 +2005,45 @@ export async function saveUnifiedDelivery(formData: FormData) {
             amount: revenue_calculated,
             entry_date: new Date(),
             description: `Chiffre d'Affaires - Tournée ${savedRun.run_code || savedRun.id}`
-          },
-          {
+          }
+      ];
+
+      if (cost_driver > 0) {
+          ledgerEntries.push({
             organization_id: orgId,
             vehicle_id: vehicleId,
             driver_id: driverId,
+            client_id: client.id,
             run_id: savedRun.id,
             entry_type: 'cost',
             category: 'driver_cost',
             amount: cost_driver,
             entry_date: new Date(),
             description: `Coût Chauffeur - Tournée ${savedRun.run_code || savedRun.id}`
-          },
-          {
+          });
+      }
+
+      if (cost_vehicle > 0) {
+          ledgerEntries.push({
             organization_id: orgId,
             vehicle_id: vehicleId,
+            driver_id: driverId,
+            client_id: client.id,
             run_id: savedRun.id,
             entry_type: 'cost',
             category: 'vehicle_wear_cost',
             amount: cost_vehicle,
             entry_date: new Date(),
             description: `Coût Véhicule (fixe + km) - Tournée ${savedRun.run_code || savedRun.id}`
-          }
-      ];
+          });
+      }
 
-      if (fuelLiters > 0) {
+      if (cost_fuel > 0) {
           ledgerEntries.push({
             organization_id: orgId,
             vehicle_id: vehicleId,
+            driver_id: driverId,
+            client_id: client.id,
             run_id: savedRun.id,
             entry_type: 'cost',
             category: 'fuel_cost',
@@ -2054,11 +2074,27 @@ export async function saveUnifiedDelivery(formData: FormData) {
           }
       }));
 
+      if (isFirstIteration) {
+          const old_km_diff_val = Number(existingRun.km_total || 0);
+          const km_delta = km_diff - old_km_diff_val;
+          if (km_delta !== 0) {
+              operations.push(prisma.vehicle.update({
+                  where: { id: vehicleId },
+                  data: { current_km: Math.max(0, (vehicle?.current_km || 0) + km_delta) }
+              }));
+          }
+      }
+
       await prisma.$transaction(operations);
+      
+      isFirstIteration = false;
     }
 
     revalidatePath("/driver");
+    revalidatePath("/driver/deliveries");
+    revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
+    
     return { success: true };
   } catch (error: any) {
     console.error("Erreur saveUnifiedDelivery:", error);
@@ -2401,6 +2437,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
     if (fromStr && toStr) {
        startDate = new Date(fromStr);
        endDate = new Date(toStr);
+       endDate.setHours(23, 59, 59, 999);
     } else {
        const activeFilter = filterStr || 'daily';
        const today = new Date();
@@ -2411,6 +2448,9 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
           startDate.setDate(today.getDate() - 29);
        }
     }
+
+    const dateDiffMs = endDate.getTime() - startDate.getTime();
+    const dateDiffDays = Math.max(1, Math.ceil(dateDiffMs / (1000 * 60 * 60 * 24)));
 
     // 1. Get total Pay and Fleet costs from completed runs
     const runs = await prisma.dailyRun.findMany({
@@ -2470,7 +2510,8 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       const evtStart = evt.start_date < startDate ? startDate : evt.start_date;
       const evtEnd = evt.end_date ? (evt.end_date > endDate ? endDate : evt.end_date) : endDate;
       const diffTime = evtEnd.getTime() - evtStart.getTime();
-      const days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+      let days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+      days = Math.min(days, dateDiffDays);
       
       totalAbsenceDays += days;
       
@@ -3030,6 +3071,16 @@ export async function updateRun(formData: FormData) {
        operations.push(prisma.financialEntry.createMany({
           data: ledgerData
        }));
+
+       const old_km_diff = Number(run.km_total || 0);
+       const km_delta = km_diff - old_km_diff;
+
+       if (km_delta !== 0) {
+          operations.push(prisma.vehicle.update({
+            where: { id: activeVehicleId! },
+            data: { current_km: Math.max(0, (activeVehicle?.current_km || 0) + km_delta) }
+          }));
+       }
     }
 
     operations.push(prisma.dailyRun.update({

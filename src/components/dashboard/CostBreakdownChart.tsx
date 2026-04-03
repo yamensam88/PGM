@@ -23,8 +23,8 @@ interface CostBreakdownChartProps {
   totalPenaltyCost?: number;
   totalAbsenceCost?: number;
   totalBonusCost?: number;
-  totalVehicleFixedCostPeriod?: number;
-  totalDriverFixedCostPeriod?: number;
+  idleVehicleFixedCost?: number;
+  idleDriverFixedCost?: number;
   periodAdminFixedCosts?: number;
 }
 
@@ -37,8 +37,8 @@ export function CostBreakdownChart({
   totalPenaltyCost,
   totalAbsenceCost,
   totalBonusCost,
-  totalVehicleFixedCostPeriod,
-  totalDriverFixedCostPeriod,
+  idleVehicleFixedCost,
+  idleDriverFixedCost,
   periodAdminFixedCosts
 }: CostBreakdownChartProps) {
   const chartData = useMemo(() => {
@@ -52,12 +52,12 @@ export function CostBreakdownChart({
       fuelCost += Number(run.cost_fuel || 0);
     });
 
-    const driverTotal = driverVariableCost + (totalDriverFixedCostPeriod || 0);
-    const vehicleTotal = vehicleVariableCost + (totalVehicleFixedCostPeriod || 0);
+    const driverTotal = driverVariableCost + (idleDriverFixedCost || 0);
+    const vehicleTotal = vehicleVariableCost + (idleVehicleFixedCost || 0);
 
     const total = driverTotal + vehicleTotal + fuelCost + 
-                 (totalMaintenanceCost || 0) + (totalDamageCost || 0) +
-                 (totalPenaltyCost || 0) + (totalAbsenceCost || 0) + (totalBonusCost || 0) +
+                 (totalMaintenanceCost || 0) + (totalDamageCost || 0) + 
+                 (totalBonusCost || 0) +
                  (periodAdminFixedCosts || 0);
 
     if (total === 0) return [];
@@ -82,18 +82,12 @@ export function CostBreakdownChart({
     if (totalDamageCost && totalDamageCost > 0) {
       data.push({ name: 'Casses / Sinistres', value: Number(totalDamageCost.toFixed(2)) });
     }
-    if (totalPenaltyCost && totalPenaltyCost > 0) {
-      data.push({ name: 'Pénalités Client', value: Number(totalPenaltyCost.toFixed(2)) });
-    }
-    if (totalAbsenceCost && totalAbsenceCost > 0) {
-      data.push({ name: 'Absences RH', value: Number(totalAbsenceCost.toFixed(2)) });
-    }
     if (totalBonusCost && totalBonusCost > 0) {
       data.push({ name: 'Primes Validées', value: Number(totalBonusCost.toFixed(2)) });
     }
 
     return data;
-  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost, totalBonusCost, totalVehicleFixedCostPeriod, totalDriverFixedCostPeriod, periodAdminFixedCosts]);
+  }, [runs, totalMaintenanceCost, totalDamageCost, totalPenaltyCost, totalAbsenceCost, totalBonusCost, idleVehicleFixedCost, idleDriverFixedCost, periodAdminFixedCosts]);
 
   if (chartData.length === 0) {
     return (

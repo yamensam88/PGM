@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
 import { VehicleAppointmentCell } from "@/components/dashboard/VehicleAppointmentCell";
 import { CreateVehicleForm } from "@/components/forms/CreateVehicleForm";
@@ -189,6 +190,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   }));
 
   const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
+  const activeDriverIds = new Set(rawDrivers.filter(d => d.status === 'active').map(d => d.id));
 
   const calendarEvents = rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
      let color = "#3b82f6";
@@ -212,18 +214,28 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   }));
   
   const manuallyPresentDriversId = rawDrivers.filter(d => {
-    return d.hr_events.some((e: any) => 
+    return d.status === 'active' && d.hr_events.some((e: any) => 
        e.event_type === 'presence' && 
        new Date(e.start_date) <= endDate &&
        (!e.end_date || new Date(e.end_date) >= startDate)
     );
   }).map(d => d.id);
   
-  const runsDriversId = runs.map(r => r.driver_id).filter(Boolean);
+  const runsDriversId = runs.filter(r => activeDriverIds.has(r.driver_id)).map(r => r.driver_id).filter(Boolean);
   const presentsChauffeursSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
   const presentsChauffeurs = presentsChauffeursSet.size;
   
-  const absentsChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs);
+  const absenceEventTypes = ['absence', 'sick_leave', 'vacation'];
+  const absentsChauffeursSet = new Set(rawDrivers.filter(d => 
+    d.status === 'active' && 
+    !presentsChauffeursSet.has(d.id) &&
+    d.hr_events.some((e: any) => 
+       absenceEventTypes.includes(e.event_type) && 
+       new Date(e.start_date) <= endDate &&
+       (!e.end_date || new Date(e.end_date) >= startDate)
+    )
+  ).map(d => d.id));
+  const absentsChauffeurs = absentsChauffeursSet.size;
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
@@ -236,6 +248,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         packages_loaded: 0,
         packages_delivered: 0,
         packages_advised: 0,
+        packages_returned: 0,
+        packages_relay: 0,
         km_utiles: 0,
         margin_net: 0,
         maintenance_cost: 0,
@@ -247,13 +261,17 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     
     zoneSynthesisMap[zName].runs.push(r);
     zoneSynthesisMap[zName].runs_count += 1;
-    const runLoaded = Number(r.packages_loaded || 0); // Exclude relay for Exploit consistency, or keep it if RunsTable adds it. Let's just use packages_loaded!
+    const runLoaded = Number(r.packages_loaded || 0);
     const runDelivered = Number(r.packages_delivered || 0);
-    const runAdvised = Number(r.packages_advised || 0);
+    const runAdvised = Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0);
+    const runReturned = Number(r.packages_returned || 0);
+    const runRelay = Number(r.packages_relay || 0);
 
     zoneSynthesisMap[zName].packages_loaded += runLoaded;
     zoneSynthesisMap[zName].packages_delivered += runDelivered;
     zoneSynthesisMap[zName].packages_advised += runAdvised;
+    zoneSynthesisMap[zName].packages_returned += runReturned;
+    zoneSynthesisMap[zName].packages_relay += runRelay;
     zoneSynthesisMap[zName].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
     
     // Sum up financial entries attached to runs
@@ -359,12 +377,13 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         {(() => {
            const completedRuns = runs.filter(r => r.status === 'completed');
            
-           const totalLoaded = completedRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0), 0);
-           const totalAdvised = completedRuns.reduce((sum, r) => sum + Number(r.packages_advised || 0), 0);
+           const totalLoaded = completedRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
+           const totalAdvised = completedRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
+           const totalReturned = completedRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
            const totalDelivered = completedRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
 
            const txLivraison = totalLoaded > 0 ? ((totalDelivered / totalLoaded) * 100).toFixed(1) : "0.0";
-           const txAvisage = totalLoaded > 0 ? ((totalAdvised / totalLoaded) * 100).toFixed(1) : "0.0";
+           const txAvisage = totalLoaded > 0 ? (((totalAdvised + totalReturned) / totalLoaded) * 100).toFixed(1) : "0.0";
            
            // Productivité moyenne = livrés / tournée
            const productiviteTournee = completedRuns.length > 0 ? (totalDelivered / completedRuns.length).toFixed(1) : "0";
@@ -425,29 +444,45 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      </div>
                   </div>
 
-                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
-                  <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Taux de Livraison</h3>
-                  <p className="text-3xl font-bold text-emerald-600">{txLivraison}%</p>
-                  <p className="text-xs text-slate-500 mt-1">{totalDelivered} livrés / {totalLoaded} chargés</p>
-                 </div>
+                 <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Taux de Livraison</h3>
+                  <div>
+                    <div className={`text-3xl font-extrabold tracking-tight ${Number(txLivraison) >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
+                      {txLivraison}%
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{totalDelivered} livrés / {totalLoaded} chargés</p>
+                  </div>
+                 </Card>
 
-                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
-                  <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Taux d'Avisage</h3>
-                  <p className={`text-3xl font-bold ${Number(txAvisage) > 10 ? 'text-red-500' : 'text-zinc-700 dark:text-slate-700'}`}>{txAvisage}%</p>
-                  <p className="text-xs text-slate-500 mt-1">{totalAdvised} avisés / {totalLoaded} chargés</p>
-                 </div>
+                 <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Taux d'Avisage</h3>
+                  <div>
+                    <div className={`text-3xl font-extrabold tracking-tight ${Number(txAvisage) > 10 ? 'text-red-500' : 'text-zinc-700 dark:text-slate-700'}`}>
+                      {txAvisage}%
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{totalAdvised} avisés / {totalLoaded} chargés</p>
+                  </div>
+                 </Card>
 
-                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
-                  <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Productivité Moy.</h3>
-                  <p className="text-3xl font-bold text-blue-600">{productiviteTournee}</p>
-                  <p className="text-xs text-slate-500 mt-1">Colis livrés / tournée</p>
-                 </div>
+                 <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Productivité Moy.</h3>
+                  <div>
+                    <div className="text-3xl font-extrabold tracking-tight text-blue-600">
+                      {productiviteTournee}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Colis livrés / tournée</p>
+                  </div>
+                 </Card>
                  
-                 <div className="bg-white dark:bg-white flex-1 min-w-[180px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
-                  <h3 className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Km Utiles / Jour</h3>
-                  <p className="text-3xl font-bold text-purple-600">{avgKmPerRun} <span className="text-lg">km</span></p>
-                  <p className="text-xs text-slate-500 mt-1">Moyenne par tournée</p>
-                 </div>
+                 <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Km Utiles / Jour</h3>
+                  <div>
+                    <div className="text-3xl font-extrabold tracking-tight text-purple-600">
+                      {avgKmPerRun} <span className="text-lg">km</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Moyenne par tournée</p>
+                  </div>
+                 </Card>
 
                  <div className="bg-white dark:bg-white flex-1 min-w-[200px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-amber-600 mb-1 uppercase tracking-wider">Leaderboard Zone</h3>
@@ -467,12 +502,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         })()}
 
         <Tabs defaultValue="runs" className="w-full">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <TabsList>
-              <TabsTrigger value="runs" className="text-base px-6">Tournées (Par Date)</TabsTrigger>
-              <TabsTrigger value="planning" className="text-base px-6">Planning & Disponibilité</TabsTrigger>
-              <TabsTrigger value="drivers" className="text-base px-6">Chauffeurs</TabsTrigger>
-              <TabsTrigger value="vehicles" className="text-base px-6">Flotte de Véhicules</TabsTrigger>
+          <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-hide py-1 mb-6 flex items-center">
+            <TabsList className="w-max flex flex-nowrap justify-start bg-zinc-100/50 dark:bg-slate-800 border border-zinc-200/50 dark:border-slate-700 h-auto p-1.5">
+              <TabsTrigger value="runs" className="text-[15px] sm:text-base px-4 sm:px-6 whitespace-nowrap">Tournées (Par Date)</TabsTrigger>
+              <TabsTrigger value="planning" className="text-[15px] sm:text-base px-4 sm:px-6 whitespace-nowrap">Planning & Disponibilité</TabsTrigger>
+              <TabsTrigger value="drivers" className="text-[15px] sm:text-base px-4 sm:px-6 whitespace-nowrap">Chauffeurs</TabsTrigger>
+              <TabsTrigger value="vehicles" className="text-[15px] sm:text-base px-4 sm:px-6 whitespace-nowrap">Flotte de Véhicules</TabsTrigger>
             </TabsList>
           </div>
 

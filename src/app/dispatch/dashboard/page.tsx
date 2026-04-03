@@ -50,6 +50,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   if (fromParam && toParam) {
     startDate = new Date(fromParam);
     endDate = new Date(toParam);
+    endDate.setHours(23, 59, 59, 999);
   } else {
     const activeFilter = filter || 'daily';
     if (activeFilter === 'weekly') {
@@ -59,10 +60,14 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     }
   }
 
+  const dateDiffMs = endDate.getTime() - startDate.getTime();
+  const dateDiffDays = Math.max(1, Math.ceil(dateDiffMs / (1000 * 60 * 60 * 24)));
+
   // 3. Fetch Runs for the period
   const rawRuns = await prisma.dailyRun.findMany({
     where: {
       organization_id: orgId,
+      status: 'completed',
       date: {
         gte: startDate,
         lte: endDate
@@ -94,32 +99,15 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   // Map to track the first run of a given day for a vehicle
   const vehicleDailyAppearance: Record<string, boolean> = {};
 
-  // Calculate dynamic margins for RunsTable & aggregates
+  // Use STRICT database constants to prevent Historical Drift
   const allRuns = rawRuns.map((run) => {
     const revenue = run.revenue_calculated ? Number(run.revenue_calculated) : 0;
-    
-    // Fully dynamic fleet cost to account for updated rental and insurance values
-    const fixed_monthly = Number(run.vehicle?.fixed_monthly_cost || 0);
-    const rental_monthly = Number(run.vehicle?.rental_monthly_cost || 0);
-    const insurance_monthly = Number(run.vehicle?.insurance_monthly_cost || 0);
-    
-    const runDateStr = run.date.toISOString().split('T')[0];
-    const vehicleKey = `${runDateStr}_${run.vehicle_id}`;
-    let isFirstForVehicle = false;
-    if (!vehicleDailyAppearance[vehicleKey]) {
-      vehicleDailyAppearance[vehicleKey] = true;
-      isFirstForVehicle = true;
-    }
-
-    const dynamicBaseFleetCost = isFirstForVehicle ? ((fixed_monthly + rental_monthly + insurance_monthly) / 30) : 0;
-    
-    const km_diff = Math.max(0, (Number(run.km_end) || 0) - (Number(run.km_start) || Number(run.km_end) || 0));
-    const variableFleetCost = km_diff * Number(run.vehicle?.internal_cost_per_km || 0);
-    const fleetCost = dynamicBaseFleetCost + variableFleetCost;
-    
+    const fleetCost = run.cost_vehicle ? Number(run.cost_vehicle) : 0;
     const driverCost = run.cost_driver ? Number(run.cost_driver) : 0;
     const fuelCost = run.cost_fuel ? Number(run.cost_fuel) : 0;
-    const calculatedMargin = revenue - fleetCost - driverCost - fuelCost;
+    const calculatedMargin = run.margin_net ? Number(run.margin_net) : (revenue - fleetCost - driverCost - fuelCost);
+
+    const runDateStr = run.date.toISOString().split('T')[0];
 
     // Retroactively attach orphan financial entries
     const orphanEntries = interventionCostsRaw.filter(e => 
@@ -147,7 +135,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       cost_other: run.cost_other ? Number(run.cost_other) : 0,
       total_cost: run.total_cost ? Number(run.total_cost) : 0,
       fuel_consumed_liters: run.fuel_consumed_liters ? Number(run.fuel_consumed_liters) : 0,
-      margin_net: calculatedMargin, // forcefully recomputed to retroactively fix legacy runs
+      margin_net: calculatedMargin, // strictly tied to Ledger boundaries
       productivity_index: run.productivity_index ? Number(run.productivity_index) : null,
       penalty_risk_score: run.penalty_risk_score ? Number(run.penalty_risk_score) : 0,
       sst_score: run.sst_score ? Number(run.sst_score) : 0,
@@ -224,13 +212,16 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     const evtStart = evt.start_date < startDate ? startDate : evt.start_date;
     const evtEnd = evt.end_date ? (evt.end_date > endDate ? endDate : evt.end_date) : endDate;
     const diffTime = evtEnd.getTime() - evtStart.getTime();
-    const days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+    let days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+    
+    // CAP OVERLAP: A driver cannot be absent more days than the dashboard filter's total span
+    days = Math.min(days, dateDiffDays);
     
     const explicitMonthly = evt.driver?.hourly_cost ? Number(evt.driver.hourly_cost) : (Number(evt.driver?.daily_base_cost||0) * 25.33);
     const calendarDailyCost = explicitMonthly / 30.44;
 
     totalAbsenceDays += days;
-    if (evt.event_type === 'sick_leave' || evt.event_type === 'vacation') {
+    if (['sick_leave', 'vacation'].includes(evt.event_type)) {
        const cost = days * calendarDailyCost;
        totalAbsenceCost += cost;
        
@@ -268,81 +259,149 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const totalBonusCost = grantedBonuses.reduce((sum, b) => sum + Number(b.notes || 0), 0);
 
   // 5. Aggregations (Period)
-  const totalRevenue = allRuns.reduce((sum, r) => sum + r.revenue_calculated, 0);
-  const totalFuelCost = allRuns.reduce((sum, r) => sum + r.cost_fuel, 0);
-  
-  // Calculate Exact Variable Fleet Cost safely
-  const totalVariableVehicleCost = allRuns.reduce((sum, r) => sum + (Math.max(0, (r.km_end||0) - (r.km_start||r.km_end||0)) * Number(r.vehicle?.internal_cost_per_km||0)), 0);
+  const completedRunsBefore = allRuns.filter((r: any) => r.status === 'completed');
 
-  // Calculate Global Periodic Fixed Costs (Avoids Idle Cost Leak and Double Counting)
-  const dateDiffMs = endDate.getTime() - startDate.getTime();
-  const dateDiffDays = Math.max(1, Math.ceil(dateDiffMs / (1000 * 60 * 60 * 24)));
+  const totalRevenue = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.revenue_calculated || 0), 0);
+  const totalFuelCost = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_fuel || 0), 0);
+  const totalFleetCostActive = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_vehicle || 0), 0);
+  const totalDriverCostActive = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_driver || 0), 0);
+  const totalRunsMargin = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.margin_net || 0), 0);
 
+  // Calculate Global Periodic Fixed Costs (To capture Idle Costs)
   const activeVehicles = await prisma.vehicle.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const totalVehicleFixedCostPeriod = activeVehicles.reduce((sum, v) => sum + ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30), 0) * dateDiffDays;
+  const globalVehicleFixedParams = activeVehicles.reduce((sum, v) => sum + ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30), 0) * dateDiffDays;
+  
+  // The cost of idle vehicles is the global parameters minus what was already accounted for in active runs
+  // Note: Since `cost_vehicle` includes variable KM cost, extracting just base_fleet_cost is mathematically tricky.
+  // We approximate idle fleet cost by checking days vehicle did NOT run.
+  let idleVehicleFixedCost = globalVehicleFixedParams;
+  const vehicleBaseChargedDays = new Set<string>();
+
+  allRuns.forEach(r => {
+    if (r.cost_vehicle && r.cost_vehicle > 0) {
+       const runDateStr = r.date.toISOString().split('T')[0];
+       const key = `${r.vehicle_id}-${runDateStr}`;
+       
+       if (!vehicleBaseChargedDays.has(key)) {
+         vehicleBaseChargedDays.add(key);
+         const v = activeVehicles.find(v => v.id === r.vehicle_id);
+         if (v) {
+            const dailyBase = ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30);
+            idleVehicleFixedCost -= dailyBase;
+         }
+       }
+    }
+  });
+  idleVehicleFixedCost = Math.max(0, idleVehicleFixedCost);
 
   const activeDriversData = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const totalDriverFixedCostPeriod = activeDriversData.reduce((sum, d) => {
+  const globalDriverFixedParams = activeDriversData.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
-     const calendarDailyCost = explicitMonthly / 30.44;
-     return sum + calendarDailyCost;
+     return sum + (explicitMonthly / 30.44);
   }, 0) * dateDiffDays;
 
   const monthlyFixedCostAdmin = orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0;
   const periodAdminFixedCosts = (monthlyFixedCostAdmin / 30.44) * dateDiffDays;
 
-  // We calculate unpaid absence savings from the driverAbsenceCosts array
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
-  // New true Margin : Revenue - (Variable Fleet + Fuel + Admin + Global Drivers + Global Vehicles + Interventions + Bonuses)
-  // Penalties are salary deductions from drivers, so they reduce the total costs (i.e. + margin).
-  // Unpaid absences also reduce the total driver fixed costs.
-  const correctedDriverFixedCost = totalDriverFixedCostPeriod - totalUnpaidSavings - totalPenaltyCost;
+  const totalIdleDriverCost = Math.max(0, globalDriverFixedParams - totalDriverCostActive - totalUnpaidSavings);
+  const fleetCostLedgerSafe = totalFleetCostActive; 
 
-  const totalMargin = totalRevenue - totalVariableVehicleCost - totalFuelCost - totalVehicleFixedCostPeriod - correctedDriverFixedCost - periodAdminFixedCosts - totalDamageCost - totalMaintenanceCost - totalBonusCost;
+  const totalMargin = totalRunsMargin - periodAdminFixedCosts - totalIdleDriverCost - idleVehicleFixedCost - totalDamageCost - totalMaintenanceCost - totalBonusCost - totalPenaltyCost;
+  const totalCosts = totalFleetCostActive + totalFuelCost + totalDriverCostActive + periodAdminFixedCosts + totalIdleDriverCost + idleVehicleFixedCost + totalDamageCost + totalMaintenanceCost + totalBonusCost + totalPenaltyCost;
 
-  const totalCosts = totalVariableVehicleCost + totalFuelCost + totalVehicleFixedCostPeriod + correctedDriverFixedCost + periodAdminFixedCosts + totalDamageCost + totalMaintenanceCost + totalBonusCost;
+  const completedRuns = allRuns.filter(r => r.status === 'completed');
 
-  const totalPackages = allRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0), 0);
-  const totalAdvised = allRuns.reduce((sum, r) => sum + Number(r.packages_advised || 0), 0);
-  const totalDelivered = allRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
-  const totalKm = allRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+  const totalPackages = completedRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
+  const totalAdvised = completedRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
+  const totalDelivered = completedRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
+  const totalReturned = completedRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
+  const totalKm = completedRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
 
-  const failureRate = totalPackages > 0 ? (totalAdvised / totalPackages) * 100 : 0;
+  const failureRate = totalPackages > 0 ? ((totalAdvised + totalReturned) / totalPackages) * 100 : 0;
+  const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
 
   // 6. Headcount Logic (Effectifs)
   const totalActiveDrivers = await prisma.driver.count({
     where: { organization_id: orgId, status: 'active' }
   });
-  // Présents: Unique drivers who have driven during this filtered period
-  const presentDrivers = new Set(allRuns.map(r => r.driver_id)).size;
-  // Absents: Unique drivers with an HR event that is an absence type during this period
-  const absentDrivers = new Set(hrEvents.filter(e => e.event_type !== 'presence').map(e => e.driver_id)).size;
+  // Présents: Unique ACTIVE drivers who have ANY run (planned, in_progress, completed) OR a manual 'presence' HR event during this period
+  const activeDriverIds = new Set(activeDriversData.map(d => d.id));
+  const runsDriversId = allRuns.filter(r => activeDriverIds.has(r.driver_id)).map(r => r.driver_id);
+  const manuallyPresentDriversId = hrEvents.filter(e => e.event_type === 'presence' && activeDriverIds.has(e.driver_id)).map(e => e.driver_id);
+  const presentDriversSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
+  const presentDrivers = presentDriversSet.size;
+
+  // Absents: Unique ACTIVE drivers with an HR event that is an absence type, UNLESS they are actually present on the field
+  const absenceEventTypes = ['absence', 'sick_leave', 'vacation'];
+  const absentDrivers = new Set(
+    hrEvents.filter(e => absenceEventTypes.includes(e.event_type) && activeDriverIds.has(e.driver_id) && !presentDriversSet.has(e.driver_id))
+    .map(e => e.driver_id)
+  ).size;
 
   const driversAtRisk = new Set(
-    allRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50).map(r => r.driver_id)
+    completedRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50 && activeDriverIds.has(r.driver_id)).map(r => r.driver_id)
   ).size;
 
   const totalActiveVehiclesCount = activeVehicles.length;
   const totalMaintenanceVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'maintenance' } });
   const totalInactiveVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'inactive' } });
 
-  const avgCaPerRun = allRuns.length > 0 ? (totalRevenue / allRuns.length).toFixed(2) : "0.00";
-  const avgCostPerRun = allRuns.length > 0 ? (totalCosts / allRuns.length).toFixed(2) : "0.00";
-  const avgMarginPerRun = allRuns.length > 0 ? (totalMargin / allRuns.length).toFixed(2) : "0.00";
+  const avgCaPerRun = completedRuns.length > 0 ? (totalRevenue / completedRuns.length).toFixed(2) : "0.00";
+  const avgCostPerRun = completedRuns.length > 0 ? (totalCosts / completedRuns.length).toFixed(2) : "0.00";
+  const avgMarginPerRun = completedRuns.length > 0 ? (totalMargin / completedRuns.length).toFixed(2) : "0.00";
 
-  // Chart Data
-  const chartRunsData = allRuns.map(r => ({
-    date: r.date,
-    revenue: r.revenue_calculated,
-    cost: r.cost_vehicle + r.cost_driver + r.cost_fuel
+  // Chart Data with mathematically strict Daily Pro-rata Overheads
+  const dailyData: Record<string, { revenue: number, cost: number }> = {};
+  
+  const iterDate = new Date(startDate);
+  while(iterDate <= endDate) {
+     dailyData[iterDate.toISOString().split('T')[0]] = { revenue: 0, cost: 0 };
+     iterDate.setDate(iterDate.getDate() + 1);
+  }
+
+  completedRuns.forEach(r => {
+    const dStr = r.date.toISOString().split('T')[0];
+    if (!dailyData[dStr]) dailyData[dStr] = { revenue: 0, cost: 0 };
+    dailyData[dStr].revenue += r.revenue_calculated;
+    dailyData[dStr].cost += (r.cost_vehicle + r.cost_driver + r.cost_fuel);
+  });
+
+  const dailyAdmin = periodAdminFixedCosts / dateDiffDays;
+  const dailyIdleDriver = totalIdleDriverCost / dateDiffDays;
+  const dailyIdleVehicle = idleVehicleFixedCost / dateDiffDays;
+  const dailyBonus = totalBonusCost / dateDiffDays;
+  const globalDailyCost = dailyAdmin + dailyIdleDriver + dailyIdleVehicle + dailyBonus;
+
+  Object.keys(dailyData).forEach(dStr => {
+     dailyData[dStr].cost += globalDailyCost;
+  });
+
+  damageCosts.forEach(c => {
+     const dStr = c.entry_date.toISOString().split('T')[0];
+     if (dailyData[dStr]) dailyData[dStr].cost += Number(c.amount);
+  });
+  maintenanceCosts.forEach(c => {
+     const dStr = c.entry_date.toISOString().split('T')[0];
+     if (dailyData[dStr]) dailyData[dStr].cost += Number(c.amount);
+  });
+  penaltyCosts.forEach(c => {
+     const dStr = c.entry_date.toISOString().split('T')[0];
+     if (dailyData[dStr]) dailyData[dStr].cost += Number(c.amount);
+  });
+
+  const chartRunsData = Object.entries(dailyData).map(([date, data]) => ({
+    date: new Date(date),
+    revenue: data.revenue,
+    cost: data.cost
   }));
 
   // AI Report Logic (Top/Flop drivers & vehicles)
   const driverStats: Record<string, { name: string, margin: number, runs: number, advised: number }> = {};
   const vehicleStats: Record<string, { plate: string, cost: number, runs: number }> = {};
 
-  allRuns.forEach(r => {
+  completedRuns.forEach(r => {
     if (r.driver_id && r.driver) {
       if (!driverStats[r.driver_id]) driverStats[r.driver_id] = { name: `${r.driver.first_name} ${r.driver.last_name}`, margin: 0, runs: 0, advised: 0 };
       driverStats[r.driver_id].margin += r.margin_net;
@@ -383,13 +442,13 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const generateAIAnalysis = () => {
     return {
       summary: {
-        runs: allRuns.length,
-        volume: { total: totalPackages, delivered: totalDelivered, advised: totalAdvised },
+        runs: completedRuns.length,
+        volume: { total: totalPackages, delivered: totalDelivered, advised: totalAdvised, returned: totalReturned },
         km: totalKm,
         costs: totalCosts
       },
       anomalies: [
-        { label: "Taux d'avisage global", value: `${failureRate.toFixed(1)}% de la charge`, type: "warning" },
+        { label: "Taux d'échec global", value: `${failureRate.toFixed(1)}% de la charge (avisés + retours)`, type: "warning" },
         driversAtRisk > 0 ? { label: "Risque RH alerté", value: `${driversAtRisk} chauffeur(s) en pénalités`, type: "danger" } : null,
         totalAbsenceDays > 0 ? { label: "Impact Absences", value: `${totalAbsenceDays} jours (${totalAbsenceCost.toFixed(0)}€)`, type: "danger" } : null,
         { label: "Hausse carburant", value: "Suivi de consommation constant", type: "info" }
@@ -408,12 +467,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const aiReport = generateAIAnalysis();
 
-  const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
 
   // 7. Synthèse Globale par Chauffeur
   const synthesisMap: Record<string, any> = {};
   
-  allRuns.forEach(r => {
+  completedRuns.forEach(r => {
     if (!r.driver_id || !r.driver) return;
     const did = r.driver_id;
     if (!synthesisMap[did]) {
@@ -423,6 +481,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         packages_loaded: 0,
         packages_delivered: 0,
         packages_advised: 0,
+        packages_returned: 0,
+        packages_relay: 0,
         km_utiles: 0,
         margin_net: 0,
         maintenance_cost: 0,
@@ -436,7 +496,9 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     synthesisMap[did].runs_count += 1;
     synthesisMap[did].packages_loaded += Number(r.packages_loaded || 0);
     synthesisMap[did].packages_delivered += Number(r.packages_delivered || 0);
-    synthesisMap[did].packages_advised += Number(r.packages_advised || 0);
+    synthesisMap[did].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
+    synthesisMap[did].packages_returned += Number(r.packages_returned || 0);
+    synthesisMap[did].packages_relay += Number(r.packages_relay || 0);
     synthesisMap[did].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
     synthesisMap[did].margin_net += r.margin_net;
     
@@ -445,7 +507,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       r.financial_entries.forEach((entry: any) => {
         if (entry.category === 'maintenance_cost') synthesisMap[did].maintenance_cost += Number(entry.amount);
         if (entry.category === 'damage_cost') synthesisMap[did].damage_cost += Number(entry.amount);
-        if (entry.category === 'penalty_cost') synthesisMap[did].penalty_cost += Number(entry.amount);
+        if (entry.category === 'penalty') synthesisMap[did].penalty_cost += Number(entry.amount);
       });
     }
   });
@@ -459,7 +521,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   // 8. Synthèse Globale par Zone
   const zoneSynthesisMap: Record<string, any> = {};
   
-  allRuns.forEach(r => {
+  completedRuns.forEach(r => {
     if (!r.zone_id || !r.zone) return;
     const zid = r.zone_id;
     if (!zoneSynthesisMap[zid]) {
@@ -469,6 +531,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         packages_loaded: 0,
         packages_delivered: 0,
         packages_advised: 0,
+        packages_returned: 0,
+        packages_relay: 0,
         km_utiles: 0,
         margin_net: 0,
         maintenance_cost: 0,
@@ -481,7 +545,9 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     zoneSynthesisMap[zid].runs_count += 1;
     zoneSynthesisMap[zid].packages_loaded += Number(r.packages_loaded || 0);
     zoneSynthesisMap[zid].packages_delivered += Number(r.packages_delivered || 0);
-    zoneSynthesisMap[zid].packages_advised += Number(r.packages_advised || 0);
+    zoneSynthesisMap[zid].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
+    zoneSynthesisMap[zid].packages_returned += Number(r.packages_returned || 0);
+    zoneSynthesisMap[zid].packages_relay += Number(r.packages_relay || 0);
     zoneSynthesisMap[zid].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
     zoneSynthesisMap[zid].margin_net += r.margin_net;
     
@@ -490,21 +556,21 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       r.financial_entries.forEach((entry: any) => {
         if (entry.category === 'maintenance_cost') zoneSynthesisMap[zid].maintenance_cost += Number(entry.amount);
         if (entry.category === 'damage_cost') zoneSynthesisMap[zid].damage_cost += Number(entry.amount);
-        if (entry.category === 'penalty_cost') zoneSynthesisMap[zid].penalty_cost += Number(entry.amount);
+        if (entry.category === 'penalty') zoneSynthesisMap[zid].penalty_cost += Number(entry.amount);
       });
     }
   });
 
   const zoneSynthesisData = Object.values(zoneSynthesisMap).sort((a: any, b: any) => {
     const marginA = a.margin_net - a.maintenance_cost - a.damage_cost - a.penalty_cost;
-    const marginB = b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost;
+    const marginB = b.margin_net - b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost;
     return marginB - marginA;
   });
 
   // 9. Radar des Anomalies (Fuel, Damages, Maintenance Usure)
   // 9a. Anomalies Carburant (Fuel)
   const fuelStatsMap: Record<string, { driverName: string, totalKm: number, totalFuel: number }> = {};
-  allRuns.forEach(r => {
+  completedRuns.forEach(r => {
     if (r.driver_id && r.driver && r.vehicle) {
       const fuel = r.fuel_consumed_liters || 0;
       const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
@@ -558,7 +624,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   prematureWearCosts.forEach(cost => {
      if (cost.vehicle_id) {
         const driversForVehicle: Record<string, {name: string, km: number}> = {};
-        allRuns.forEach(r => {
+        completedRuns.forEach(r => {
            if (r.vehicle_id === cost.vehicle_id && r.driver_id && r.driver) {
               const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
               if (!driversForVehicle[r.driver_id]) driversForVehicle[r.driver_id] = {name: `${r.driver.first_name} ${r.driver.last_name}`, km: 0};
@@ -642,7 +708,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
               <div className={`text-3xl font-extrabold tracking-tight ${deliveryRate >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
                 {deliveryRate.toFixed(1)}%
               </div>
-              <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{totalDelivered} colis livrés</p>
+              <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{totalDelivered} livrés / {totalPackages} chargés</p>
             </div>
           </Card>
 
@@ -719,8 +785,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                   totalPenaltyCost={totalPenaltyCost}
                   totalAbsenceCost={totalAbsenceCost}
                   totalBonusCost={totalBonusCost}
-                  totalVehicleFixedCostPeriod={totalVehicleFixedCostPeriod}
-                  totalDriverFixedCostPeriod={totalDriverFixedCostPeriod}
+                  idleVehicleFixedCost={idleVehicleFixedCost}
+                  idleDriverFixedCost={totalIdleDriverCost}
                   periodAdminFixedCosts={periodAdminFixedCosts}
                  />
               </div>
@@ -803,7 +869,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             </CardHeader>
             <CardContent className="pt-6 px-6 pb-6">
               <div className="text-[13px] leading-relaxed text-slate-700 whitespace-pre-wrap font-medium space-y-4">
-                {`**RAPPORT ANALYTIQUE IA**\nDate de génération : ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}\n\n**Résumé Global de la Période** :\n- Nombre total de tournées : ${aiReport.summary.runs} actives\n- Volume Colis : ${aiReport.summary.volume.total} chargés | ${aiReport.summary.volume.delivered} livrés | ${aiReport.summary.volume.advised} avisés\n- Kilomètres parcourus : ${aiReport.summary.km} km au total\n- Frais réels globaux : ${aiReport.summary.costs.toFixed(2)}€\n\n**Top Problèmes & Anomalies Détectées :**\n${aiReport.anomalies.map(a => `- ${a.label} : ${a.value}`).join('\n')}\n\n**Analyse des Acteurs (Marge Nette pondérée) :**\n- Acteurs ultra-performants (Top) : ${aiReport.actors.top}\n- Impact négatif sur rentabilité (Flop) : ${aiReport.actors.flop}\n- Postes de dépense élevés (Véhicules) : ${aiReport.actors.vehicles}\n\n**Recommandations Concrètes (Actionnable) :**\n${aiReport.recommendations.map((r, i) => `- ${i===0? 'Alerte Rentabilité' : 'Points de vigilance'} : ${r}`).join('\n')}`}
+                {`**RAPPORT ANALYTIQUE IA**\nDate de génération : ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}\n\n**Résumé Global de la Période** :\n- Nombre total de tournées : ${aiReport.summary.runs} actives\n- Volume Colis : ${aiReport.summary.volume.total} chargés | ${aiReport.summary.volume.delivered} livrés | ${aiReport.summary.volume.advised} avisés | ${aiReport.summary.volume.returned} retournés\n- Kilomètres parcourus : ${aiReport.summary.km} km au total\n- Frais réels globaux : ${aiReport.summary.costs.toFixed(2)}€\n\n**Top Problèmes & Anomalies Détectées :**\n${aiReport.anomalies.map(a => `- ${a.label} : ${a.value}`).join('\n')}\n\n**Analyse des Acteurs (Marge Nette pondérée) :**\n- Acteurs ultra-performants (Top) : ${aiReport.actors.top}\n- Impact négatif sur rentabilité (Flop) : ${aiReport.actors.flop}\n- Postes de dépense élevés (Véhicules) : ${aiReport.actors.vehicles}\n\n**Recommandations Concrètes (Actionnable) :**\n${aiReport.recommendations.map((r, i) => `- ${i===0? 'Alerte Rentabilité' : 'Points de vigilance'} : ${r}`).join('\n')}`}
               </div>
               <div className="mt-8 flex justify-end">
                 <Button variant="outline" size="sm" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 gap-2 rounded-xl px-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
