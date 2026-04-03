@@ -240,12 +240,12 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
                 <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
                   <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Maladie (Mois)</h3>
+                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Maladie (Période)</h3>
                      <BriefcaseMedical className="w-4 h-4 text-red-500" />
                   </div>
                   <div>
                     <div className="text-3xl font-bold tracking-tight text-red-400">{sickLeaves.length}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Arrêts sur 30 jours</p>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{sickLeaves.length > 1 ? 'Arrêts' : 'Arrêt'} sur la période</p>
                   </div>
                 </Card>
 
@@ -258,7 +258,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                     <div className="text-3xl font-bold tracking-tight text-orange-400">
                        {sanctions.length}
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Avertissements/Retards</p>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{sanctions.length > 1 ? 'Avertissements/Retards' : 'Avertissement/Retard'}</p>
                   </div>
                 </Card>
 
@@ -269,7 +269,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                   </div>
                   <div>
                     <div className="text-3xl font-bold tracking-tight text-rose-400">{unjustifiedAbsences.length}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Cumul sur 30 jours</p>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Cumul sur la période</p>
                   </div>
                 </Card>
 
@@ -280,7 +280,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                   </div>
                   <div>
                     <div className="text-3xl font-bold tracking-tight text-emerald-400">{totalPaidLeaveBalance}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Jours cumulés dispo.</p>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{totalPaidLeaveBalance > 1 ? 'Jours cumulés dispo.' : 'Jour cumulé dispo.'}</p>
                   </div>
                 </Card>
 

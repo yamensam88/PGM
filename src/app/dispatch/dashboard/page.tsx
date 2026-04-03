@@ -679,7 +679,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">CA Période</h3>
             <div>
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">{totalRevenue.toFixed(2)} €</div>
+              <div className="text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight">{totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">~{avgCaPerRun} € CA / tournée</p>
             </div>
           </Card>
@@ -687,7 +687,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Charges D'Exploit.</h3>
             <div>
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">-{totalCosts.toFixed(0)} €</div>
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">-{totalCosts.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Coûts totaux absorbés</p>
             </div>
           </Card>
