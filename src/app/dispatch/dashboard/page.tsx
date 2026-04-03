@@ -67,7 +67,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const rawRuns = await prisma.dailyRun.findMany({
     where: {
       organization_id: orgId,
-      status: 'completed',
+      status: { not: 'cancelled' },
       date: {
         gte: startDate,
         lte: endDate

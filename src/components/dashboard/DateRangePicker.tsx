@@ -36,14 +36,26 @@ export function DateRangePicker({
         to: new Date(urlTo),
       };
     }
+    const activeFilter = filter || (!urlFrom ? 'daily' : null);
+    if (activeFilter) {
+      const today = new Date();
+      if (activeFilter === 'daily') {
+        return { from: today, to: today };
+      }
+      if (activeFilter === 'weekly') {
+        return { from: subDays(today, 6), to: today };
+      }
+      if (activeFilter === 'monthly') {
+        return { from: subDays(today, 29), to: today };
+      }
+    }
     return undefined;
-  }, [urlFrom, urlTo]);
+  }, [urlFrom, urlTo, filter]);
 
   const [date, setDate] = React.useState<DateRange | undefined>(initialRange);
 
-  // When a preset is clicked, we clear custom date selections
+  // When a preset is clicked, update the URL
   const handlePresetClick = (preset: "daily" | "weekly" | "monthly") => {
-    setDate(undefined);
     router.push(`${pathname}?filter=${preset}`);
   };
 
@@ -111,7 +123,7 @@ export function DateRangePicker({
               size="sm"
               className={cn(
                 "h-8 justify-start text-left font-normal border-0",
-                date || (urlFrom && urlTo) ? "bg-white shadow-sm dark:bg-zinc-700 text-zinc-900 dark:text-slate-900 hover:bg-white" : "text-slate-500 hover:text-zinc-700 dark:hover:text-slate-600"
+                date || (urlFrom && urlTo) || filter ? "bg-white shadow-sm dark:bg-zinc-700 text-zinc-900 dark:text-slate-900 hover:bg-white" : "text-slate-500 hover:text-zinc-700 dark:hover:text-slate-600"
               )}
             />}>
               <CalendarIcon className="mr-2 h-4 w-4" />
