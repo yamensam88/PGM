@@ -313,11 +313,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const completedRuns = allRuns.filter(r => r.status === 'completed');
 
-  const totalPackages = completedRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
-  const totalAdvised = completedRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
-  const totalDelivered = completedRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
-  const totalReturned = completedRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
-  const totalKm = completedRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+  const totalPackages = allRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
+  const totalAdvised = allRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
+  const totalDelivered = allRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
+  const totalReturned = allRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
+  const totalKm = allRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
 
   const failureRate = totalPackages > 0 ? ((totalAdvised + totalReturned) / totalPackages) * 100 : 0;
   const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
@@ -521,7 +521,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   // 8. Synthèse Globale par Zone
   const zoneSynthesisMap: Record<string, any> = {};
   
-  completedRuns.forEach(r => {
+  allRuns.forEach(r => {
     if (!r.zone_id || !r.zone) return;
     const zid = r.zone_id;
     if (!zoneSynthesisMap[zid]) {
