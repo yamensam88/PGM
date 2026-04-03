@@ -442,10 +442,6 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                          <div className="text-3xl font-extrabold text-teal-500">{congesChauffeurs}</div>
                          <div className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mt-1">{congesChauffeurs > 1 ? 'Congés' : 'Congé'}</div>
                        </div>
-                       <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-blue-500">{idleChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">Repos</div>
-                       </div>
                      </div>
                   </div>
 
