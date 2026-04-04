@@ -510,7 +510,9 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                  <div className="bg-white dark:bg-white flex-1 min-w-[200px] p-5 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-200">
                   <h3 className="text-xs font-medium text-amber-600 mb-1 uppercase tracking-wider">Leaderboard Zone</h3>
                   <div className="mt-2 space-y-2">
-                     {Object.entries(zonesStats).slice(0,2).map(([zone, stats]) => (
+                     {Object.entries(zonesStats)
+                        .sort((a, b) => (b[1].totalDelivered / b[1].count) - (a[1].totalDelivered / a[1].count))
+                        .slice(0,2).map(([zone, stats]) => (
                         <div key={zone} className="flex justify-between text-sm">
                            <span className="font-medium truncate max-w-[120px]">{zone}</span>
                            <span className="text-slate-500">{(stats.totalDelivered / stats.count).toFixed(0)} moy/j</span>
