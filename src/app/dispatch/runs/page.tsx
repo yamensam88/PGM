@@ -194,50 +194,26 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
   const activeDriverIds = new Set(rawDrivers.filter(d => d.status === 'active').map(d => d.id));
 
-  const calendarEvents = [
-    // 1. Map Administrative HR Events
-    ...rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
-       let color = "#3b82f6";
-       let title = d.first_name + " " + d.last_name;
-       if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
-       else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
-       else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
-       else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
+  const calendarEvents = rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
+     let color = "#3b82f6";
+     let title = d.first_name + " " + d.last_name;
+     if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
+     else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
+     else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
+     else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
 
-       const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
-       endDate.setDate(endDate.getDate() + 1);
+     const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+     endDate.setDate(endDate.getDate() + 1);
 
-       return {
-          id: "hr_" + e.id,
-          title: title,
-          start: new Date(e.start_date).toISOString().split('T')[0],
-          end: endDate.toISOString().split('T')[0],
-          allDay: true,
-          backgroundColor: color,
-       };
-    })),
-    // 2. Map Operational Daily Runs
-    ...runs.filter((r: any) => r.driver_id && r.status !== 'cancelled').map((r: any) => {
-       const d = rawDrivers.find(drv => drv.id === r.driver_id);
-       if (!d) return null;
-       
-       const runDate = new Date(r.date);
-       const nextDay = new Date(runDate);
-       nextDay.setDate(nextDay.getDate() + 1);
-       
-       const isCompleted = r.status === 'completed';
-       const clientsText = r.client?.name ? ` (${r.client.name})` : '';
-       
-       return {
-          id: "run_" + r.id,
-          title: d.first_name + " " + d.last_name + (isCompleted ? " (Tournée)" : " (Planifié)") + clientsText,
-          start: runDate.toISOString().split('T')[0],
-          end: nextDay.toISOString().split('T')[0],
-          allDay: true,
-          backgroundColor: isCompleted ? "#0284c7" : "#0ea5e9"
-       };
-    }).filter(Boolean)
-  ];
+     return {
+        id: e.id,
+        title: title,
+        start: new Date(e.start_date).toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        allDay: true,
+        backgroundColor: color,
+     };
+  }));
   
   const manuallyPresentDriversId = rawDrivers.filter(d => {
     return d.status === 'active' && d.hr_events.some((e: any) => 
