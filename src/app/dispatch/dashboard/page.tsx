@@ -706,8 +706,61 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           </div>
         </div>
 
-        {/* KPIs Row */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 mb-8">
+        {/* Effectifs Top Bar (Shared with Exploitation) */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 flex flex-col justify-between">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Chauffeurs</h3>
+            <div className="flex justify-between items-center pb-2">
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">{totalActiveDrivers > 1 ? 'Actifs' : 'Actif'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{presentDrivers}</div>
+                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{presentDrivers > 1 ? 'Présents' : 'Présent'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
+                <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">{absentDrivers > 1 ? 'Absents' : 'Absent'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-teal-500">{congesDrivers}</div>
+                <div className="text-[9px] font-bold text-teal-400 uppercase tracking-wider mt-1">{congesDrivers > 1 ? 'Congés' : 'Congé'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
+              <div className="text-center flex-1 flex flex-col items-center">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-blue-500">{Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers - congesDrivers)}</div>
+                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Sur Banc</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 md:w-[350px] flex flex-col justify-between">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">État du Parc</h3>
+            <div className="flex justify-between items-center pb-2">
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'}</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
+              <div className="text-center flex-1">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
+              </div>
+              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
+              <div className="text-center flex-1 flex flex-col items-center">
+                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
+                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">{totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial KPIs Row */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">CA Période</h3>
             <div>
@@ -743,56 +796,6 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                 {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-xl 2xl:text-2xl text-slate-700">{totalPackages}</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {deliveryRate.toFixed(1)}%</p>
-            </div>
-          </Card>
-
-          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between xl:col-span-2 lg:col-span-3 lg:row-start-2 xl:row-start-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Chauffeurs</h3>
-            <div className="flex justify-between items-center pb-2">
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">{totalActiveDrivers > 1 ? 'Actifs' : 'Actif'}</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{presentDrivers}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{presentDrivers > 1 ? 'Présents' : 'Présent'}</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
-                <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">{absentDrivers > 1 ? 'Absents' : 'Absent'}</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-teal-500">{congesDrivers}</div>
-                <div className="text-[9px] font-bold text-teal-400 uppercase tracking-wider mt-1">{congesDrivers > 1 ? 'Congés' : 'Congé'}</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
-              <div className="text-center flex flex-col items-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-blue-500">{Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers - congesDrivers)}</div>
-                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Sur Banc</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Véhicules</h3>
-            <div className="flex justify-between items-center pb-2">
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'}</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
-              <div className="text-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
-              </div>
-              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
-              <div className="text-center flex flex-col items-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">{totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'}</div>
-              </div>
             </div>
           </Card>
         </div>
