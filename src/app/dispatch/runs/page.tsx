@@ -468,12 +468,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                   </div>
 
                  <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Taux de Livraison</h3>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Volume de Livraison</h3>
                   <div>
                     <div className={`text-3xl font-extrabold tracking-tight ${Number(txLivraison) >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
-                      {txLivraison}%
+                      {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-2xl text-slate-700">{totalLoaded}</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{totalDelivered} livrés / {totalLoaded} chargés</p>
+                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {txLivraison}%</p>
                   </div>
                  </Card>
 
