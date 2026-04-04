@@ -138,6 +138,10 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                      <p className="text-[11px] font-bold text-orange-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-orange-500 transition-colors">Pénalités Client</p>
                      <p className="text-lg md:text-2xl font-extrabold text-orange-600 truncate">{data.totalPenalties.toFixed(2)} €</p>
                   </div>
+                  <div className="bg-white p-5 rounded-2xl border border-teal-50 ring-1 ring-teal-900/5 hover:shadow-[0_8px_30px_rgba(20,184,166,0.06)] transition-all duration-300 overflow-hidden group">
+                     <p className="text-[11px] font-bold text-teal-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-teal-500 transition-colors">Droits Prime</p>
+                     <p className="text-lg md:text-2xl font-extrabold text-teal-600 truncate">{data.totalBonusCost?.toFixed(2) || '0.00'} €</p>
+                  </div>
                   <div className="bg-slate-900 p-5 rounded-2xl shadow-xl ring-1 ring-slate-900/20 flex flex-col justify-center relative overflow-hidden group">
                      <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-50"></div>
                      <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">

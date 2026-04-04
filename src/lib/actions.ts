@@ -2509,6 +2509,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
     let unjustifiedAbsenceDays = 0;
     let sickLeaveDays = 0;
     let vacationDays = 0;
+    let totalBonusCost = 0;
 
     hrEvents.forEach(evt => {
       const evtStart = evt.start_date < startDate ? startDate : evt.start_date;
@@ -2522,6 +2523,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       if (evt.event_type === 'absence') unjustifiedAbsenceDays += days;
       if (evt.event_type === 'sick_leave') sickLeaveDays += days;
       if (evt.event_type === 'vacation') vacationDays += days;
+      if (evt.event_type === 'bonus') totalBonusCost += Number((evt as any).amount || 0);
 
       // If it's sick_leave or vacation, we assume the company still bears the daily cost of the driver
       if (evt.event_type === 'sick_leave' || evt.event_type === 'vacation') {
@@ -2530,7 +2532,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       }
     });
 
-    const totalCompanyCost = totalPay + totalFleetCost + totalDamages + totalPenalties + totalMaintenance + totalAbsenceCost;
+    const totalCompanyCost = totalPay + totalFleetCost + totalDamages + totalPenalties + totalMaintenance + totalAbsenceCost + totalBonusCost;
     const finalNetMargin = totalRevenue - totalCompanyCost;
     
     // Unique days worked
@@ -2562,6 +2564,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
         totalDamages,
         totalPenalties,
         totalAbsenceCost,
+        totalBonusCost,
         totalAbsenceDays,
         unjustifiedAbsenceDays,
         sickLeaveDays,
