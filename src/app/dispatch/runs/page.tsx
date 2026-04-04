@@ -158,7 +158,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         select: { id: true, start_date: true, end_date: true, event_type: true }
       },
       financial_entries: {
-        where: { category: { in: ["maintenance_cost", "damage_cost"] }, entry_date: { gte: startDate, lte: endDate } },
+        where: { category: { in: ["maintenance_cost", "damage_cost", "penalty"] }, entry_date: { gte: startDate, lte: endDate } },
         orderBy: { entry_date: "desc" }
       }
     },
@@ -294,7 +294,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
       r.financial_entries.forEach((entry: any) => {
         if (entry.category === 'maintenance_cost') zoneSynthesisMap[zName].maintenance_cost += Number(entry.amount);
         if (entry.category === 'damage_cost') zoneSynthesisMap[zName].damage_cost += Number(entry.amount);
-        if (entry.category === 'penalty_cost') zoneSynthesisMap[zName].penalty_cost += Number(entry.amount);
+        if (entry.category === 'penalty') zoneSynthesisMap[zName].penalty_cost += Number(entry.amount);
       });
     }
   });
