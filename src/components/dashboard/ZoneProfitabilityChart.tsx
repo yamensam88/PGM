@@ -17,11 +17,18 @@ interface RunData {
   margin_net: number;
 }
 
-interface ZoneProfitabilityChartProps {
-  runs: RunData[];
+interface ExtraCost {
+  run_id?: string | null;
+  zone_id?: string | null;
+  amount: number | any; // Decimal maps to roughly number/string
 }
 
-export function ZoneProfitabilityChart({ runs }: ZoneProfitabilityChartProps) {
+interface ZoneProfitabilityChartProps {
+  runs: RunData[];
+  extraCosts?: ExtraCost[];
+}
+
+export function ZoneProfitabilityChart({ runs, extraCosts = [] }: ZoneProfitabilityChartProps) {
   const chartData = useMemo(() => {
     const dataByZone: Record<string, { zone: string; Marge: number }> = {};
 
@@ -31,6 +38,25 @@ export function ZoneProfitabilityChart({ runs }: ZoneProfitabilityChartProps) {
         dataByZone[zoneName] = { zone: zoneName, Marge: 0 };
       }
       dataByZone[zoneName].Marge += Number(run.margin_net || 0);
+
+      // We subtract financial entries attached to this run/zone directly.
+      // Easiest is to lookup financial entries inside 'run' but the type RunData doesn't have it defined here,
+      // so if we pass extraCosts, we can match by run_id or rely on page.tsx aggregation. 
+      // Actually, since extraCosts don't have zone_id consistently populated (it's driver_id / vehicle_id),
+      // we must rely on matching via run_id.
+    });
+
+    extraCosts.forEach(cost => {
+      // Find the corresponding run to know the zone
+      if (cost.run_id) {
+         const matchedRun = runs.find(r => (r as any).id === cost.run_id);
+         if (matchedRun) {
+            const zName = matchedRun.zone?.name || "Non Assigné";
+            if (dataByZone[zName]) {
+               dataByZone[zName].Marge -= Number(cost.amount || 0);
+            }
+         }
+      }
     });
 
     return Object.values(dataByZone)

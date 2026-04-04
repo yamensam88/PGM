@@ -429,6 +429,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       driverStats[cost.driver_id].margin -= Number(cost.amount || 0);
     }
   });
+  maintenanceCosts.forEach(cost => {
+    if (cost.driver_id && driverStats[cost.driver_id]) {
+      driverStats[cost.driver_id].margin -= Number(cost.amount || 0);
+    }
+  });
   penaltyCosts.forEach(cost => {
     if (cost.driver_id && driverStats[cost.driver_id]) {
       driverStats[cost.driver_id].margin -= Number(cost.amount || 0);
@@ -845,7 +850,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             </CardHeader>
             <CardContent className="pt-6 px-6 pb-6">
               <div className="h-[250px] w-full">
-                <ZoneProfitabilityChart runs={allRuns} />
+                <ZoneProfitabilityChart runs={allRuns} extraCosts={[...damageCosts, ...penaltyCosts, ...maintenanceCosts]} />
               </div>
             </CardContent>
           </Card>
@@ -863,7 +868,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           </CardHeader>
           <CardContent className="pt-6 px-6 pb-6">
             <div className="h-[250px] w-full">
-              <DriverProfitabilityChart runs={allRuns} extraCosts={[...damageCosts, ...penaltyCosts, ...driverAbsenceCosts]} />
+              <DriverProfitabilityChart runs={allRuns} extraCosts={[...damageCosts, ...penaltyCosts, ...driverAbsenceCosts, ...maintenanceCosts]} />
             </div>
           </CardContent>
         </Card>

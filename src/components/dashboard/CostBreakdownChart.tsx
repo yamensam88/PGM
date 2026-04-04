@@ -57,7 +57,7 @@ export function CostBreakdownChart({
 
     const total = driverTotal + vehicleTotal + fuelCost + 
                  (totalMaintenanceCost || 0) + (totalDamageCost || 0) + 
-                 (totalBonusCost || 0) +
+                 (totalPenaltyCost || 0) + (totalBonusCost || 0) +
                  (periodAdminFixedCosts || 0);
 
     if (total === 0) return [];
@@ -81,6 +81,9 @@ export function CostBreakdownChart({
     }
     if (totalDamageCost && totalDamageCost > 0) {
       data.push({ name: 'Casses / Sinistres', value: Number(totalDamageCost.toFixed(2)) });
+    }
+    if (totalPenaltyCost && totalPenaltyCost > 0) {
+      data.push({ name: 'Pénalités Client', value: Number(totalPenaltyCost.toFixed(2)) });
     }
     if (totalBonusCost && totalBonusCost > 0) {
       data.push({ name: 'Primes Validées', value: Number(totalBonusCost.toFixed(2)) });
