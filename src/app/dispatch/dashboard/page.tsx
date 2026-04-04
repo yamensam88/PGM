@@ -707,27 +707,27 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         </div>
 
         {/* KPIs Row */}
-        <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-6 mb-8">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 mb-8">
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">CA Période</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">CA Période</h3>
             <div>
-              <div className="text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight">{totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
+              <div className="text-2xl 2xl:text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight whitespace-nowrap">{totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">~{avgCaPerRun} € CA / tournée</p>
             </div>
           </Card>
           
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Charges D'Exploit.</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Charges D'Exploit.</h3>
             <div>
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">-{totalCosts.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
+              <div className="text-2xl 2xl:text-3xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap">-{totalCosts.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Coûts totaux absorbés</p>
             </div>
           </Card>
 
           <Card className={`shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 ${totalMargin >= 0 ? 'bg-emerald-500 ring-emerald-600 border-0' : 'bg-red-500 ring-red-600 border-0'}`}>
-            <h3 className={`text-[10px] font-bold uppercase tracking-widest mb-4 text-white/80`}>Marge Nette</h3>
+            <h3 className={`text-[10px] font-bold uppercase tracking-widest mb-4 text-white/80 whitespace-nowrap`}>Marge Nette</h3>
             <div>
-              <div className={`text-3xl font-extrabold tracking-tight text-white`}>
+              <div className={`text-2xl 2xl:text-3xl font-extrabold tracking-tight text-white whitespace-nowrap`}>
                 {totalMargin.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
               </div>
               <p className={`text-[11px] mt-1.5 font-medium text-white/70`}>
@@ -737,60 +737,60 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           </Card>
 
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Volume de Livraison</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Volume de Livraison</h3>
             <div>
-              <div className={`text-3xl font-extrabold tracking-tight ${deliveryRate >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
-                {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-2xl text-slate-700">{totalPackages}</span>
+              <div className={`text-2xl 2xl:text-3xl font-extrabold tracking-tight whitespace-nowrap ${deliveryRate >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
+                {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-xl 2xl:text-2xl text-slate-700">{totalPackages}</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {deliveryRate.toFixed(1)}%</p>
             </div>
           </Card>
 
-          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Effectifs Chauffeurs</h3>
+          <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between xl:col-span-2 lg:col-span-3 lg:row-start-2 xl:row-start-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Chauffeurs</h3>
             <div className="flex justify-between items-center pb-2">
               <div className="text-center">
-                <div className="text-xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
                 <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">{totalActiveDrivers > 1 ? 'Actifs' : 'Actif'}</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center">
-                <div className="text-xl font-extrabold text-emerald-500">{presentDrivers}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{presentDrivers}</div>
                 <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{presentDrivers > 1 ? 'Présents' : 'Présent'}</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center">
-                <div className="text-xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
                 <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">{absentDrivers > 1 ? 'Absents' : 'Absent'}</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center">
-                <div className="text-xl font-extrabold text-teal-500">{congesDrivers}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-teal-500">{congesDrivers}</div>
                 <div className="text-[9px] font-bold text-teal-400 uppercase tracking-wider mt-1">{congesDrivers > 1 ? 'Congés' : 'Congé'}</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center flex flex-col items-center">
-                <div className="text-xl font-extrabold text-blue-500">{Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers - congesDrivers)}</div>
-                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Non Affectés</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-blue-500">{Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers - congesDrivers)}</div>
+                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Sur Banc</div>
               </div>
             </div>
           </Card>
 
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Effectifs Véhicules</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Véhicules</h3>
             <div className="flex justify-between items-center pb-2">
               <div className="text-center">
-                <div className="text-xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
                 <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'}</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
               <div className="text-center">
-                <div className="text-xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
                 <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
               </div>
-              <div className="w-px bg-slate-200/50 my-1"></div>
+              <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
               <div className="text-center flex flex-col items-center">
-                <div className="text-xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
+                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
                 <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">{totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'}</div>
               </div>
             </div>
