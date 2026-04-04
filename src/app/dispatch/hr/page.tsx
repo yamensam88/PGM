@@ -93,6 +93,19 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     orderBy: { first_name: 'asc' }
   });
 
+  const todayStart = new Date(today);
+  const todayEnd = new Date(today);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayRunsData = await prisma.dailyRun.findMany({
+    where: {
+      organization_id: orgId,
+      date: { gte: todayStart, lte: todayEnd }
+    },
+    select: { driver_id: true }
+  });
+  const todayRunsDriverIds = new Set(todayRunsData.map(r => r.driver_id));
+
   const drivers = rawDrivers.map(d => ({
     ...d,
     daily_base_cost: d.daily_base_cost ? Number(d.daily_base_cost) : 0,
@@ -201,10 +214,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
             if (!hasAbsence) return false;
             
             // MATH OVERLAP PARITY: If they are absent, BUT they have a daily run TODAY OR a manual presence TODAY, they are ACTUALLY PRESENT
-            const hasRun = (d as any).daily_runs?.some((r: any) => {
-               const rDate = new Date(r.date).getTime();
-               return rDate >= todayStart.getTime() && rDate <= todayEnd.getTime();
-            });
+            const hasRun = todayRunsDriverIds.has(d.id);
             const hasManualPresence = (d as any).hr_events?.some((e: any) => 
                e.status === 'active' && 
                e.event_type === 'presence' &&
@@ -218,10 +228,81 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           
           const realAvailability = totalDrivers > 0 ? (((totalDrivers - currentlyAbsent) / totalDrivers) * 100).toFixed(1) : "0.0";
 
+          const actifsChauffeurs = activeDrivers;
+          
+          const manuallyPresentDriversId = drivers.filter(d => d.status === 'active' &&
+             (d as any).hr_events?.some((e: any) => 
+               e.status === 'active' &&
+               e.event_type === 'presence' && 
+               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
+             )
+          ).map(d => d.id);
+          const presentsChauffeursSet = new Set([...Array.from(todayRunsDriverIds), ...manuallyPresentDriversId]);
+          const presentsChauffeurs = presentsChauffeursSet.size;
+
+          const congesChauffeursSet = new Set(drivers.filter(d => 
+            d.status === 'active' && 
+            !presentsChauffeursSet.has(d.id) &&
+            (d as any).hr_events?.some((e: any) => 
+               e.status === 'active' &&
+               e.event_type === 'vacation' && 
+               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
+            )
+          ).map(d => d.id));
+          const congesChauffeurs = congesChauffeursSet.size;
+
+          const absentsChauffeursSet = new Set(drivers.filter(d => 
+            d.status === 'active' && 
+            !presentsChauffeursSet.has(d.id) &&
+            !congesChauffeursSet.has(d.id) &&
+            (d as any).hr_events?.some((e: any) => 
+               e.status === 'active' &&
+               ['absence', 'sick_leave'].includes(e.event_type) && 
+               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
+            )
+          ).map(d => d.id));
+          const absentsChauffeurs = absentsChauffeursSet.size;
+          
+          const nonAffectesChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs - congesChauffeurs);
+
           return (
             <div>
-              <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Indicateurs RH</h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+              {/* Daily Effectif Block strictly identical to Exploitation */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 p-4 md:p-5 mb-8">
+                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Effectifs Chauffeurs (Aujourd'hui)</h3>
+                 <div className="flex justify-between items-center text-center">
+                   <div className="flex-1">
+                     <div className="text-3xl font-extrabold text-slate-800">{actifsChauffeurs}</div>
+                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{actifsChauffeurs > 1 ? 'Actifs' : 'Actif'}</div>
+                   </div>
+                   <div className="w-px bg-slate-200/50 self-stretch my-1"></div>
+                   <div className="flex-1">
+                     <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
+                     <div className="text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest mt-1">{presentsChauffeurs > 1 ? 'Présents' : 'Présent'}</div>
+                   </div>
+                   <div className="w-px bg-slate-200/50 self-stretch my-1"></div>
+                   <div className="flex-1">
+                     <div className="text-3xl font-extrabold text-[#0A1A2F]">{absentsChauffeurs}</div>
+                     <div className="text-[10px] font-bold text-[#0A1A2F]/60 uppercase tracking-widest mt-1">{absentsChauffeurs > 1 ? 'Absents' : 'Absent'}</div>
+                   </div>
+                   <div className="w-px bg-slate-200/50 self-stretch my-1"></div>
+                   <div className="flex-1">
+                     <div className="text-3xl font-extrabold text-teal-500">{congesChauffeurs}</div>
+                     <div className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mt-1">{congesChauffeurs > 1 ? 'Congés' : 'Congé'}</div>
+                   </div>
+                   <div className="w-px bg-slate-200/50 self-stretch my-1"></div>
+                   <div className="flex-1">
+                     <div className="text-3xl font-extrabold text-blue-500">{nonAffectesChauffeurs}</div>
+                     <div className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest mt-1">Non Affectés</div>
+                   </div>
+                 </div>
+              </div>
+
+              <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Indicateurs RH ({(filter || 'monthly') === 'monthly' ? 'Ce Mois' : 'Aujourd\'hui / Période'})</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 ">
                 <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
                   <div className="flex flex-row items-center justify-between pb-2">
                      <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Effectif Global</h3>
