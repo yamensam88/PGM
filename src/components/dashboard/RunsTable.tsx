@@ -185,9 +185,18 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                </div>
             </TableCell>
             <TableCell className="text-right px-4">
-               <span className={`text-[12px] font-bold px-2 py-0.5 rounded border ${Number(run.margin_net) >= 0 ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100"}`}>
-                 {Number(run.margin_net) > 0 ? '+' : ''}{Number(run.margin_net || 0).toFixed(2)}€
-               </span>
+               {(()=>{
+                   const runMaint = Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) || 0;
+                   const runDamage = Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) || 0;
+                   const runPenalty = Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)) || 0;
+                   const realMarginNet = Number(run.margin_net || 0) - runMaint - runDamage - runPenalty;
+
+                   return (
+                     <span className={`text-[12px] font-bold px-2 py-0.5 rounded border ${realMarginNet >= 0 ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100"}`}>
+                       {realMarginNet > 0 ? '+' : ''}{realMarginNet.toFixed(2)}€
+                     </span>
+                   )
+               })()}
             </TableCell>
           </>
         )}
@@ -347,7 +356,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 const zPenalty = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
                 const zRevenue = zoneRuns.reduce((sum, run) => sum + Number(run.revenue_calculated || 0), 0);
                 const zCosts = zoneRuns.reduce((sum, run) => sum + Number(run.cost_driver || 0) + Number(run.cost_vehicle || 0) + Number(run.cost_fuel || 0), 0);
-                const zMargin = zoneRuns.reduce((sum, run) => sum + Number(run.margin_net || 0), 0);
+                const zMargin = zoneRuns.reduce((sum, run) => sum + Number(run.margin_net || 0), 0) - zMaint - zDamages - zPenalty;
 
                 return (
                   <React.Fragment key={zoneName}>
