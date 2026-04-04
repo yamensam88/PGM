@@ -128,7 +128,11 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-red-50 ring-1 ring-red-900/5 hover:shadow-[0_8px_30px_rgba(239,68,68,0.06)] transition-all duration-300 overflow-hidden group">
                      <p className="text-[11px] font-bold text-red-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-red-500 transition-colors">Casses & Sinistres</p>
-                     <p className="text-lg md:text-2xl font-extrabold text-red-600 truncate">{data.totalDamages.toFixed(2)} €</p>
+                     <p className="text-lg md:text-2xl font-extrabold text-red-600 truncate">{data.totalDamages?.toFixed(2) || '0.00'} €</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-100 ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden group">
+                     <p className="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-blue-600 transition-colors">Entretien / Usure</p>
+                     <p className="text-lg md:text-2xl font-extrabold text-blue-600 truncate">{data.totalMaintenance?.toFixed(2) || '0.00'} €</p>
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-orange-50 ring-1 ring-orange-900/5 hover:shadow-[0_8px_30px_rgba(249,115,22,0.06)] transition-all duration-300 overflow-hidden group">
                      <p className="text-[11px] font-bold text-orange-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-orange-500 transition-colors">Pénalités Client</p>

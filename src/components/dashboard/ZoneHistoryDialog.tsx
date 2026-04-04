@@ -46,6 +46,7 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
   let totalAdvised = 0;
   let totalDamages = 0;
   let totalPenalties = 0;
+  let totalMaintenance = 0;
   let totalCA = 0;
   let totalMargin = 0;
   let financialEntries: any[] = [];
@@ -70,7 +71,9 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
     if (r.financial_entries && r.financial_entries.length > 0) {
       r.financial_entries.forEach((entry: any) => {
         if (entry.category === 'damage_cost') totalDamages += Number(entry.amount);
-        if (entry.category === 'penalty_cost') totalPenalties += Number(entry.amount);
+        if (entry.category === 'penalty') totalPenalties += Number(entry.amount);
+        if (entry.category === 'maintenance_cost') totalMaintenance += Number(entry.amount);
+        
         financialEntries.push({
           ...entry,
           runDate: r.date,
@@ -91,7 +94,7 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
     cost: chartMap[k].cost
   }));
 
-  const finalMargin = totalMargin - totalDamages - totalPenalties;
+  const finalMargin = totalMargin - totalDamages - totalPenalties - totalMaintenance;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,6 +161,12 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
                      <Scale className="w-3.5 h-3.5" /> Pénalités Client
                    </p>
                    <p className="text-lg md:text-2xl font-extrabold text-orange-600 truncate">{totalPenalties.toFixed(2)} €</p>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden group">
+                   <p className="flex items-center gap-1.5 text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-blue-600 transition-colors">
+                     <AlertTriangle className="w-3.5 h-3.5" /> Entretien / Mécanique
+                   </p>
+                   <p className="text-lg md:text-2xl font-extrabold text-blue-600 truncate">{totalMaintenance.toFixed(2)} €</p>
                 </div>
                 <div className="bg-slate-900 p-5 rounded-2xl shadow-xl ring-1 ring-slate-900/20 flex flex-col justify-center relative overflow-hidden group">
                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-50"></div>

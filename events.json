@@ -1,0 +1,162 @@
+[
+  {
+    "id": "cab4c036-ad5d-4495-b82d-041e0e293433",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "0b742225-3f69-4fc7-a5e8-47666c707f26",
+    "event_type": "vacation",
+    "start_date": "2026-04-01T00:00:00.000Z",
+    "end_date": "2026-04-02T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-02T17:04:53.405Z",
+    "updated_at": "2026-04-02T17:04:53.405Z",
+    "driver": {
+      "first_name": "grégory",
+      "last_name": "moulin"
+    }
+  },
+  {
+    "id": "14959dae-ff02-48cc-835a-da64a8cbc75d",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "2e5f3e0b-4263-42f8-aa1e-19d71fbbfb0e",
+    "event_type": "vacation",
+    "start_date": "2026-04-01T00:00:00.000Z",
+    "end_date": "2026-04-02T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-02T17:05:34.114Z",
+    "updated_at": "2026-04-02T17:05:34.114Z",
+    "driver": {
+      "first_name": "henry",
+      "last_name": "benjamin"
+    }
+  },
+  {
+    "id": "e77810d8-23b8-4af1-a2cb-04c70634ef13",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "7e96d5e3-a891-4d81-97a8-31aa2561347c",
+    "event_type": "vacation",
+    "start_date": "2026-04-02T00:00:00.000Z",
+    "end_date": "2026-04-02T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-02T18:27:14.191Z",
+    "updated_at": "2026-04-02T18:27:14.191Z",
+    "driver": {
+      "first_name": "remy",
+      "last_name": "oulerich"
+    }
+  },
+  {
+    "id": "db13d7dd-3324-4624-8738-ab7d4dc4138c",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "1f7650d4-e792-463f-bc9e-82a4b57d321e",
+    "event_type": "vacation",
+    "start_date": "2026-04-01T00:00:00.000Z",
+    "end_date": "2026-04-02T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-02T18:27:48.378Z",
+    "updated_at": "2026-04-02T18:27:48.378Z",
+    "driver": {
+      "first_name": "laurine",
+      "last_name": "rague"
+    }
+  },
+  {
+    "id": "b386aa92-6046-410a-935d-c3da6abafafc",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "221e0da1-7992-4e81-8cf3-4ae821fb02b7",
+    "event_type": "vacation",
+    "start_date": "2026-04-02T00:00:00.000Z",
+    "end_date": "2026-04-02T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-02T18:29:22.897Z",
+    "updated_at": "2026-04-02T18:29:22.897Z",
+    "driver": {
+      "first_name": "bryan",
+      "last_name": "gimenez"
+    }
+  },
+  {
+    "id": "cfd30208-23bf-4bc9-8296-5279a350b89c",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "2e67b2ed-b713-4ad9-9ec6-5a3c5458ddde",
+    "event_type": "vacation",
+    "start_date": "2026-04-09T00:00:00.000Z",
+    "end_date": "2026-04-09T00:00:00.000Z",
+    "status": "active",
+    "notes": "rendez vous chirurgical dentaire",
+    "created_at": "2026-04-02T21:10:12.334Z",
+    "updated_at": "2026-04-02T21:10:12.334Z",
+    "driver": {
+      "first_name": "dylan",
+      "last_name": "fine"
+    }
+  },
+  {
+    "id": "c15a1a7e-a3ae-44c2-9642-5cafe3425566",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "2e5f3e0b-4263-42f8-aa1e-19d71fbbfb0e",
+    "event_type": "vacation",
+    "start_date": "2026-04-03T00:00:00.000Z",
+    "end_date": "2026-04-03T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-03T08:09:39.517Z",
+    "updated_at": "2026-04-03T08:09:39.517Z",
+    "driver": {
+      "first_name": "henry",
+      "last_name": "benjamin"
+    }
+  },
+  {
+    "id": "1f48c704-643b-47ad-935b-7ce1350bac72",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "2e67b2ed-b713-4ad9-9ec6-5a3c5458ddde",
+    "event_type": "vacation",
+    "start_date": "2026-04-04T00:00:00.000Z",
+    "end_date": "2026-04-04T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-03T20:37:36.227Z",
+    "updated_at": "2026-04-03T20:37:36.227Z",
+    "driver": {
+      "first_name": "dylan",
+      "last_name": "fine"
+    }
+  },
+  {
+    "id": "cdc70596-5165-4d8d-babc-82e1812c7f63",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "2e5f3e0b-4263-42f8-aa1e-19d71fbbfb0e",
+    "event_type": "vacation",
+    "start_date": "2026-04-04T00:00:00.000Z",
+    "end_date": "2026-04-04T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-03T20:38:06.067Z",
+    "updated_at": "2026-04-03T20:38:06.067Z",
+    "driver": {
+      "first_name": "henry",
+      "last_name": "benjamin"
+    }
+  },
+  {
+    "id": "3af5c098-6d43-46e6-b516-15e64aeb7673",
+    "organization_id": "94d2eee0-176a-4646-b352-44a7af1d89c2",
+    "driver_id": "7e96d5e3-a891-4d81-97a8-31aa2561347c",
+    "event_type": "vacation",
+    "start_date": "2026-04-04T00:00:00.000Z",
+    "end_date": "2026-04-04T00:00:00.000Z",
+    "status": "active",
+    "notes": null,
+    "created_at": "2026-04-03T20:38:24.710Z",
+    "updated_at": "2026-04-03T20:38:24.710Z",
+    "driver": {
+      "first_name": "remy",
+      "last_name": "oulerich"
+    }
+  }
+]

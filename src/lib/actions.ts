@@ -2485,6 +2485,10 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       .filter(f => f.category === 'penalty')
       .reduce((sum, f) => sum + Number(f.amount || 0), 0);
 
+    const totalMaintenance = finances
+      .filter(f => f.category === 'maintenance_cost')
+      .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+
     // 3. Get Absences from HrEvent
     const hrEvents = await prisma.hrEvent.findMany({
       where: {
@@ -2526,7 +2530,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       }
     });
 
-    const totalCompanyCost = totalPay + totalFleetCost + totalDamages + totalPenalties + totalAbsenceCost;
+    const totalCompanyCost = totalPay + totalFleetCost + totalDamages + totalPenalties + totalMaintenance + totalAbsenceCost;
     const finalNetMargin = totalRevenue - totalCompanyCost;
     
     // Unique days worked
