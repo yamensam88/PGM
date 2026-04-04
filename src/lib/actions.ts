@@ -829,15 +829,15 @@ export async function finishRun(formData: FormData) {
     const price_parcel = Number(run.rate_card?.unit_price_package || 0);
     const bonus_relay = Number(run.rate_card?.bonus_relay_point || 0);
     
-    // NOTE MÉTIER: En V1, le prix par colis est calculé sur les colis assignés à la tournée 
-    // (packages_loaded + packages_relay), pas sur les seuls colis effectivement livrés.
-    const billed_parcels = (run.packages_loaded || 0) + (run.packages_relay || 0);
+    // NOTE MÉTIER: La facturation se fait uniquement au colis livré avec un tarif distinct pour le relais direct vs livré
+    const direct_delivered = Math.max(0, (run.packages_loaded || 0) - advised_parcels_direct - packages_returned);
+    const relay_delivered = Math.max(0, (run.packages_relay || 0) - advised_parcels_relay);
     
     const revenue_calculated = 
       base_flat + 
       (price_stop * stops_done) + 
-      (price_parcel * billed_parcels) + 
-      (bonus_relay * (run.packages_relay || 0));
+      (price_parcel * direct_delivered) + 
+      (bonus_relay * relay_delivered);
     
     console.log(`▶ [finishRun] Calcul revenue_calculated: ${revenue_calculated}€`);
 
@@ -1297,8 +1297,11 @@ export async function createRun(formData: FormData) {
         const price_parcel = Number(rateCard?.unit_price_package || 0);
         const bonus_relay = Number(rateCard?.bonus_relay_point || 0);
 
-        const billed_parcels = direct_parcels + packages_relay;
-        revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * billed_parcels) + (bonus_relay * packages_relay);
+        // On the form, we only receive the total delivered, we allocate relay packages delivery first
+        const relay_delivered = Math.min(packages_delivered, packages_relay);
+        const direct_delivered = Math.max(0, packages_delivered - relay_delivered);
+
+        revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
         // Filter double counting
         const startOfDay = new Date(utcDate);
@@ -1895,9 +1898,10 @@ export async function saveUnifiedDelivery(formData: FormData) {
       const price_parcel = Number(rateCardToUse?.unit_price_package || 0);
       const bonus_relay = Number(rateCardToUse?.bonus_relay_point || 0);
       
-      // Revenue definition
-      const billed_parcels = loaded + relay;
-      const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * billed_parcels) + (bonus_relay * relay);
+      // Projection de revenu basée sur la livraison complète estimée
+      const direct_delivered = loaded;
+      const relay_delivered = relay;
+      const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
       // Driver & Fleet Avoid Double Counting
       const startOfDay = new Date();
@@ -2904,6 +2908,7 @@ export async function updateRun(formData: FormData) {
     const final_packages_loaded = formData.has("packages_loaded") ? Number(formData.get("packages_loaded")) : Number(run.packages_loaded || 0);
     const final_packages_delivered = formData.has("packages_delivered") ? Number(formData.get("packages_delivered")) : Number(run.packages_delivered || 0);
     const final_packages_returned = formData.has("packages_returned") ? Number(formData.get("packages_returned")) : Number(run.packages_returned || 0);
+    const final_packages_relay = formData.has("packages_relay") ? Number(formData.get("packages_relay")) : Number(run.packages_relay || 0);
     const final_packages_advised_direct = formData.has("packages_advised_direct") ? Number(formData.get("packages_advised_direct")) : Number(run.packages_advised_direct || 0);
     const final_packages_advised_relay = formData.has("packages_advised_relay") ? Number(formData.get("packages_advised_relay")) : Number(run.packages_advised_relay || 0);
     const final_advised_total = final_packages_advised_direct + final_packages_advised_relay;
@@ -2946,10 +2951,11 @@ export async function updateRun(formData: FormData) {
        const activeDriver = formDriverId && formDriverId !== run.driver_id ? await prisma.driver.findUnique({ where: { id: formDriverId } }) : run.driver;
        const activeVehicle = formVehicleId && formVehicleId !== run.vehicle_id ? await prisma.vehicle.findUnique({ where: { id: formVehicleId } }) : run.vehicle;
 
-       const billed_parcels = final_packages_loaded + final_packages_advised_relay;
+       const direct_delivered = Math.max(0, final_packages_loaded - final_packages_advised_direct - final_packages_returned);
+       const relay_delivered = Math.max(0, final_packages_relay - final_packages_advised_relay);
        const stops_completed = Number(run.stops_completed || 0); 
 
-       const revenue_calculated = base_flat + (price_stop * stops_completed) + (price_parcel * billed_parcels) + (bonus_relay * final_packages_advised_relay);
+       const revenue_calculated = base_flat + (price_stop * stops_completed) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
        const startOfDay = new Date(run.date);
        startOfDay.setUTCHours(0, 0, 0, 0);
