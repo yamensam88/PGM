@@ -100,7 +100,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
     const advised = (run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0;
     const returned = run.packages_returned || 0;
     const ecart = loaded - (delivered + advised + returned);
-    const kmUtiles = run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || 0));
+    const kmUtiles = run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || Number(run.km_end) || 0));
 
     return (
       <TableRow key={run.id} className="hover:bg-slate-50/50 border-0 transition-colors duration-200 group">
@@ -151,21 +151,26 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
         </TableCell>
 
         <TableCell className="text-right px-4">
-          <div className="flex flex-col items-end gap-0.5">
-             {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-               <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
-                 {run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Maint.
-               </span>
-             )}
-             {Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-               <span className="text-[11px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-                 {run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Casse
-               </span>
-             )}
-             {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost' || e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) === 0 && (
-               <span className="text-slate-300 font-medium text-[13px]">-</span>
-             )}
-          </div>
+           <div className="flex flex-col items-end gap-0.5">
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Maint.
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Casse
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Pénalité
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => ['maintenance_cost', 'damage_cost', 'penalty'].includes(e.category)).reduce((s: number, e: any) => s + Number(e.amount), 0)) === 0 && (
+                <span className="text-slate-300 font-medium text-[13px]">-</span>
+              )}
+           </div>
         </TableCell>
 
         <TableCell className="text-right px-4">
@@ -313,6 +318,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 const zKm = zoneRuns.reduce((sum, run) => sum + (run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || 0))), 0);
                 const zMaint = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
                 const zDamages = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
+                const zPenalty = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
 
                 return (
                   <React.Fragment key={zoneName}>
@@ -347,9 +353,10 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                       <TableCell></TableCell>
                       <TableCell className="text-right px-4">
                         <div className="flex flex-col items-end gap-0.5">
-                           {zMaint > 0 && <span className="text-[10px] text-orange-500">{zMaint.toFixed(0)}€ Maint.</span>}
-                           {zDamages > 0 && <span className="text-[10px] text-red-500">{zDamages.toFixed(0)}€ Casse</span>}
-                           {zMaint === 0 && zDamages === 0 && <span className="text-slate-300 font-medium text-[12px]">-</span>}
+                          {zMaint > 0 && <span className="text-[11px] font-semibold text-orange-500">{zMaint.toFixed(0)}€ Maint.</span>}
+                          {zDamages > 0 && <span className="text-[11px] font-semibold text-red-500">{zDamages.toFixed(0)}€ Casse</span>}
+                          {zPenalty > 0 && <span className="text-[11px] font-semibold text-purple-600">{zPenalty.toFixed(0)}€ Pénalité</span>}
+                          {zMaint === 0 && zDamages === 0 && zPenalty === 0 && <span className="text-slate-300">-</span>}
                         </div>
                       </TableCell>
                       <TableCell></TableCell>
