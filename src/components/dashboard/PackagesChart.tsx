@@ -33,7 +33,7 @@ export function PackagesChart({ runs }: PackagesChartProps) {
         dataByDate[dateStr] = { date: dateStr, Chargés: 0, Livrés: 0, Avisés: 0, Retours: 0 };
       }
       const loaded = Number(run.packages_loaded || 0);
-      const advised = Number(run.packages_advised || 0);
+      const advised = Number((run as any).packages_advised_direct || 0) + Number((run as any).packages_advised_relay || 0) || Number(run.packages_advised || 0);
       const returned = Number((run as any).packages_returned || 0);
       const relay = Number((run as any).packages_relay || 0);
       
