@@ -173,6 +173,25 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
            </div>
         </TableCell>
 
+        {!isExploitationMode && (
+          <>
+            <TableCell className="text-right px-4">
+              <span className="text-[13px] font-semibold text-slate-700">{Number(run.revenue_calculated || 0).toFixed(2)}€</span>
+            </TableCell>
+            <TableCell className="text-right px-4">
+               <div className="flex flex-col items-end">
+                 <span className="text-[12px] font-medium text-slate-500">{(Number(run.cost_driver || 0) + Number(run.cost_vehicle || 0) + Number(run.cost_fuel || 0)).toFixed(2)}€</span>
+                 <span className="text-[9px] text-slate-400">CH+VH+CB</span>
+               </div>
+            </TableCell>
+            <TableCell className="text-right px-4">
+               <span className={`text-[12px] font-bold px-2 py-0.5 rounded border ${Number(run.margin_net) >= 0 ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100"}`}>
+                 {Number(run.margin_net) > 0 ? '+' : ''}{Number(run.margin_net || 0).toFixed(2)}€
+               </span>
+            </TableCell>
+          </>
+        )}
+
         <TableCell className="text-right px-4">
           <span className="text-[13px] font-medium text-slate-600">
             {new Date(run.date).toLocaleDateString("fr-FR")}
@@ -303,6 +322,13 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Statut</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Dommages</TableHead>
+              {!isExploitationMode && (
+                <>
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">CA</TableHead>
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Coûts</TableHead>
+                  <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-right px-4">Marge Nette</TableHead>
+                </>
+              )}
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Date</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Actions</TableHead>
             </TableRow>
@@ -319,11 +345,14 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 const zMaint = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
                 const zDamages = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
                 const zPenalty = zoneRuns.reduce((sum, run) => sum + Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)), 0);
+                const zRevenue = zoneRuns.reduce((sum, run) => sum + Number(run.revenue_calculated || 0), 0);
+                const zCosts = zoneRuns.reduce((sum, run) => sum + Number(run.cost_driver || 0) + Number(run.cost_vehicle || 0) + Number(run.cost_fuel || 0), 0);
+                const zMargin = zoneRuns.reduce((sum, run) => sum + Number(run.margin_net || 0), 0);
 
                 return (
                   <React.Fragment key={zoneName}>
                     <TableRow className="bg-slate-50/40 hover:bg-slate-50/40 border-b border-t border-slate-200">
-                      <TableCell colSpan={13} className="font-bold text-indigo-900 py-3 text-[12px] uppercase tracking-widest pl-4">
+                      <TableCell colSpan={isExploitationMode ? 13 : 16} className="font-bold text-indigo-900 py-3 text-[12px] uppercase tracking-widest pl-4">
                         Zone : {zoneName} <span className="text-slate-400 font-medium normal-case ml-2 tracking-normal">({zoneRuns.length} tournées)</span>
                       </TableCell>
                     </TableRow>
@@ -359,6 +388,13 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                           {zMaint === 0 && zDamages === 0 && zPenalty === 0 && <span className="text-slate-300">-</span>}
                         </div>
                       </TableCell>
+                      {!isExploitationMode && (
+                        <>
+                          <TableCell className="text-right px-4 text-[12px] font-bold text-slate-700">{zRevenue.toFixed(2)}€</TableCell>
+                          <TableCell className="text-right px-4 text-[12px] font-bold text-slate-500">{zCosts.toFixed(2)}€</TableCell>
+                          <TableCell className="text-right px-4 text-[12px] font-bold"><span className={zMargin >= 0 ? "text-emerald-600" : "text-red-600"}>{zMargin > 0 ? '+' : ''}{zMargin.toFixed(2)}€</span></TableCell>
+                        </>
+                      )}
                       <TableCell></TableCell>
                       <TableCell></TableCell>
                     </TableRow>
