@@ -307,7 +307,14 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
-  const totalIdleDriverCost = Math.max(0, globalDriverFixedParams - totalDriverCostActive - totalUnpaidSavings);
+  let activeDriverCostInParams = 0;
+  completedRunsBefore.forEach((r: any) => {
+     if (activeDriversData.some(d => d.id === r.driver_id)) {
+        activeDriverCostInParams += Number(r.cost_driver || 0);
+     }
+  });
+
+  const totalIdleDriverCost = Math.max(0, globalDriverFixedParams - activeDriverCostInParams - totalUnpaidSavings);
   const fleetCostLedgerSafe = totalFleetCostActive; 
 
   const totalMargin = totalRunsMargin - periodAdminFixedCosts - totalIdleDriverCost - idleVehicleFixedCost - totalDamageCost - totalMaintenanceCost - totalBonusCost - totalPenaltyCost;
@@ -550,6 +557,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         margin_net: 0,
         maintenance_cost: 0,
         damage_cost: 0,
+        penalty_cost: 0,
         runs: [],
       };
     }
