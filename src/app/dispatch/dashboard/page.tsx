@@ -529,7 +529,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   // 8. Synthèse Globale par Zone
   const zoneSynthesisMap: Record<string, any> = {};
   
-  allRuns.forEach(r => {
+  completedRuns.forEach(r => {
     if (!r.zone_id || !r.zone) return;
     const zid = r.zone_id;
     if (!zoneSynthesisMap[zid]) {
