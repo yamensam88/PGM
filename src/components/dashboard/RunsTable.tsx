@@ -150,30 +150,31 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
           {getStatusBadge(run.status)}
         </TableCell>
 
+        <TableCell className="text-right px-4">
+           <div className="flex flex-col items-end gap-0.5">
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Maint.
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Casse
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
+                <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                  {run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Pénalité
+                </span>
+              )}
+              {Number(run.financial_entries?.filter((e: any) => ['maintenance_cost', 'damage_cost', 'penalty'].includes(e.category)).reduce((s: number, e: any) => s + Number(e.amount), 0)) === 0 && (
+                <span className="text-slate-300 font-medium text-[13px]">-</span>
+              )}
+           </div>
+        </TableCell>
+
         {!isExploitationMode && (
           <>
-            <TableCell className="text-right px-4">
-               <div className="flex flex-col items-end gap-0.5">
-                  {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-                    <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
-                      {run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Maint.
-                    </span>
-                  )}
-                  {Number(run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-                    <span className="text-[11px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-                      {run.financial_entries?.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Casse
-                    </span>
-                  )}
-                  {Number(run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-                    <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
-                      {run.financial_entries?.filter((e: any) => e.category === 'penalty').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Pénalité
-                    </span>
-                  )}
-                  {Number(run.financial_entries?.filter((e: any) => ['maintenance_cost', 'damage_cost', 'penalty'].includes(e.category)).reduce((s: number, e: any) => s + Number(e.amount), 0)) === 0 && (
-                    <span className="text-slate-300 font-medium text-[13px]">-</span>
-                  )}
-               </div>
-            </TableCell>
             <TableCell className="text-right px-4">
               <span className="text-[13px] font-semibold text-slate-700">{Number(run.revenue_calculated || 0).toFixed(2)}€</span>
             </TableCell>
@@ -329,9 +330,9 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Statut</TableHead>
+              <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Dommages</TableHead>
               {!isExploitationMode && (
                 <>
-                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Dommages</TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">CA</TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Coûts</TableHead>
                   <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-right px-4">Marge Nette</TableHead>

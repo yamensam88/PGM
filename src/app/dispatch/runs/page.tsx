@@ -592,7 +592,11 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                             <TableHead>Catégorie</TableHead>
                             <TableHead>Statut</TableHead>
                             <TableHead className="text-right">Kilométrage</TableHead>
+                            <TableHead className="text-right">Propriété</TableHead>
+                            <TableHead className="text-right">Coût Fixe Mensuel (€)</TableHead>
                             <TableHead className="text-center px-0">RDV / Intervention Prévue</TableHead>
+                            <TableHead className="text-right text-orange-600 font-semibold">Entretien (€)</TableHead>
+                            <TableHead className="text-right text-red-600 font-semibold">Sinistres (€)</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -623,8 +627,27 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                               <TableCell className="text-right font-medium text-zinc-600 dark:text-slate-500">
                                  {vehicle.current_km?.toLocaleString('fr-FR')} km
                               </TableCell>
+                              <TableCell className="text-right">
+                                 {(vehicle as any).ownership_type === 'rented' ? (
+                                   <div className="flex flex-col items-end">
+                                     <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">Locatier</span>
+                                     <span className="text-xs text-slate-500">{(vehicle as any).lessor_name}</span>
+                                   </div>
+                                 ) : (
+                                   <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">En Propre</span>
+                                 )}
+                              </TableCell>
+                              <TableCell className="text-right text-slate-500">
+                                {Number(vehicle.ownership_type === 'rented' ? vehicle.rental_monthly_cost : vehicle.fixed_monthly_cost).toFixed(2)}
+                              </TableCell>
                               <TableCell className="text-center p-1 align-top">
                                 <VehicleAppointmentCell vehicle={vehicle} />
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-orange-600">
+                                {vehicle.financial_entries.filter(e => e.category === 'maintenance_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-red-600">
+                                {vehicle.financial_entries.filter(e => e.category === 'damage_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-center w-40">
                                 <ErrorBoundary>
