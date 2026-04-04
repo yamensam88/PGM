@@ -137,50 +137,26 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     select: { id: true, date: true, driver_id: true, status: true, client: { select: { name: true } } }
   });
 
-  const calendarEvents = [
-    // 1. Map Administrative HR Events
-    ...drivers.flatMap(d => (d as any).hr_events?.map((e: any) => {
-       let color = "#3b82f6";
-       let title = d.first_name + " " + d.last_name;
-       if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
-       else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
-       else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
-       else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
-  
-       const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
-       endDate.setDate(endDate.getDate() + 1); // FullCalendar exclusive end borders need to encompass the next day for full day events
-  
-       return {
-          id: "hr_" + e.id,
-          title: title,
-          start: new Date(e.start_date).toISOString().split('T')[0],
-          end: endDate.toISOString().split('T')[0],
-          allDay: true,
-          backgroundColor: color,
-       };
-    }) || []),
-    // 2. Map Operational Daily Runs
-    ...periodRunsCalendar.filter(r => r.driver_id).map(r => {
-       const d = drivers.find(drv => drv.id === r.driver_id);
-       if (!d) return null;
-       
-       const runDate = new Date(r.date);
-       const nextDay = new Date(runDate);
-       nextDay.setDate(nextDay.getDate() + 1);
-       
-       const isCompleted = r.status === 'completed';
-       const clientsText = r.client?.name ? ` (${r.client.name})` : '';
-       
-       return {
-          id: "run_" + r.id,
-          title: d.first_name + " " + d.last_name + (isCompleted ? " (Tournée)" : " (Planifié)") + clientsText,
-          start: runDate.toISOString().split('T')[0],
-          end: nextDay.toISOString().split('T')[0],
-          allDay: true,
-          backgroundColor: isCompleted ? "#0284c7" : "#0ea5e9" // blue tones for field operations
-       };
-    }).filter(Boolean)
-  ];
+  const calendarEvents = drivers.flatMap(d => (d as any).hr_events?.map((e: any) => {
+     let color = "#3b82f6";
+     let title = d.first_name + " " + d.last_name;
+     if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
+     else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
+     else if (e.event_type === "absence") { color = "#ef4444"; title += " (Abs.)"; }
+     else if (e.event_type === "presence") { color = "#6366f1"; title += " (Dispo)"; }
+
+     const endDate = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+     endDate.setDate(endDate.getDate() + 1); // FullCalendar exclusive end borders need to encompass the next day for full day events
+
+     return {
+        id: "hr_" + e.id,
+        title: title,
+        start: new Date(e.start_date).toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        allDay: true,
+        backgroundColor: color,
+     };
+  }) || []);
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] text-slate-800 p-6 md:p-8 font-sans antialiased">
