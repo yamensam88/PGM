@@ -296,8 +296,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   });
   idleVehicleFixedCost = Math.max(0, idleVehicleFixedCost);
 
-  const activeDriversData = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const globalDriverFixedParams = activeDriversData.reduce((sum, d) => {
+  const allActiveEmployees = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
+  const globalDriverFixedParams = allActiveEmployees.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
      return sum + (explicitMonthly / 30.44);
   }, 0) * dateDiffDays;
@@ -307,9 +307,12 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
+  // Operational Headcount filter: Only genuine Chauffeurs
+  const activeDriversData = allActiveEmployees.filter(d => d.job_title === 'Chauffeur' || !d.job_title);
+
   let activeDriverCostInParams = 0;
   completedRunsBefore.forEach((r: any) => {
-     if (activeDriversData.some(d => d.id === r.driver_id)) {
+     if (allActiveEmployees.some(d => d.id === r.driver_id)) {
         activeDriverCostInParams += Number(r.cost_driver || 0);
      }
   });
@@ -332,9 +335,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
 
   // 6. Headcount Logic (Effectifs)
-  const totalActiveDrivers = await prisma.driver.count({
-    where: { organization_id: orgId, status: 'active' }
-  });
+  const totalActiveDrivers = activeDriversData.length;
   // Présents: Unique ACTIVE drivers who have ANY run (planned, in_progress, completed) OR a manual 'presence' HR event during this period
   const activeDriverIds = new Set(activeDriversData.map(d => d.id));
   const runsDriversId = allRuns.filter(r => activeDriverIds.has(r.driver_id)).map(r => r.driver_id);
