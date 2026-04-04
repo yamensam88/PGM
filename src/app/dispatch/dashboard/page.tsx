@@ -451,6 +451,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       driverStats[cost.driver_id].margin -= Number(cost.amount || 0);
     }
   });
+  grantedBonuses.forEach(bonus => {
+    if (bonus.driver_id && driverStats[bonus.driver_id]) {
+       driverStats[bonus.driver_id].margin -= Number(bonus.notes || 0);
+    }
+  });
 
   const sortedDrivers = Object.values(driverStats).sort((a, b) => b.margin - a.margin);
   const sortedVehicles = Object.values(vehicleStats).sort((a, b) => b.cost - a.cost);
@@ -508,6 +513,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         maintenance_cost: 0,
         damage_cost: 0,
         penalty_cost: 0,
+        bonus_cost: 0,
         runs: [],
       };
     }
@@ -532,9 +538,15 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     }
   });
 
+  grantedBonuses.forEach(bonus => {
+    if (bonus.driver_id && synthesisMap[bonus.driver_id]) {
+       synthesisMap[bonus.driver_id].bonus_cost += Number(bonus.notes || 0);
+    }
+  });
+
   const driverSynthesisData = Object.values(synthesisMap).sort((a: any, b: any) => {
-    const marginA = a.margin_net - a.maintenance_cost - a.damage_cost - a.penalty_cost;
-    const marginB = b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost;
+    const marginA = a.margin_net - a.maintenance_cost - a.damage_cost - a.penalty_cost - a.bonus_cost;
+    const marginB = b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost - b.bonus_cost;
     return marginB - marginA;
   });
 
@@ -876,7 +888,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
           </CardHeader>
           <CardContent className="pt-6 px-6 pb-6">
             <div className="h-[250px] w-full">
-              <DriverProfitabilityChart runs={allRuns} extraCosts={[...damageCosts, ...penaltyCosts, ...driverAbsenceCosts, ...maintenanceCosts]} />
+              <DriverProfitabilityChart runs={allRuns} extraCosts={[...damageCosts, ...penaltyCosts, ...driverAbsenceCosts, ...maintenanceCosts, ...grantedBonuses.map(b => ({ ...b, amount: Number(b.notes || 0) })) ]} />
             </div>
           </CardContent>
         </Card>

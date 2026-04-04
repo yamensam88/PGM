@@ -28,6 +28,7 @@ type SynthesisRow = {
   maintenance_cost: number;
   damage_cost: number;
   penalty_cost: number;
+  bonus_cost: number;
   runs: any[];
 };
 
@@ -70,7 +71,7 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
           {data.map((row) => {
             const ecart = (row.packages_loaded + row.packages_relay) - (row.packages_delivered + row.packages_advised + row.packages_returned);
             const isExpanded = expandedId === row.driver.id;
-            const finalMargin = row.margin_net - (row.maintenance_cost || 0) - (row.damage_cost || 0) - (row.penalty_cost || 0);
+            const finalMargin = row.margin_net - (row.maintenance_cost || 0) - (row.damage_cost || 0) - (row.penalty_cost || 0) - (row.bonus_cost || 0);
 
             return (
               <React.Fragment key={row.driver.id}>
