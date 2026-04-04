@@ -183,32 +183,36 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
           const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
           
+          const todayStart = new Date(today);
+          const todayEnd = new Date(today);
+          todayEnd.setHours(23, 59, 59, 999);
+
           const currentlyAbsent = drivers.filter(d => {
             if (d.status !== 'active') return false;
             
-            // Check if they have an absence event overlapping the period
+            // Check if they have an absence event overlapping TODAY strictly
             const hasAbsence = (d as any).hr_events?.some((e: any) => 
                e.status === 'active' && 
                ['absence', 'sick_leave', 'vacation'].includes(e.event_type) &&
-               new Date(e.start_date).getTime() <= endDate.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
+               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
             );
             
             if (!hasAbsence) return false;
             
-            // MATH OVERLAP PARITY: If they are absent, BUT they have a daily run in this period OR a manual presence, they are ACTUALLY PRESENT
+            // MATH OVERLAP PARITY: If they are absent, BUT they have a daily run TODAY OR a manual presence TODAY, they are ACTUALLY PRESENT
             const hasRun = (d as any).daily_runs?.some((r: any) => {
                const rDate = new Date(r.date).getTime();
-               return rDate >= startDate.getTime() && rDate <= endDate.getTime();
+               return rDate >= todayStart.getTime() && rDate <= todayEnd.getTime();
             });
             const hasManualPresence = (d as any).hr_events?.some((e: any) => 
                e.status === 'active' && 
                e.event_type === 'presence' &&
-               new Date(e.start_date).getTime() <= endDate.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
+               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
+               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
             );
             
-            // If they are physically present, they are excluded from the Absent count
+            // If they are physically present today, they are excluded from the Absent count
             return !(hasRun || hasManualPresence);
           }).length;
           
