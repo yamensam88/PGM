@@ -571,7 +571,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const zoneSynthesisData = Object.values(zoneSynthesisMap).sort((a: any, b: any) => {
     const marginA = a.margin_net - a.maintenance_cost - a.damage_cost - a.penalty_cost;
-    const marginB = b.margin_net - b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost;
+    const marginB = b.margin_net - b.maintenance_cost - b.damage_cost - b.penalty_cost;
     return marginB - marginA;
   });
 
