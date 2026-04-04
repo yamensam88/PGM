@@ -202,6 +202,7 @@ export async function createEmployee(formData: FormData) {
     const employmentType = formData.get("employmentType") as string;
     const hireDateStr = formData.get("hireDate") as string;
     const dailyCostStr = formData.get("dailyCost") as string;
+    const monthlyCostStr = formData.get("monthlyCost") as string;
     const monthlyNetSalaryStr = formData.get("monthlyNetSalary") as string;
     
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
@@ -213,6 +214,7 @@ export async function createEmployee(formData: FormData) {
     }
 
     const dailyCost = dailyCostStr ? Number(dailyCostStr) : 150;
+    const globalMonthlyCost = monthlyCostStr ? Number(monthlyCostStr) : null;
     const monthlyNetSalary = monthlyNetSalaryStr ? Number(monthlyNetSalaryStr) : null;
 
     const hireDate = new Date(hireDateStr);
@@ -278,6 +280,7 @@ export async function createEmployee(formData: FormData) {
         phone: phone || null,
         status: "active",
         daily_base_cost: dailyCost,
+        hourly_cost: globalMonthlyCost,
         monthly_net_salary: monthlyNetSalary,
         paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
         justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,

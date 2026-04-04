@@ -172,7 +172,7 @@ export function CreateEmployeeForm() {
         <div className="space-y-2.5 bg-blue-900/10 p-5 border border-blue-900/30 rounded-xl">
           <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-blue-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>
           <p className="text-[11px] text-slate-500">Sert au calcul du coût journalier (Lun-Sam hors jours fériés).</p>
-          <Input id="monthlyCost" type="number" step="0.01" value={monthlyCost} onChange={(e) => setMonthlyCost(e.target.value)} required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-blue-600" placeholder="ex: 3500.00" />
+          <Input id="monthlyCost" name="monthlyCost" type="number" step="0.01" value={monthlyCost} onChange={(e) => setMonthlyCost(e.target.value)} required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-blue-600" placeholder="ex: 3500.00" />
         </div>
 
         <div className="space-y-2.5 bg-zinc-50 p-5 border border-slate-200 rounded-xl">
