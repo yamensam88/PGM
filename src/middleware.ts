@@ -53,18 +53,30 @@ export async function middleware(request: NextRequest) {
      const role = token.role as string;
      const allowed = ALLOWED_PREFIXES[role] || [];
      
-     if (pathname.startsWith('/dispatch') || pathname.startsWith('/driver')) {
+      if (pathname.startsWith('/dispatch') || pathname.startsWith('/driver')) {
         // Admin and owner bypass
         if (role === 'admin' || role === 'owner') {
             return NextResponse.next();
         }
 
-        const hasAccess = allowed.some(prefix => pathname.startsWith(prefix));
+        const permissions = (token as any).permissions || {};
+        
+        // Let's build a dynamic allowed prefixes list based on explicit permissions overrides first
+        let userAllowedPrefixes = [...allowed];
+        for (const [key, val] of Object.entries(permissions)) {
+           if (val === true && !userAllowedPrefixes.includes(key)) {
+               userAllowedPrefixes.push(key);
+           } else if (val === false) {
+               userAllowedPrefixes = userAllowedPrefixes.filter(prefix => prefix !== key);
+           }
+        }
+
+        const hasAccess = userAllowedPrefixes.some(prefix => pathname.startsWith(prefix));
         if (!hasAccess) {
            const defaultPath = DEFAULT_PATHS[role] || '/login';
            return NextResponse.redirect(new URL(defaultPath, request.url));
         }
-     }
+      }
   }
 
   const requestHeaders = new Headers(request.headers);
