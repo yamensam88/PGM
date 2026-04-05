@@ -17,6 +17,7 @@ export default async function DispatchLayout({
 }) {
   const session = await getServerSession(authOptions);
   const userRole = session?.user?.role || "dispatcher";
+  const userPermissions = (session?.user as any)?.permissions || {};
   const orgId = session?.user?.organization_id;
 
   const headersList = await headers();
@@ -73,7 +74,7 @@ export default async function DispatchLayout({
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-[#f8f9fc]">
-      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} />
+      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} />
       <div className="flex flex-col flex-1 w-full md:pl-64 transition-all duration-300">
         <OnboardingTour />
 
@@ -101,7 +102,7 @@ export default async function DispatchLayout({
            </div>
          )}
  
-         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} />} />
+         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (

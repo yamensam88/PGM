@@ -37,6 +37,7 @@ export const authOptions: NextAuthOptions = {
           organization_id: user.organization_id,
           first_name: user.first_name,
           last_name: user.last_name,
+          permissions: (user as any).permissions,
         };
       },
     }),
@@ -52,6 +53,7 @@ export const authOptions: NextAuthOptions = {
         token.organization_id = user.organization_id;
         token.first_name = user.first_name;
         token.last_name = user.last_name;
+        token.permissions = (user as any).permissions;
       }
       return token;
     },
@@ -62,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         session.user.organization_id = token.organization_id;
         session.user.first_name = token.first_name;
         session.user.last_name = token.last_name;
+        session.user.permissions = token.permissions;
       }
       return session;
     },

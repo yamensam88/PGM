@@ -3317,3 +3317,34 @@ export async function updateRateCard(formData: FormData) {
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
+
+export async function updateUserPermissions(userId: string, permissions: any) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id || (session.user.role !== 'admin' && session.user.role !== 'owner')) {
+      throw new Error("Non autorisé");
+    }
+
+    // Verify the target user belongs to the same org
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId, organization_id: session.user.organization_id }
+    });
+
+    if (!targetUser) {
+      throw new Error("Utilisateur introuvable");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        permissions: permissions
+      }
+    });
+
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateUserPermissions:", error);
+    return { success: false, error: error.message || "Erreur serveur" };
+  }
+}
