@@ -30,6 +30,26 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Mot de passe incorrect.");
         }
 
+        // --- AUDIT LOGGING ---
+        const now = new Date();
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+             last_login_at: now,
+             last_active_at: now,
+          }
+        });
+
+        await prisma.sessionLog.create({
+           data: {
+              user_id: user.id,
+              organization_id: user.organization_id,
+              action: "LOGIN",
+              created_at: now
+           }
+        });
+        // ---------------------
+
         return {
           id: user.id,
           email: user.email,

@@ -5,9 +5,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Send, User, ChevronLeft, Loader2, Eye } from "lucide-react";
+import { MessageSquare, Send, User, ChevronLeft, Loader2, Eye, Activity } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { getChatUsers, getMessages, sendMessage, markAsRead, getGodModeMessages, getUnreadCount } from "@/lib/chat";
+import { getChatUsers, getMessages, sendMessage, markAsRead, getGodModeMessages, getUnreadCount, pingPresence, getConnectionLogs } from "@/lib/chat";
 
 export function ChatButton() {
   const [unread, setUnread] = useState(0);
@@ -18,6 +18,8 @@ export function ChatButton() {
        if (res && typeof res.count === 'number') {
            setUnread(res.count);
        }
+       // Ping presence to keep user online
+       pingPresence();
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 15000);
@@ -50,6 +52,7 @@ function ChatPanelContent() {
   const [activeTab, setActiveTab] = useState("direct");
   const [activeChat, setActiveChat] = useState<{ id: string, name: string, type: 'user'|'group' } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [inputMsg, setInputMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -75,10 +78,13 @@ function ChatPanelContent() {
        } else if (activeTab === 'godmode' && isAdmin) {
           const res = await getGodModeMessages();
           if (res.success) setMessages(res.data);
+       } else if (activeTab === 'history' && isAdmin) {
+          const res = await getConnectionLogs();
+          if (res.success) setLogs(res.data);
        }
     };
     fetchMsgs();
-    interval = setInterval(fetchMsgs, 5000); // poll every 5s
+    interval = setInterval(fetchMsgs, 15000); // poll every 15s to reduce load
     return () => clearInterval(interval);
   }, [activeChat, activeTab, isAdmin]);
 
@@ -162,10 +168,11 @@ function ChatPanelContent() {
             Messagerie Interne
          </SheetTitle>
          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full grid-cols-3 bg-slate-50 rounded-lg p-1">
-               <TabsTrigger value="direct" className="rounded-md">Direct</TabsTrigger>
-               <TabsTrigger value="general" className="rounded-md">Général</TabsTrigger>
-               {isAdmin && <TabsTrigger value="godmode" className="rounded-md flex items-center gap-1 text-purple-600"><Eye className="w-3.5 h-3.5"/> God Mode</TabsTrigger>}
+            <TabsList className={`w-full grid-cols-${isAdmin ? '4' : '2'} bg-slate-50 flex rounded-lg p-1 overflow-x-auto`}>
+               <TabsTrigger value="direct" className="rounded-md flex-1">Direct</TabsTrigger>
+               <TabsTrigger value="general" className="rounded-md flex-1">Général</TabsTrigger>
+               {isAdmin && <TabsTrigger value="godmode" className="rounded-md flex-1 flex items-center gap-1 text-purple-600"><Eye className="w-3.5 h-3.5"/> God Mode</TabsTrigger>}
+               {isAdmin && <TabsTrigger value="history" className="rounded-md flex-1 flex items-center gap-1 text-emerald-600"><Activity className="w-3.5 h-3.5"/> Historique</TabsTrigger>}
             </TabsList>
          </Tabs>
        </SheetHeader>
@@ -174,14 +181,24 @@ function ChatPanelContent() {
           
           {activeTab === "direct" && (
              <div className="p-2 flex flex-col gap-1">
-                {users.map(u => (
+                {users.map(u => {
+                   const now = new Date().getTime();
+                   const lastActive = u.last_active_at ? new Date(u.last_active_at).getTime() : 0;
+                   const lastLogin = u.last_login_at ? new Date(u.last_login_at).getTime() : 0;
+                   
+                   const isOnline = (now - lastActive) < 5 * 60 * 1000; // less than 5 min
+                   const isToday = lastLogin > new Date().setHours(0,0,0,0) || lastActive > new Date().setHours(0,0,0,0);
+                   
+                   return (
                    <button 
                      key={u.id}
                      onClick={() => setActiveChat({ id: u.id, name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email, type: 'user' })}
-                     className="flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                     className="flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left relative"
                    >
-                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center shrink-0 mr-3">
+                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center shrink-0 mr-3 relative">
                         <User className="w-5 h-5 text-slate-500" />
+                        {isAdmin && isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>}
+                        {isAdmin && !isOnline && isToday && <span className="absolute bottom-0 right-0 w-3 h-3 bg-orange-400 border-2 border-white rounded-full"></span>}
                      </div>
                      <div className="flex flex-col">
                         <span className="font-semibold text-slate-800 text-sm">
@@ -190,7 +207,7 @@ function ChatPanelContent() {
                         <span className="text-[11px] text-slate-400 capitalize">{u.role}</span>
                      </div>
                    </button>
-                ))}
+                )})}
                 {users.length === 0 && <div className="p-8 text-center text-slate-400 text-sm">Aucun utilisateur disponible pour le moment.</div>}
              </div>
           )}
@@ -239,6 +256,37 @@ function ChatPanelContent() {
                 </div>
              </div>
           )}
+
+          {activeTab === "history" && isAdmin && (
+             <div className="p-4 bg-slate-50 min-h-full">
+                <div className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-2 rounded-lg mb-4 flex items-center gap-2">
+                   <Activity className="w-4 h-4 shrink-0" />
+                   Registre sécurisé des sessions. Trace toutes les connexions au portail.
+                </div>
+                <div className="space-y-3">
+                   {logs.map(log => (
+                      <div key={log.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-1">
+                         <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-800">
+                               {log.user?.first_name || log.user?.email}
+                            </span>
+                            <span className="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded border border-emerald-100">
+                               LOGIN
+                            </span>
+                         </div>
+                         <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">
+                            {log.user?.role}
+                         </span>
+                         <span className="text-[11px] text-slate-500 mt-1">
+                            {new Date(log.created_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })}
+                         </span>
+                      </div>
+                   ))}
+                   {logs.length === 0 && <div className="text-center text-slate-400 py-8 text-sm">Aucun historique récent.</div>}
+                </div>
+             </div>
+          )}
+
 
        </div>
     </div>

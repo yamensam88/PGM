@@ -4,6 +4,20 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// Automatically pings presence for the logged in user
+export async function pingPresence() {
+   const session = await getServerSession(authOptions);
+   if (!session?.user?.id) return;
+   try {
+     await prisma.user.update({
+       where: { id: session.user.id },
+       data: { last_active_at: new Date() }
+    });
+   } catch (e) {
+     // silent fail
+   }
+}
+
 // Send a message (to a specific user or group)
 export async function sendMessage(content: string, receiverId?: string, groupRoom?: string) {
   const session = await getServerSession(authOptions);
@@ -74,7 +88,7 @@ export async function getChatUsers() {
    try {
      const users = await prisma.user.findMany({
         where: { organization_id: session.user.organization_id, id: { not: session.user.id } },
-        select: { id: true, first_name: true, last_name: true, role: true, email: true },
+        select: { id: true, first_name: true, last_name: true, role: true, email: true, last_login_at: true, last_active_at: true },
         orderBy: { first_name: 'asc' }
      });
      return { success: true, data: users };
@@ -140,4 +154,28 @@ export async function getUnreadCount() {
    } catch {
       return { count: 0 };
    }
+}
+
+// GOD MODE: Get all recent login history (Audit)
+export async function getConnectionLogs() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session?.user?.organization_id) return { success: false, data: [] };
+  
+  if (session.user.role !== 'admin' && session.user.role !== 'owner') {
+    return { success: false, data: [] };
+  }
+
+  try {
+     const logs = await prisma.sessionLog.findMany({
+        where: { organization_id: session.user.organization_id },
+        orderBy: { created_at: 'desc' },
+        take: 100,
+        include: {
+           user: { select: { first_name: true, last_name: true, email: true, role: true } }
+        }
+     });
+     return { success: true, data: logs };
+  } catch {
+     return { success: false, data: [] };
+  }
 }
