@@ -43,11 +43,6 @@ export function Header({ mobileMenu }: { mobileMenu?: React.ReactNode }) {
       <div className="flex items-center gap-3">
         <ChatButton />
 
-        <button className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-500 transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-zinc-950" />
-        </button>
-
         <div className="h-6 w-px bg-zinc-200 dark:bg-white mx-2" />
 
         <div className="flex items-center space-x-4">
