@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Send, User, ChevronLeft, Loader2, Eye, Activity } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { getChatUsers, getMessages, sendMessage, markAsRead, getGodModeMessages, getUnreadCount, pingPresence, getConnectionLogs } from "@/lib/chat";
+import { getChatUsers, getMessages, sendMessage, markAsRead, getGodModeMessages, getUnreadCount, pingPresence, getConnectionLogs, getUnreadCountsBySender } from "@/lib/chat";
 
 export function ChatButton() {
   const [unread, setUnread] = useState(0);
@@ -53,6 +53,7 @@ function ChatPanelContent() {
   const [activeChat, setActiveChat] = useState<{ id: string, name: string, type: 'user'|'group' } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
   const [inputMsg, setInputMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,17 @@ function ChatPanelContent() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     const fetchMsgs = async () => {
+      if (activeTab === 'direct') {
+         const resUnreads = await getUnreadCountsBySender();
+         if (resUnreads.success) {
+            const map: Record<string, number> = {};
+            resUnreads.data?.forEach((item: any) => {
+               map[item.sender_id] = item._count.id;
+            });
+            setUnreadMap(map);
+         }
+      }
+
        if (activeChat) {
           if (activeChat.type === 'user') {
             const res = await getMessages(activeChat.id, undefined);
@@ -188,24 +200,30 @@ function ChatPanelContent() {
                    
                    const isOnline = (now - lastActive) < 5 * 60 * 1000; // less than 5 min
                    const isToday = lastLogin > new Date().setHours(0,0,0,0) || lastActive > new Date().setHours(0,0,0,0);
+                   const hasUnread = unreadMap[u.id] > 0;
                    
                    return (
                    <button 
                      key={u.id}
                      onClick={() => setActiveChat({ id: u.id, name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email, type: 'user' })}
-                     className="flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left relative"
+                     className={`flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left relative ${hasUnread ? 'bg-blue-50/50' : ''}`}
                    >
                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center shrink-0 mr-3 relative">
                         <User className="w-5 h-5 text-slate-500" />
                         {isAdmin && isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>}
                         {isAdmin && !isOnline && isToday && <span className="absolute bottom-0 right-0 w-3 h-3 bg-orange-400 border-2 border-white rounded-full"></span>}
                      </div>
-                     <div className="flex flex-col">
-                        <span className="font-semibold text-slate-800 text-sm">
+                     <div className="flex flex-col flex-1">
+                        <span className={`text-sm ${hasUnread ? 'font-bold text-blue-700' : 'font-semibold text-slate-800'}`}>
                            {`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email}
                         </span>
-                        <span className="text-[11px] text-slate-400 capitalize">{u.role}</span>
+                        <span className={`text-[11px] capitalize ${hasUnread ? 'font-bold text-blue-600' : 'text-slate-400'}`}>
+                           {hasUnread ? `${unreadMap[u.id]} nouveau(x) message(s)` : u.role}
+                        </span>
                      </div>
+                     {hasUnread && (
+                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full shrink-0 shadow-sm ml-2"></div>
+                     )}
                    </button>
                 )})}
                 {users.length === 0 && <div className="p-8 text-center text-slate-400 text-sm">Aucun utilisateur disponible pour le moment.</div>}

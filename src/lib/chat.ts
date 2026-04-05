@@ -156,6 +156,22 @@ export async function getUnreadCount() {
    }
 }
 
+// Get breakdown of unread message count per sender
+export async function getUnreadCountsBySender() {
+   const session = await getServerSession(authOptions);
+   if (!session?.user?.id || !session?.user?.organization_id) return { success: false, data: [] };
+   try {
+      const counts = await prisma.internalMessage.groupBy({
+         by: ['sender_id'],
+         where: { receiver_id: session.user.id, is_read: false },
+         _count: { id: true }
+      });
+      return { success: true, data: counts };
+   } catch {
+      return { success: false, data: [] };
+   }
+}
+
 // GOD MODE: Get all recent login history (Audit)
 export async function getConnectionLogs() {
   const session = await getServerSession(authOptions);
