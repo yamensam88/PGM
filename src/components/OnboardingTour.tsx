@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Joyride } from "react-joyride";
+import dynamic from "next/dynamic";
 import type { EventData, Step } from "react-joyride";
 import { useLocalStorage } from "react-use";
+
+// Completely bypass Vercel/Turbopack ESM import bugs by dynamically loading the component client-side
+const Joyride = dynamic(() => import("react-joyride").then((mod) => mod.Joyride || (mod as any).default), { ssr: false });
 
 export function OnboardingTour() {
   const [hasCompletedTour, setHasCompletedTour] = useLocalStorage("pgm_tour_completed", false);
