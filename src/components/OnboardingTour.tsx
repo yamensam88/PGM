@@ -7,7 +7,7 @@ import { useLocalStorage } from "react-use";
 
 const Joyride = JoyrideModule.Joyride || (JoyrideModule as any).default;
 
-export function OnboardingTour() {
+export default function OnboardingTour() {
   const [hasCompletedTour, setHasCompletedTour] = useLocalStorage("pgm_tour_completed", false);
   const [run, setRun] = useState(false);
   const [mounted, setMounted] = useState(false);

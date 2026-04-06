@@ -2,9 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { Sidebar, MobileSidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
-import nextDynamic from "next/dynamic";
-
-const OnboardingTour = nextDynamic(() => import("@/components/OnboardingTour").then((mod) => mod.OnboardingTour), { ssr: false });
+import OnboardingTour from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
