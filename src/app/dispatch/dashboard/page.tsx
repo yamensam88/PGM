@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as PieChartIcon, Package, Map, ShieldAlert, Brain, CheckCircle2, Activity, TrendingDown, Car, Users, AlertCircle, Sparkles } from "lucide-react";
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
+import { countWorkingDays } from "@/lib/calendar";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
 import { ZoneProfitabilityChart } from "@/components/dashboard/ZoneProfitabilityChart";
@@ -64,6 +65,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const dateDiffMs = endDate.getTime() - startDate.getTime();
   const dateDiffDays = Math.max(1, Math.ceil(dateDiffMs / (1000 * 60 * 60 * 24)));
+  const dateDiffWorkingDays = Math.max(1, countWorkingDays(startDate, endDate));
 
   // 3. Fetch Runs for the period
   const rawRuns = await prisma.dailyRun.findMany({
@@ -213,14 +215,13 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   hrEvents.forEach(evt => {
     const evtStart = evt.start_date < startDate ? startDate : evt.start_date;
     const evtEnd = evt.end_date ? (evt.end_date > endDate ? endDate : evt.end_date) : endDate;
-    const diffTime = evtEnd.getTime() - evtStart.getTime();
-    let days = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+    let days = countWorkingDays(evtStart, evtEnd);
     
     // CAP OVERLAP: A driver cannot be absent more days than the dashboard filter's total span
-    days = Math.min(days, dateDiffDays);
+    days = Math.min(days, dateDiffWorkingDays);
     
     const explicitMonthly = evt.driver?.hourly_cost ? Number(evt.driver.hourly_cost) : (Number(evt.driver?.daily_base_cost||0) * 25.33);
-    const calendarDailyCost = explicitMonthly / 30.44;
+    const calendarDailyCost = explicitMonthly / 25.33;
 
     totalAbsenceDays += days;
     if (['sick_leave', 'vacation'].includes(evt.event_type)) {
@@ -271,7 +272,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   // Calculate Global Periodic Fixed Costs (To capture Idle Costs)
   const activeVehicles = await prisma.vehicle.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const globalVehicleFixedParams = activeVehicles.reduce((sum, v) => sum + ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30), 0) * dateDiffDays;
+  const globalVehicleFixedParams = activeVehicles.reduce((sum, v) => sum + ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/25.33), 0) * dateDiffWorkingDays;
   
   // The cost of idle vehicles is the global parameters minus what was already accounted for in active runs
   // Note: Since `cost_vehicle` includes variable KM cost, extracting just base_fleet_cost is mathematically tricky.
@@ -288,7 +289,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
          vehicleBaseChargedDays.add(key);
          const v = activeVehicles.find(v => v.id === r.vehicle_id);
          if (v) {
-            const dailyBase = ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/30);
+            const dailyBase = ((Number(v.fixed_monthly_cost||0) + Number(v.rental_monthly_cost||0) + Number(v.insurance_monthly_cost||0))/25.33);
             idleVehicleFixedCost -= dailyBase;
          }
        }
@@ -299,11 +300,11 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const allActiveEmployees = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
   const globalDriverFixedParams = allActiveEmployees.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
-     return sum + (explicitMonthly / 30.44);
-  }, 0) * dateDiffDays;
+     return sum + (explicitMonthly / 25.33);
+  }, 0) * dateDiffWorkingDays;
 
   const monthlyFixedCostAdmin = orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0;
-  const periodAdminFixedCosts = (monthlyFixedCostAdmin / 30.44) * dateDiffDays;
+  const periodAdminFixedCosts = (monthlyFixedCostAdmin / 25.33) * dateDiffWorkingDays;
 
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
@@ -384,14 +385,16 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
     dailyData[dStr].cost += (r.cost_vehicle + r.cost_driver + r.cost_fuel);
   });
 
-  const dailyAdmin = periodAdminFixedCosts / dateDiffDays;
-  const dailyIdleDriver = totalIdleDriverCost / dateDiffDays;
-  const dailyIdleVehicle = idleVehicleFixedCost / dateDiffDays;
-  const dailyBonus = totalBonusCost / dateDiffDays;
+  const dailyAdmin = periodAdminFixedCosts / dateDiffWorkingDays;
+  const dailyIdleDriver = totalIdleDriverCost / dateDiffWorkingDays;
+  const dailyIdleVehicle = idleVehicleFixedCost / dateDiffWorkingDays;
+  const dailyBonus = totalBonusCost / dateDiffWorkingDays;
   const globalDailyCost = dailyAdmin + dailyIdleDriver + dailyIdleVehicle + dailyBonus;
 
   Object.keys(dailyData).forEach(dStr => {
-     dailyData[dStr].cost += globalDailyCost;
+     if (countWorkingDays(new Date(dStr), new Date(dStr)) > 0) {
+        dailyData[dStr].cost += globalDailyCost;
+     }
   });
 
   damageCosts.forEach(c => {
