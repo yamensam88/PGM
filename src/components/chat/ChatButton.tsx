@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { MessageSquare, Send, User, ChevronLeft, Loader2, Eye, Activity } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { getChatUsers, getMessages, sendMessage, markAsRead, getGodModeMessages, getUnreadCount, pingPresence, getConnectionLogs, getUnreadCountsBySender } from "@/lib/chat";
@@ -110,6 +109,12 @@ function ChatPanelContent() {
 
     const msg = inputMsg;
     setInputMsg(""); // optimistic clear
+    
+    // Reset textarea height
+    const textarea = document.getElementById("chat-textarea");
+    if (textarea) {
+       textarea.style.height = '40px';
+    }
 
     const res = await sendMessage(
        msg, 
@@ -157,15 +162,27 @@ function ChatPanelContent() {
             })}
             <div ref={messagesEndRef} />
          </div>
-         <form onSubmit={handleSend} className="p-3 bg-white border-t flex gap-2">
-            <Input 
+         <form onSubmit={handleSend} className="p-3 bg-white border-t flex gap-2 items-end">
+            <textarea
+               id="chat-textarea"
                value={inputMsg} 
-               onChange={e => setInputMsg(e.target.value)} 
-               placeholder="Tapez un message..." 
-               className="rounded-full shadow-sm"
+               onChange={e => {
+                  setInputMsg(e.target.value);
+                  e.target.style.height = '40px';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+               }} 
+               onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                     e.preventDefault();
+                     handleSend(e as any);
+                  }
+               }}
+               placeholder="Tapez un message... (Shift+Entrée pour passer à la ligne)" 
+               className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow max-h-[120px] min-h-[40px] overflow-y-auto leading-relaxed"
+               rows={1}
             />
-            <Button type="submit" size="icon" className="rounded-full bg-blue-600 hover:bg-blue-700 shrink-0">
-               <Send className="w-4 h-4 text-white" />
+            <Button type="submit" size="icon" className="rounded-xl h-10 w-10 bg-blue-600 hover:bg-blue-700 shrink-0 mb-[1px]">
+               <Send className="w-4 h-4 text-white ml-0.5" />
             </Button>
          </form>
        </div>
