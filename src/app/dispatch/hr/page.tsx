@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateEmployeeForm } from "@/components/forms/CreateEmployeeForm";
 import { EditAbsenceForm } from "@/components/forms/EditAbsenceForm";
+import { EditPenaltyForm } from "@/components/forms/EditPenaltyForm";
 import { CreateAbsenceDialog, CreatePenaltyDialog } from "@/components/hr/HrActionDialogs";
 import { HrDocumentManager } from "@/components/hr/HrDocumentManager";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
@@ -673,15 +674,19 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                    <span className="capitalize text-[11px] font-semibold tracking-wider text-slate-500">{event.status}</span>
                                 </td>
                                 <td className="px-6 py-4 flex justify-end">
-                                  {['sick_leave', 'vacation', 'absence'].includes(event.event_type) && (
+                                  {['sick_leave', 'vacation', 'absence', 'sanction'].includes(event.event_type) && (
                                     <Dialog>
-                                      <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>Modifier</DialogTrigger>
+                                      <DialogTrigger render={<button className={`text-slate-400 hover:text-${event.event_type === 'sanction' ? 'red' : 'blue'}-500 text-[11px] font-semibold underline decoration-transparent hover:decoration-${event.event_type === 'sanction' ? 'red' : 'blue'}-500/30 underline-offset-2 transition-all`} />}>Modifier</DialogTrigger>
                                       <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
                                         <DialogHeader>
-                                          <DialogTitle className="text-blue-500">Modifier l'événement</DialogTitle>
-                                          <DialogDescription className="text-slate-500">Mettez à jour les dates ou le type d'absence.</DialogDescription>
+                                          <DialogTitle className={event.event_type === 'sanction' ? "text-red-500" : "text-blue-500"}>Modifier {event.event_type === 'sanction' ? 'la pénalité' : "l'événement"}</DialogTitle>
+                                          <DialogDescription className="text-slate-500">Mettez à jour les informations enregistrées.</DialogDescription>
                                         </DialogHeader>
-                                        <EditAbsenceForm event={event} drivers={drivers} />
+                                        {event.event_type === 'sanction' ? (
+                                          <EditPenaltyForm event={event} drivers={drivers} />
+                                        ) : (
+                                          <EditAbsenceForm event={event} drivers={drivers} />
+                                        )}
                                       </DialogContent>
                                     </Dialog>
                                   )}

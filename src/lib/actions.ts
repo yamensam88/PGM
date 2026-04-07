@@ -2258,6 +2258,113 @@ export async function recordDriverPenalty(formData: FormData) {
   }
 }
 
+export async function updateDriverPenalty(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    const event_id = formData.get("event_id") as string;
+    const driver_id = formData.get("driver_id") as string;
+    const amount = Number(formData.get("amount"));
+    const date_input = formData.get("date") as string;
+    const old_date_input = formData.get("old_date") as string;
+    const description = formData.get("description") as string;
+
+    if (!event_id || !driver_id || isNaN(amount) || amount <= 0 || !date_input || !old_date_input) {
+      throw new Error("Veuillez remplir les informations de pénalité correctement.");
+    }
+
+    const newDate = new Date(date_input);
+    const oldDateBoundStart = new Date(old_date_input);
+    oldDateBoundStart.setHours(0,0,0,0);
+    const oldDateBoundEnd = new Date(old_date_input);
+    oldDateBoundEnd.setHours(23,59,59,999);
+
+    await prisma.$transaction(async (tx) => {
+      // Update HrEvent
+      await tx.hrEvent.updateMany({
+        where: { id: event_id, organization_id: orgId },
+        data: {
+          start_date: newDate,
+          end_date: newDate,
+          notes: `Pénalité financière de ${amount}€: ${description || ''}`
+        }
+      });
+      // Try resolving related financial entry and update IT too
+      await tx.financialEntry.updateMany({
+        where: {
+          organization_id: orgId,
+          driver_id: driver_id,
+          category: 'penalty',
+          entry_type: 'cost',
+          entry_date: {
+             gte: oldDateBoundStart,
+             lte: oldDateBoundEnd
+          }
+        },
+        data: {
+          amount: amount,
+          entry_date: newDate,
+          description: `Pénalité chauffeur: ${description || 'Non précisé'}`
+        }
+      });
+    });
+
+    revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur updateDriverPenalty:", error);
+    return { success: false, error: error.message || "Erreur lors de la modification de la pénalité." };
+  }
+}
+
+export async function deleteDriverPenalty(eventId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé");
+    const orgId = session.user.organization_id;
+
+    if (!eventId) throw new Error("ID de l'événement manquant.");
+
+    const event = await prisma.hrEvent.findFirst({
+        where: { id: eventId, organization_id: orgId }
+    });
+    if (!event) throw new Error("Evénement non trouvé.");
+
+    const dateBoundStart = new Date(event.start_date);
+    dateBoundStart.setHours(0,0,0,0);
+    const dateBoundEnd = new Date(event.start_date);
+    dateBoundEnd.setHours(23,59,59,999);
+
+    await prisma.$transaction(async (tx) => {
+        await tx.hrEvent.deleteMany({
+          where: { id: eventId }
+        });
+        await tx.financialEntry.deleteMany({
+          where: {
+            organization_id: orgId,
+            driver_id: event.driver_id,
+            category: 'penalty',
+            entry_type: 'cost',
+            entry_date: {
+                gte: dateBoundStart,
+                lte: dateBoundEnd
+            }
+          }
+        });
+    });
+
+    revalidatePath("/dispatch/hr");
+    revalidatePath("/dispatch/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur deleteDriverPenalty:", error);
+    return { success: false, error: error.message || "Erreur lors de la suppression de la pénalité." };
+  }
+}
+
 /**
  * Server Action: Enregistrer une absence ou un congé pour un chauffeur (RH)
  */
