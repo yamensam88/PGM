@@ -1,3 +1,0 @@
-﻿src/components/settings/ManageUserPermissions.tsx(54,22): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
-  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
-src/lib/actions.ts(3340,9): error TS2353: Object literal may only specify known properties, and 'permissions' does not exist in type '(Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput)'.

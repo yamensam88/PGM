@@ -11,9 +11,8 @@ import { Users, UserCheck, UserX, Receipt, CalendarClock, BriefcaseMedical, Plus
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateEmployeeForm } from "@/components/forms/CreateEmployeeForm";
-import { CreatePenaltyForm } from "@/components/forms/CreatePenaltyForm";
-import { CreateAbsenceForm } from "@/components/forms/CreateAbsenceForm";
 import { EditAbsenceForm } from "@/components/forms/EditAbsenceForm";
+import { CreateAbsenceDialog, CreatePenaltyDialog } from "@/components/hr/HrActionDialogs";
 import { HrDocumentManager } from "@/components/hr/HrDocumentManager";
 import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
 import { EditNetSalaryForm } from "@/components/forms/EditNetSalaryForm";
@@ -626,39 +625,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
            <TabsContent value="absences" className="space-y-4">
                <div className="flex justify-end gap-3 mb-4">
-                  <Dialog>
-                    <DialogTrigger render={<Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm" />}>
-                      Déclarer Absence / Maladie / Congés
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
-                      <DialogHeader>
-                        <DialogTitle className="text-blue-500">Nouvelle Déclaration RH</DialogTitle>
-                        <DialogDescription className="text-slate-500">
-                          Enregistrez une absence, un arrêt maladie ou la pose d'un congé payé pour un chauffeur.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div>
-                        <CreateAbsenceForm drivers={drivers} />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  <Dialog>
-                    <DialogTrigger render={<Button variant="outline" className="border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:text-red-400" />}>
-                      Pénalité Client / Exploitation
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
-                      <DialogHeader>
-                        <DialogTitle className="text-red-500">Pénalité Client / Exploitation</DialogTitle>
-                        <DialogDescription className="text-slate-500">
-                          Enregistrez une pénalité financière facturée à l'entreprise (ex: Amazon) due à une erreur ou une non-livraison du chauffeur.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div>
-                        <CreatePenaltyForm drivers={drivers} />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <CreateAbsenceDialog drivers={drivers} />
+                  <CreatePenaltyDialog drivers={drivers} />
                </div>
                
                <Card className="border-slate-200 bg-white shadow-none overflow-hidden rounded-xl">
