@@ -1322,7 +1322,33 @@ export async function createRun(formData: FormData) {
             const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
             km_diff = Math.max(0, km_end - km_start);
             const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
-            cost_vehicle = base_fleet_cost + variable_fleet_cost;
+
+            let penalty_cost = 0;
+            if (vehicle?.ownership_type === 'rented' && vehicle?.monthly_km_limit && vehicle.monthly_km_limit > 0) {
+                const nowForMonth = new Date(utcDate);
+                const monthStart = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth(), 1);
+                const monthEnd = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+                
+                const priorRunsThisMonth = await prisma.dailyRun.findMany({
+                    where: {
+                        vehicle_id: vehicle_id,
+                        date: { gte: monthStart, lte: monthEnd },
+                        status: 'completed'
+                    },
+                    select: { km_start: true, km_end: true }
+                });
+                const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+                const limit = Number(vehicle.monthly_km_limit);
+                const extraCost = Number(vehicle.extra_km_cost || 0.18);
+                
+                if (previousTotal >= limit) {
+                    penalty_cost = km_diff * extraCost;
+                } else if (previousTotal + km_diff > limit) {
+                    penalty_cost = ((previousTotal + km_diff) - limit) * extraCost;
+                }
+            }
+
+            cost_vehicle = base_fleet_cost + variable_fleet_cost + penalty_cost;
             
             if (fuel_liters > 0) {
               const org = await prisma.organization.findUnique({ where: { id: orgId } });
@@ -1933,7 +1959,34 @@ export async function saveUnifiedDelivery(formData: FormData) {
         const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
         km_diff = Math.max(0, kmEnd - kmStart);
         const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
-        cost_vehicle = base_fleet_cost + variable_fleet_cost;
+
+        let penalty_cost = 0;
+        if (vehicle?.ownership_type === 'rented' && vehicle?.monthly_km_limit && vehicle.monthly_km_limit > 0) {
+            const nowForMonth = new Date();
+            const monthStart = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth(), 1);
+            const monthEnd = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+            
+            const priorRunsThisMonth = await prisma.dailyRun.findMany({
+                where: {
+                    vehicle_id: vehicleId,
+                    date: { gte: monthStart, lte: monthEnd },
+                    id: { not: id },
+                    status: 'completed'
+                },
+                select: { km_start: true, km_end: true }
+            });
+            const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+            const limit = Number(vehicle.monthly_km_limit);
+            const extraCost = Number(vehicle.extra_km_cost || 0.18);
+            
+            if (previousTotal >= limit) {
+                penalty_cost = km_diff * extraCost;
+            } else if (previousTotal + km_diff > limit) {
+                penalty_cost = ((previousTotal + km_diff) - limit) * extraCost;
+            }
+        }
+
+        cost_vehicle = base_fleet_cost + variable_fleet_cost + penalty_cost;
         
         if (fuelLiters > 0) {
           const org = await prisma.organization.findUnique({ where: { id: orgId } });
@@ -3084,7 +3137,33 @@ export async function updateRun(formData: FormData) {
        });
        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 30;
        const variable_fleet_cost = km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
-       const cost_vehicle = base_fleet_cost + variable_fleet_cost;
+
+       let penalty_cost = 0;
+       if (activeVehicle?.ownership_type === 'rented' && activeVehicle?.monthly_km_limit && activeVehicle.monthly_km_limit > 0) {
+           const nowForMonth = new Date(run.date || new Date());
+           const monthStart = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth(), 1);
+           const monthEnd = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+           
+           const priorRunsThisMonth = await prisma.dailyRun.findMany({
+               where: {
+                   vehicle_id: activeVehicleId,
+                   date: { gte: monthStart, lte: monthEnd },
+                   id: { not: runId }
+               },
+               select: { km_start: true, km_end: true }
+           });
+           const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+           const limit = Number(activeVehicle.monthly_km_limit);
+           const extraCost = Number(activeVehicle.extra_km_cost || 0.18);
+           
+           if (previousTotal >= limit) {
+               penalty_cost = km_diff * extraCost;
+           } else if (previousTotal + km_diff > limit) {
+               penalty_cost = ((previousTotal + km_diff) - limit) * extraCost;
+           }
+       }
+
+       const cost_vehicle = base_fleet_cost + variable_fleet_cost + penalty_cost;
 
        let cost_fuel = Number(run.cost_fuel || 0);
        let final_fuel_liters = Number(run.fuel_consumed_liters || 0);
