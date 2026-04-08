@@ -1727,6 +1727,9 @@ export async function addVehicle(formData: FormData) {
     const internal_cost_per_km = parseNumber(formData.get("internal_cost_per_km"));
     const ownership_type = formData.get("ownership_type") as string;
     const lessor_name = formData.get("lessor_name") as string;
+    const monthly_km_limit_input = formData.get("monthly_km_limit");
+    const monthly_km_limit = monthly_km_limit_input ? parseInt(String(monthly_km_limit_input)) : null;
+    const extra_km_cost = formData.get("extra_km_cost") ? parseNumber(formData.get("extra_km_cost")) : 0.18;
 
     if (!plate_number) throw new Error("La plaque d'immatriculation est requise.");
 
@@ -1742,6 +1745,8 @@ export async function addVehicle(formData: FormData) {
         internal_cost_per_km,
         ownership_type: ownership_type || 'owned',
         lessor_name: ownership_type === 'rented' ? lessor_name : null,
+        monthly_km_limit: ownership_type === 'rented' ? monthly_km_limit : null,
+        extra_km_cost: ownership_type === 'rented' ? extra_km_cost : 0.18,
         status: 'active'
       } as any // Prisma typed any because we might have generated schema locally but client doesn't see it
     });
@@ -3241,6 +3246,8 @@ export async function updateVehicle(formData: FormData) {
     const currentKm = currentKmInput ? Number(currentKmInput) : undefined;
     const ownershipType = formData.get("ownership_type") as string;
     const lessorName = formData.get("lessor_name") as string;
+    const monthly_km_limit_input = formData.get("monthly_km_limit");
+    const monthly_km_limit = monthly_km_limit_input ? parseInt(String(monthly_km_limit_input)) : null;
     
     // Convert costs correctly natively handling commas
     const parseNumber = (val: any) => {
@@ -3254,11 +3261,13 @@ export async function updateVehicle(formData: FormData) {
     const rentalCostInput = formData.get("rental_monthly_cost");
     const insuranceCostInput = formData.get("insurance_monthly_cost");
     const internalCostPerKmInput = formData.get("internal_cost_per_km");
+    const extraKmCostInput = formData.get("extra_km_cost");
     
     const fixedCost = parseNumber(fixedCostInput);
     const rentalCost = parseNumber(rentalCostInput);
     const insuranceCost = parseNumber(insuranceCostInput);
     const internalCostPerKm = parseNumber(internalCostPerKmInput);
+    const extraKmCost = extraKmCostInput ? parseNumber(extraKmCostInput) : 0.18;
 
     if (!vehicleId || !plateNumber) {
       throw new Error("L'identifiant du véhicule et la plaque sont requis.");
@@ -3273,6 +3282,8 @@ export async function updateVehicle(formData: FormData) {
         current_km: currentKm,
         ownership_type: ownershipType || "owned",
         lessor_name: ownershipType === "rented" ? lessorName || null : null,
+        monthly_km_limit: ownershipType === "rented" ? monthly_km_limit : null,
+        extra_km_cost: ownershipType === "rented" ? extraKmCost : 0.18,
         fixed_monthly_cost: ownershipType === "owned" ? fixedCost : 0,
         rental_monthly_cost: ownershipType === "rented" ? rentalCost : 0,
         insurance_monthly_cost: insuranceCost,

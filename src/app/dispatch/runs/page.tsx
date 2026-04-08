@@ -102,10 +102,17 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     sst_score: run.sst_score ? Number(run.sst_score) : 0,
     financial_entries: run.financial_entries.map(e => ({ ...e, amount: Number(e.amount) }))
   }));
+  const nowForMonth = new Date();
+  const currentMonthStart = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth(), 1);
+  const currentMonthEnd = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth() + 1, 0, 23, 59, 59, 999);
 
   const rawVehicles = await prisma.vehicle.findMany({
     where: { organization_id: session.user.organization_id },
     include: {
+      daily_runs: {
+        where: { date: { gte: currentMonthStart, lte: currentMonthEnd } },
+        select: { km_start: true, km_end: true }
+      },
       maintenance_logs: { 
         where: { service_date: { gte: startDate, lte: endDate } },
         orderBy: { service_date: "desc" }, 
@@ -125,14 +132,17 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     orderBy: { created_at: "desc" },
   });
 
-  const vehicles = rawVehicles.map(v => ({
+  const vehicles = rawVehicles.map((v: any) => ({
      ...v,
      internal_cost_per_km: v.internal_cost_per_km ? Number(v.internal_cost_per_km) : 0,
      fixed_monthly_cost: v.fixed_monthly_cost ? Number(v.fixed_monthly_cost) : 0,
      insurance_monthly_cost: v.insurance_monthly_cost ? Number(v.insurance_monthly_cost) : 0,
      rental_monthly_cost: v.rental_monthly_cost ? Number(v.rental_monthly_cost) : 0,
-     maintenance_logs: v.maintenance_logs.map(m => ({ ...m, cost: Number(m.cost) })),
-     incidents: v.incidents.map(i => ({ 
+     extra_km_cost: v.extra_km_cost ? Number(v.extra_km_cost) : 0.18,
+     monthly_km_limit: v.monthly_km_limit ? Number(v.monthly_km_limit) : null,
+     km_this_month: (v.daily_runs || []).reduce((sum: number, run: any) => sum + Math.max(0, (run.km_end || 0) - (run.km_start || Number(run.km_end))), 0),
+     maintenance_logs: v.maintenance_logs.map((m: any) => ({ ...m, cost: Number(m.cost) })),
+     incidents: v.incidents.map((i: any) => ({ 
          ...i, 
          gps_latitude: i.gps_latitude ? Number(i.gps_latitude) : null,
          gps_longitude: i.gps_longitude ? Number(i.gps_longitude) : null,
@@ -140,7 +150,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
          penalty_exposure_amount: i.penalty_exposure_amount ? Number(i.penalty_exposure_amount) : 0,
          penalty_saved_amount: i.penalty_saved_amount ? Number(i.penalty_saved_amount) : 0,
      })),
-     financial_entries: v.financial_entries.map(f => ({ ...f, amount: Number(f.amount) }))
+     financial_entries: v.financial_entries.map((f: any) => ({ ...f, amount: Number(f.amount) }))
   }));
 
   const activeVehicles = vehicles.filter(v => v.status !== 'archived');
@@ -591,7 +601,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                             <TableHead>Plaque d'Immatriculation</TableHead>
                             <TableHead>Catégorie</TableHead>
                             <TableHead>Statut</TableHead>
-                            <TableHead className="text-right">Kilométrage</TableHead>
+                            <TableHead className="text-right">Kilométrage absolu</TableHead>
+                            <TableHead className="text-right bg-blue-50/50">Forfait Mensuel (Ce Mois)</TableHead>
                             <TableHead className="text-right">Propriété</TableHead>
                             <TableHead className="text-right">Coût Fixe Mensuel (€)</TableHead>
                             <TableHead className="text-center px-0">RDV / Intervention Prévue</TableHead>
@@ -601,7 +612,27 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {tab.data.map((vehicle) => (
+                          {tab.data.map((vehicle: any) => {
+                            const limit = vehicle.monthly_km_limit;
+                            const currentMonthKm = vehicle.km_this_month;
+                            const isRented = vehicle.ownership_type === 'rented';
+                            let kmStatusColor = "text-zinc-600";
+                            let warningText = null;
+                            let penaltyCost = 0;
+                            
+                            if (isRented && limit > 0) {
+                               if (currentMonthKm >= limit) {
+                                  kmStatusColor = "text-red-600 font-bold";
+                                  const excess = currentMonthKm - limit;
+                                  penaltyCost = excess * vehicle.extra_km_cost;
+                                  warningText = <div className="text-xs text-red-500 font-semibold mt-1">Dépassement: +{excess}km (~{penaltyCost.toFixed(2)}€)</div>;
+                               } else if (currentMonthKm >= limit * 0.9) {
+                                  kmStatusColor = "text-orange-500 font-semibold";
+                                  warningText = <div className="text-xs text-orange-500 mt-1">Attention: Proche limite ({limit - currentMonthKm}km restants)</div>;
+                               }
+                            }
+
+                            return (
                             <TableRow key={vehicle.id} className="hover:bg-zinc-50 dark:hover:bg-white/30 transition-colors">
                               <TableCell className="font-bold tracking-widest text-zinc-700 dark:text-slate-600">
                                 <span className="bg-zinc-100 dark:bg-white px-3 py-1.5 rounded-md border border-zinc-200 dark:border-slate-300">
@@ -627,18 +658,28 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                               <TableCell className="text-right font-medium text-zinc-600 dark:text-slate-500">
                                  {vehicle.current_km?.toLocaleString('fr-FR')} km
                               </TableCell>
+                              <TableCell className="text-right bg-blue-50/20">
+                                {isRented && limit ? (
+                                   <div className="flex flex-col items-end">
+                                      <span className={`text-[13px] ${kmStatusColor}`}>{currentMonthKm} / {limit} km</span>
+                                      {warningText}
+                                   </div>
+                                ) : (
+                                   <span className="text-xs text-slate-400 italic">Illimité ou En propre</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right">
-                                 {(vehicle as any).ownership_type === 'rented' ? (
+                                 {isRented ? (
                                    <div className="flex flex-col items-end">
                                      <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">Locatier</span>
-                                     <span className="text-xs text-slate-500">{(vehicle as any).lessor_name}</span>
+                                     <span className="text-xs text-slate-500">{vehicle.lessor_name}</span>
                                    </div>
                                  ) : (
                                    <span className="text-sm font-semibold text-zinc-700 dark:text-slate-600">En Propre</span>
                                  )}
                               </TableCell>
                               <TableCell className="text-right text-slate-500">
-                                {Number(vehicle.ownership_type === 'rented' ? vehicle.rental_monthly_cost : vehicle.fixed_monthly_cost).toFixed(2)}
+                                {Number(isRented ? vehicle.rental_monthly_cost : vehicle.fixed_monthly_cost).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-center p-1 align-top">
                                 <VehicleAppointmentCell vehicle={vehicle} />

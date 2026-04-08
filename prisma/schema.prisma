@@ -191,6 +191,8 @@ model Vehicle {
 
   ownership_type            String?      @default("owned") @db.VarChar(50) // owned, rented
   lessor_name               String?      @db.VarChar(100)
+  monthly_km_limit          Int?         // Limit of km per month (mostly for rented)
+  extra_km_cost             Decimal?     @default(0.18) @db.Decimal(10, 2) // Penalty per extra km
 
   created_at                DateTime?    @default(now()) @db.Timestamptz(6)
   updated_at                DateTime?    @default(now()) @db.Timestamptz(6)

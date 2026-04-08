@@ -119,10 +119,20 @@ export function EditVehicleForm({ vehicle, onSuccess }: EditVehicleFormProps) {
       )}
 
       {ownershipType === 'rented' && (
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="rental_monthly_cost" className="text-right">Loyer Mensuel (€)</Label>
-          <Input id="rental_monthly_cost" name="rental_monthly_cost" type="number" step="0.01" defaultValue={Number(vehicle.rental_monthly_cost || 0)} required className="col-span-3" />
-        </div>
+        <>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="rental_monthly_cost" className="text-right">Loyer Mensuel (€)</Label>
+            <Input id="rental_monthly_cost" name="rental_monthly_cost" type="number" step="0.01" defaultValue={Number(vehicle.rental_monthly_cost || 0)} required className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="monthly_km_limit" className="text-right">Limite KM / Mois</Label>
+            <Input id="monthly_km_limit" name="monthly_km_limit" type="number" defaultValue={vehicle.monthly_km_limit || ''} placeholder="ex: 4000" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="extra_km_cost" className="text-right">Pénalité par KM supp. (€)</Label>
+            <Input id="extra_km_cost" name="extra_km_cost" type="number" step="0.01" defaultValue={Number(vehicle.extra_km_cost || 0.18)} className="col-span-3" />
+          </div>
+        </>
       )}
 
       <div className="grid grid-cols-4 items-center gap-4">
