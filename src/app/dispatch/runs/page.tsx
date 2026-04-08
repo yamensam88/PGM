@@ -699,7 +699,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                 </ErrorBoundary>
                               </TableCell>
                             </TableRow>
-                          ))}
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
