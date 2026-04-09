@@ -413,11 +413,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         {/* --- KPIs d'Exploitation (Phase 4) --- */}
         {(() => {
            const completedRuns = runs.filter(r => r.status === 'completed');
+           const validRuns = runs.filter(r => r.status !== 'cancelled');
            
-           const totalLoaded = completedRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
-           const totalAdvised = completedRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
-           const totalReturned = completedRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
-           const totalDelivered = completedRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
+           const totalLoaded = validRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
+           const totalAdvised = validRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
+           const totalReturned = validRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
+           const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
 
            const txLivraison = totalLoaded > 0 ? ((totalDelivered / totalLoaded) * 100).toFixed(1) : "0.0";
            const txAvisage = totalLoaded > 0 ? (((totalAdvised + totalReturned) / totalLoaded) * 100).toFixed(1) : "0.0";
