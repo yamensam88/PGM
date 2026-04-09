@@ -177,7 +177,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                                Détail des Tournées de la Zone : {row.zone.name}  ({row.runs.length})
                             </h4>
                          </div>
-                         <div className="rounded-xl overflow-hidden border border-slate-200/60 shadow-sm bg-white">
+                         <div className="rounded-xl overflow-x-auto border border-slate-200/60 shadow-sm bg-white w-auto max-w-[calc(100vw-4rem)] md:max-w-[calc(100vw-20rem)] lg:max-w-full">
                             <RunsTable data={row.runs} showHistoryAction={false} isExploitationMode={isExploitationMode} disableDriverLink={true} />
                          </div>
                       </div>
