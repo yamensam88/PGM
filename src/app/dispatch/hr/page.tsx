@@ -201,7 +201,16 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           const absenceTypes = ['absence', 'sick_leave', 'vacation'];
           const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
           const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
-          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + Number((d as any).paid_leave_balance || 0), 0);
+          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => {
+             const baseVacation = Number((d as any).paid_leave_balance || 0);
+             const consumed = ((d as any).hr_events || []).filter((e: any) => e.event_type === 'vacation').reduce((daysSum: number, e: any) => {
+                const start = new Date(e.start_date);
+                const end = e.end_date ? new Date(e.end_date) : start;
+                const diffTime = end.getTime() - start.getTime();
+                return daysSum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
+             }, 0);
+             return sum + Math.max(0, baseVacation - consumed);
+          }, 0);
           const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
           const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
           
@@ -424,7 +433,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                const diffTime = end.getTime() - start.getTime();
                                return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
                              }, 0);
-                             const leaveBalance = 25 - calculateDays(((driver as any).hr_events || []), 'vacation');
+                             const baseVacation = Number((driver as any).paid_leave_balance || 0);
+                             const leaveBalance = baseVacation - calculateDays(((driver as any).hr_events || []), 'vacation');
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
                              const todayObj = new Date();
