@@ -857,7 +857,7 @@ export async function finishRun(formData: FormData) {
     const priorVehicleRuns = await prisma.dailyRun.count({
       where: { vehicle_id: run.vehicle_id, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
     });
-    const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(run.vehicle.fixed_monthly_cost || 0) + Number(run.vehicle.rental_monthly_cost || 0) + Number(run.vehicle.insurance_monthly_cost || 0)) / 30; // Approximation daily
+    const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(run.vehicle.fixed_monthly_cost || 0) + Number(run.vehicle.rental_monthly_cost || 0) + Number(run.vehicle.insurance_monthly_cost || 0)) / 25.33; // Lissé sur jours ouvrés
     
     const cost_per_km = Number(run.vehicle.internal_cost_per_km || 0);
     const km_diff = Math.max(0, km_end - (final_km_start !== null ? final_km_start : km_end)); // fallback to 0 if km_start missing
@@ -1319,7 +1319,7 @@ export async function createRun(formData: FormData) {
             const priorVehicleRuns = await prisma.dailyRun.count({
               where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
             });
-            const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
+            const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
             km_diff = Math.max(0, km_end - km_start);
             const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
@@ -1956,7 +1956,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
           where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
 
-        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 30;
+        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
         km_diff = Math.max(0, kmEnd - kmStart);
         const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
@@ -3135,7 +3135,7 @@ export async function updateRun(formData: FormData) {
        const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: activeVehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
        });
-       const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 30;
+       const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 25.33;
        const variable_fleet_cost = km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
 
        let penalty_cost = 0;
