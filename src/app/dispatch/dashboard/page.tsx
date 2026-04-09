@@ -18,6 +18,7 @@ import { RunsTable } from "@/components/dashboard/RunsTable";
 import { DriverSynthesisTable } from "@/components/dashboard/DriverSynthesisTable";
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { FleetRadarAlerts } from "@/components/dashboard/FleetRadarAlerts";
+import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -345,17 +346,26 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const presentDrivers = presentDriversSet.size;
 
   // Congés: Unique ACTIVE drivers with a vacation HR event
-  const congesDrivers = new Set(
+  // Congés: Unique ACTIVE drivers with a vacation HR event
+  const congesDriversSet = new Set(
     hrEvents.filter(e => e.event_type === 'vacation' && activeDriverIds.has(e.driver_id) && !presentDriversSet.has(e.driver_id))
     .map(e => e.driver_id)
-  ).size;
+  );
+  const congesDrivers = congesDriversSet.size;
 
   // Absents: Unique ACTIVE drivers with an HR event that is an absence type, UNLESS they are actually present on the field
   const absenceEventTypes = ['absence', 'sick_leave'];
-  const absentDrivers = new Set(
+  const absentsDriversSet = new Set(
     hrEvents.filter(e => absenceEventTypes.includes(e.event_type) && activeDriverIds.has(e.driver_id) && !presentDriversSet.has(e.driver_id))
     .map(e => e.driver_id)
-  ).size;
+  );
+  const absentDrivers = absentsDriversSet.size;
+
+  const actifsChauffeursList = activeDriversData;
+  const presentsChauffeursList = activeDriversData.filter(d => presentDriversSet.has(d.id));
+  const absentsChauffeursList = activeDriversData.filter(d => absentsDriversSet.has(d.id));
+  const congesChauffeursList = activeDriversData.filter(d => congesDriversSet.has(d.id));
+  const idleDriversList = activeDriversData.filter(d => !presentDriversSet.has(d.id) && !absentsDriversSet.has(d.id) && !congesDriversSet.has(d.id));
 
   const driversAtRisk = new Set(
     completedRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50 && activeDriverIds.has(r.driver_id)).map(r => r.driver_id)
@@ -715,28 +725,58 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs Chauffeurs</h3>
             <div className="flex justify-between items-center pb-2">
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-800">{totalActiveDrivers}</div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">{totalActiveDrivers > 1 ? 'Actifs' : 'Actif'}</div>
+                 <DriverMetricBox 
+                   valueClass="text-xl 2xl:text-2xl text-slate-800" 
+                   labelClass="text-slate-400" 
+                   count={totalActiveDrivers} 
+                   label={totalActiveDrivers > 1 ? 'Actifs' : 'Actif'} 
+                   title="Chauffeurs Actifs" 
+                   drivers={actifsChauffeursList} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{presentDrivers}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{presentDrivers > 1 ? 'Présents' : 'Présent'}</div>
+                 <DriverMetricBox 
+                   valueClass="text-xl 2xl:text-2xl text-emerald-500" 
+                   labelClass="text-emerald-500/70" 
+                   count={presentDrivers} 
+                   label={presentDrivers > 1 ? 'Présents' : 'Présent'} 
+                   title="Chauffeurs Présents" 
+                   drivers={presentsChauffeursList} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-[#0A1A2F]">{absentDrivers}</div>
-                <div className="text-[9px] font-bold text-[#0A1A2F]/60 uppercase tracking-wider mt-1">{absentDrivers > 1 ? 'Absents' : 'Absent'}</div>
+                 <DriverMetricBox 
+                   valueClass="text-xl 2xl:text-2xl text-[#0A1A2F]" 
+                   labelClass="text-[#0A1A2F]/60" 
+                   count={absentDrivers} 
+                   label={absentDrivers > 1 ? 'Absents' : 'Absent'} 
+                   title="Chauffeurs Absents" 
+                   drivers={absentsChauffeursList} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-teal-500">{congesDrivers}</div>
-                <div className="text-[9px] font-bold text-teal-400 uppercase tracking-wider mt-1">{congesDrivers > 1 ? 'Congés' : 'Congé'}</div>
+                 <DriverMetricBox 
+                   valueClass="text-xl 2xl:text-2xl text-teal-500" 
+                   labelClass="text-teal-400" 
+                   count={congesDrivers} 
+                   label={congesDrivers > 1 ? 'Congés' : 'Congé'} 
+                   title="Chauffeurs en Congés" 
+                   drivers={congesChauffeursList} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
-              <div className="text-center flex-1 flex flex-col items-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-blue-500">{Math.max(0, totalActiveDrivers - presentDrivers - absentDrivers - congesDrivers)}</div>
-                <div className="text-[9px] font-bold text-blue-500/80 uppercase tracking-wider mt-1">Sur Banc</div>
+              <div className="text-center flex-1">
+                 <DriverMetricBox 
+                   valueClass="text-xl 2xl:text-2xl text-blue-500" 
+                   labelClass="text-blue-500/80" 
+                   count={idleDriversList.length} 
+                   label="Sur Banc" 
+                   title="Chauffeurs Sur Banc (Non affectés)" 
+                   drivers={idleDriversList} 
+                 />
               </div>
             </div>
           </div>
