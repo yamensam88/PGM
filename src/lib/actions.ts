@@ -859,9 +859,43 @@ export async function finishRun(formData: FormData) {
     });
     const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(run.vehicle.fixed_monthly_cost || 0) + Number(run.vehicle.rental_monthly_cost || 0) + Number(run.vehicle.insurance_monthly_cost || 0)) / 25.33; // Lissé sur jours ouvrés
     
-    const cost_per_km = Number(run.vehicle.internal_cost_per_km || 0);
     const km_diff = Math.max(0, km_end - (final_km_start !== null ? final_km_start : km_end)); // fallback to 0 if km_start missing
-    const variable_fleet_cost = km_diff * cost_per_km;
+    
+    let variable_fleet_cost = 0;
+
+    if (run.vehicle.ownership_type === 'rented') {
+       // On récupère le nombre de kilomètres roulés CE mois-ci (civil) AVANT cette tournée
+       const runDate = new Date(run.date);
+       const startOfMonth = new Date(runDate.getFullYear(), runDate.getMonth(), 1);
+       const endOfMonth = new Date(runDate.getFullYear(), runDate.getMonth() + 1, 0, 23, 59, 59, 999);
+       
+       const previousRunsThisMonth = await prisma.dailyRun.findMany({
+         where: {
+           vehicle_id: run.vehicle_id,
+           date: { gte: startOfMonth, lte: endOfMonth },
+           id: { not: runId },
+           status: 'completed'
+         },
+         select: { km_total: true, km_end: true, km_start: true }
+       });
+
+       const km_already_driven = previousRunsThisMonth.reduce((sum, r) => sum + (r.km_total || Math.max(0, (Number(r.km_end) || 0) - (Number(r.km_start) || 0))), 0);
+       const limit = Number(run.vehicle.monthly_km_limit || 4000);
+       const penalty_cost = Number(run.vehicle.extra_km_cost || 0.28);
+
+       if (km_already_driven + km_diff <= limit) {
+          variable_fleet_cost = 0;
+       } else if (km_already_driven < limit && km_already_driven + km_diff > limit) {
+          const excess_km = (km_already_driven + km_diff) - limit;
+          variable_fleet_cost = excess_km * penalty_cost;
+       } else if (km_already_driven >= limit) {
+          variable_fleet_cost = km_diff * penalty_cost;
+       }
+    } else {
+       // En Propre : Coût kilométrique constant
+       const cost_per_km = Number(run.vehicle.internal_cost_per_km || 0);
+       variable_fleet_cost = km_diff * cost_per_km;
+    }
 
     let final_fuel_amount = 0;
     let actual_fuel_price = 1.80; // default assumption

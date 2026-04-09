@@ -685,10 +685,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                 <VehicleAppointmentCell vehicle={vehicle} />
                               </TableCell>
                               <TableCell className="text-right font-medium text-orange-600">
-                                {vehicle.financial_entries.filter(e => e.category === 'maintenance_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
+                                {vehicle.financial_entries.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-right font-semibold text-red-600">
-                                {vehicle.financial_entries.filter(e => e.category === 'damage_cost').reduce((sum, entry) => sum + Number(entry.amount), 0).toFixed(2)}
+                                {vehicle.financial_entries.filter((e: any) => e.category === 'damage_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-center w-40">
                                 <ErrorBoundary>
