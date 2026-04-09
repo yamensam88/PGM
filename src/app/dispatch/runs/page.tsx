@@ -260,7 +260,18 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     )
   ).map(d => d.id));
   const absentsChauffeurs = absentsChauffeursSet.size;
-  const idleChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs - congesChauffeurs);
+  const idleChauffeursList = rawDrivers.filter(d => 
+    d.status === 'active' && 
+    !presentsChauffeursSet.has(d.id) && 
+    !absentsChauffeursSet.has(d.id) && 
+    !congesChauffeursSet.has(d.id)
+  );
+  const idleChauffeurs = idleChauffeursList.length;
+
+  const actifsChauffeursList = rawDrivers.filter(d => d.status === 'active');
+  const presentsChauffeursList = rawDrivers.filter(d => presentsChauffeursSet.has(d.id));
+  const absentsChauffeursList = rawDrivers.filter(d => absentsChauffeursSet.has(d.id));
+  const congesChauffeursList = rawDrivers.filter(d => congesChauffeursSet.has(d.id));
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
@@ -437,24 +448,54 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">Effectifs Chauffeurs</h3>
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
-                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{actifsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{actifsChauffeurs > 1 ? 'Actifs' : 'Actif'}</div>
+                         <DriverMetricBox 
+                           valueClass="text-slate-900 dark:text-white" 
+                           labelClass="text-slate-400" 
+                           count={actifsChauffeurs} 
+                           label={actifsChauffeurs > 1 ? 'Actifs' : 'Actif'} 
+                           title="Chauffeurs Actifs" 
+                           drivers={actifsChauffeursList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-emerald-500">{presentsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">{presentsChauffeurs > 1 ? 'Présents' : 'Présent'}</div>
+                         <DriverMetricBox 
+                           valueClass="text-emerald-500" 
+                           labelClass="text-emerald-400" 
+                           count={presentsChauffeurs} 
+                           label={presentsChauffeurs > 1 ? 'Présents' : 'Présent'} 
+                           title="Chauffeurs Présents" 
+                           drivers={presentsChauffeursList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-[#0A1A2F] dark:text-slate-300">{absentsChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-[#0A1A2F]/60 dark:text-slate-500 uppercase tracking-widest mt-1">{absentsChauffeurs > 1 ? 'Absents' : 'Absent'}</div>
+                         <DriverMetricBox 
+                           valueClass="text-[#0A1A2F] dark:text-slate-300" 
+                           labelClass="text-[#0A1A2F]/60 dark:text-slate-500" 
+                           count={absentsChauffeurs} 
+                           label={absentsChauffeurs > 1 ? 'Absents' : 'Absent'} 
+                           title="Chauffeurs Absents" 
+                           drivers={absentsChauffeursList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-teal-500">{congesChauffeurs}</div>
-                         <div className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mt-1">{congesChauffeurs > 1 ? 'Congés' : 'Congé'}</div>
+                         <DriverMetricBox 
+                           valueClass="text-teal-500" 
+                           labelClass="text-teal-400" 
+                           count={congesChauffeurs} 
+                           label={congesChauffeurs > 1 ? 'Congés' : 'Congé'} 
+                           title="Chauffeurs en Congés" 
+                           drivers={congesChauffeursList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-blue-500">{Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs - congesChauffeurs)}</div>
-                         <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">Non Affectés</div>
+                         <DriverMetricBox 
+                           valueClass="text-blue-500" 
+                           labelClass="text-blue-400" 
+                           count={idleChauffeurs} 
+                           label="Non Affectés" 
+                           title="Chauffeurs Non Affectés" 
+                           drivers={idleChauffeursList} 
+                         />
                        </div>
                      </div>
                   </div>
@@ -711,5 +752,49 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
           </TabsContent>
         </Tabs>
     </div>
+  );
+}
+
+function DriverMetricBox({ 
+  valueClass, 
+  labelClass, 
+  count, 
+  label, 
+  title, 
+  drivers 
+}: { 
+  valueClass: string, 
+  labelClass: string, 
+  count: number, 
+  label: string, 
+  title: string, 
+  drivers: any[] 
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 p-2 -m-2 rounded-lg transition-colors flex flex-col items-center justify-center h-full w-full">
+        <div className={`text-3xl font-extrabold ${valueClass}`}>{count}</div>
+        <div className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${labelClass}`}>{label}</div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title} ({count})</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto px-1">
+          {drivers.length === 0 ? (
+             <p className="text-sm text-slate-500 italic py-4 text-center">Aucun chauffeur dans cette catégorie.</p>
+          ) : (
+             <ul className="space-y-1">
+               {drivers.map(d => (
+                 <li key={d.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b last:border-0 border-slate-100 dark:border-slate-800">
+                   <span className="font-medium text-slate-900 dark:text-slate-100">{d.first_name} {d.last_name}</span>
+                   <span className="text-sm text-slate-500 font-mono bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-700">{d.phone || "Pas de numéro"}</span>
+                 </li>
+               ))}
+             </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
