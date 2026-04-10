@@ -26,6 +26,7 @@ import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
+import { VehicleMetricBox } from "@/components/dashboard/VehicleMetricBox";
 
 export const dynamic = 'force-dynamic';
 
@@ -157,9 +158,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const activeVehicles = vehicles.filter(v => v.status !== 'archived');
   const archivedVehicles = vehicles.filter(v => v.status === 'archived');
 
-  const actifsVehicules = activeVehicles.filter(v => v.status === 'active').length;
-  const maintenanceVehicules = activeVehicles.filter(v => v.status === 'maintenance').length;
-  const inactifsVehicules = activeVehicles.filter(v => v.status === 'inactive').length;
+  const actifsVehiculesList = activeVehicles.filter(v => v.status === 'active');
+  const actifsVehicules = actifsVehiculesList.length;
+  const maintenanceVehiculesList = activeVehicles.filter(v => v.status === 'maintenance');
+  const maintenanceVehicules = maintenanceVehiculesList.length;
+  const inactifsVehiculesList = activeVehicles.filter(v => v.status === 'inactive');
+  const inactifsVehicules = inactifsVehiculesList.length;
 
   const rawDrivers = await prisma.driver.findMany({
     where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
@@ -506,16 +510,34 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                      <h3 className="text-xs font-bold text-slate-500 tracking-widest mb-3 uppercase">ÉTAT DU PARC</h3>
                      <div className="flex justify-between items-center text-center">
                        <div className="flex-1">
-                         <div className="text-3xl font-extrabold text-emerald-500">{actifsVehicules}</div>
-                         <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1">{actifsVehicules > 1 ? 'Actifs' : 'Actif'}</div>
+                         <VehicleMetricBox 
+                           valueClass="text-emerald-500" 
+                           labelClass="text-emerald-400" 
+                           count={actifsVehicules} 
+                           label={actifsVehicules > 1 ? 'Actifs' : 'Actif'} 
+                           title="Véhicules Actifs" 
+                           vehicles={actifsVehiculesList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-amber-500">{maintenanceVehicules}</div>
-                         <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">En Maint.</div>
+                         <VehicleMetricBox 
+                           valueClass="text-amber-500" 
+                           labelClass="text-amber-400" 
+                           count={maintenanceVehicules} 
+                           label="En Maint." 
+                           title="Véhicules en Maintenance" 
+                           vehicles={maintenanceVehiculesList} 
+                         />
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
-                         <div className="text-3xl font-extrabold text-slate-500 dark:text-slate-400">{inactifsVehicules}</div>
-                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{inactifsVehicules > 1 ? 'Inactifs' : 'Inactif'}</div>
+                         <VehicleMetricBox 
+                           valueClass="text-slate-500 dark:text-slate-400" 
+                           labelClass="text-slate-500" 
+                           count={inactifsVehicules} 
+                           label={inactifsVehicules > 1 ? 'Inactifs' : 'Inactif'} 
+                           title="Véhicules Inactifs" 
+                           vehicles={inactifsVehiculesList} 
+                         />
                        </div>
                      </div>
                   </div>

@@ -19,6 +19,7 @@ import { DriverSynthesisTable } from "@/components/dashboard/DriverSynthesisTabl
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { FleetRadarAlerts } from "@/components/dashboard/FleetRadarAlerts";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
+import { VehicleMetricBox } from "@/components/dashboard/VehicleMetricBox";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -373,8 +374,10 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   ).size;
 
   const totalActiveVehiclesCount = activeVehicles.length;
-  const totalMaintenanceVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'maintenance' } });
-  const totalInactiveVehiclesCount = await prisma.vehicle.count({ where: { organization_id: orgId, status: 'inactive' } });
+  const maintenanceVehiclesList = await prisma.vehicle.findMany({ where: { organization_id: orgId, status: 'maintenance' } });
+  const totalMaintenanceVehiclesCount = maintenanceVehiclesList.length;
+  const inactiveVehiclesList = await prisma.vehicle.findMany({ where: { organization_id: orgId, status: 'inactive' } });
+  const totalInactiveVehiclesCount = inactiveVehiclesList.length;
 
   const avgCaPerRun = completedRuns.length > 0 ? (totalRevenue / completedRuns.length).toFixed(2) : "0.00";
   const avgCostPerRun = completedRuns.length > 0 ? (totalCosts / completedRuns.length).toFixed(2) : "0.00";
@@ -786,18 +789,36 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">État du Parc</h3>
             <div className="flex justify-between items-center pb-2">
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-emerald-500">{totalActiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider mt-1">{totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'}</div>
+                 <VehicleMetricBox 
+                   valueClass="text-emerald-500" 
+                   labelClass="text-emerald-500/70" 
+                   count={totalActiveVehiclesCount} 
+                   label={totalActiveVehiclesCount > 1 ? 'Actifs' : 'Actif'} 
+                   title="Véhicules Actifs" 
+                   vehicles={activeVehicles} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
               <div className="text-center flex-1">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-amber-500">{totalMaintenanceVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-amber-500/70 uppercase tracking-wider mt-1">Maint.</div>
+                 <VehicleMetricBox 
+                   valueClass="text-amber-500" 
+                   labelClass="text-amber-500/70" 
+                   count={totalMaintenanceVehiclesCount} 
+                   label="Maint." 
+                   title="Véhicules en Maintenance" 
+                   vehicles={maintenanceVehiclesList} 
+                 />
               </div>
               <div className="w-px bg-slate-200/50 my-1 mx-2"></div>
               <div className="text-center flex-1 flex flex-col items-center">
-                <div className="text-xl 2xl:text-2xl font-extrabold text-slate-400">{totalInactiveVehiclesCount}</div>
-                <div className="text-[9px] font-bold text-slate-400/80 uppercase tracking-wider mt-1">{totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'}</div>
+                 <VehicleMetricBox 
+                   valueClass="text-slate-400" 
+                   labelClass="text-slate-400/80" 
+                   count={totalInactiveVehiclesCount} 
+                   label={totalInactiveVehiclesCount > 1 ? 'Inactifs' : 'Inactif'} 
+                   title="Véhicules Inactifs" 
+                   vehicles={inactiveVehiclesList} 
+                 />
               </div>
             </div>
           </div>
