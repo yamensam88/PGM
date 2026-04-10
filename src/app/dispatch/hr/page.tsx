@@ -114,6 +114,48 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     performance_score: d.performance_score ? Number(d.performance_score) : 0,
   }));
 
+  // Helper to dynamically calculate accrued leaves (+2.08 / month)
+  const calculateDynamicLeaveBalance = (d: any) => {
+     const baseVacation = Number(d.paid_leave_balance || 0);
+     const refDateStr = d.paid_leave_reference_date;
+     
+     let accruedDays = 0;
+     let cutoffDate = new Date(0);
+     
+     if (refDateStr) {
+        const refDate = new Date(refDateStr);
+        cutoffDate = refDate;
+        const today = new Date();
+        const diffTime = today.getTime() - refDate.getTime();
+        if (diffTime > 0) {
+           const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
+           accruedDays = diffMonths * 2.08;
+        }
+     } else if (d.hire_date) {
+        const hireDate = new Date(d.hire_date);
+        cutoffDate = hireDate;
+        const today = new Date();
+        const diffTime = today.getTime() - hireDate.getTime();
+        if (diffTime > 0) {
+           const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
+           accruedDays = diffMonths * 2.08;
+        }
+     }
+     
+     const totalBase = baseVacation + accruedDays;
+     
+     const consumed = (d.hr_events || [])
+        .filter((e: any) => e.event_type === 'vacation' && new Date(e.start_date) >= cutoffDate)
+        .reduce((daysSum: number, e: any) => {
+           const start = new Date(e.start_date);
+           const end = e.end_date ? new Date(e.end_date) : start;
+           const diffTime = Math.max(0, end.getTime() - start.getTime());
+           return daysSum + Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }, 0);
+        
+     return Math.max(0, totalBase - consumed);
+  };
+
   // Calculate high-level KPIs
   const totalDrivers = drivers.length;
   const activeDrivers = drivers.filter(d => d.status === 'active').length;
@@ -201,47 +243,6 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           const absenceTypes = ['absence', 'sick_leave', 'vacation'];
           const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
           const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
-          const calculateDynamicLeaveBalance = (d: any) => {
-             const baseVacation = Number(d.paid_leave_balance || 0);
-             const refDateStr = d.paid_leave_reference_date;
-             
-             let accruedDays = 0;
-             let cutoffDate = new Date(0);
-             
-             if (refDateStr) {
-                const refDate = new Date(refDateStr);
-                cutoffDate = refDate;
-                const today = new Date();
-                const diffTime = today.getTime() - refDate.getTime();
-                if (diffTime > 0) {
-                   const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
-                   accruedDays = diffMonths * 2.08;
-                }
-             } else if (d.hire_date) {
-                const hireDate = new Date(d.hire_date);
-                cutoffDate = hireDate;
-                const today = new Date();
-                const diffTime = today.getTime() - hireDate.getTime();
-                if (diffTime > 0) {
-                   const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
-                   accruedDays = diffMonths * 2.08;
-                }
-             }
-             
-             const totalBase = baseVacation + accruedDays;
-             
-             const consumed = (d.hr_events || [])
-                .filter((e: any) => e.event_type === 'vacation' && new Date(e.start_date) >= cutoffDate)
-                .reduce((daysSum: number, e: any) => {
-                   const start = new Date(e.start_date);
-                   const end = e.end_date ? new Date(e.end_date) : start;
-                   const diffTime = Math.max(0, end.getTime() - start.getTime());
-                   return daysSum + Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                }, 0);
-                
-             return Math.max(0, totalBase - consumed);
-          };
-
           const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + calculateDynamicLeaveBalance(d), 0);
           const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
           const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
