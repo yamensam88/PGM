@@ -97,6 +97,16 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
           <Label htmlFor="fuel_price">Prix Unit. (€/L)</Label>
           <Input id="fuel_price" name="fuel_price" type="number" step="0.001" placeholder="Ex: 1.85 (Optionnel)" />
         </div>
+        <div className="space-y-2 col-span-2">
+          <Label htmlFor="fuel_receipt" className="text-slate-600">Justificatif Carburant (Optionnel)</Label>
+          <Input 
+             id="fuel_receipt" 
+             name="fuel_receipt" 
+             type="file" 
+             accept="image/*,.pdf" 
+             className="text-slate-500 bg-white border-slate-300 file:bg-blue-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-blue-700 cursor-pointer" 
+          />
+        </div>
       </div>
 
       {error && (

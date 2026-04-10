@@ -3208,6 +3208,12 @@ export async function updateRun(formData: FormData) {
 
        const formFuelLiters = formData.get("fuel_liters");
        const formFuelPrice = formData.get("fuel_price");
+       const formFuelReceipt = formData.get("fuel_receipt") as File | null;
+       
+       let receiptUrl = null;
+       if (formFuelReceipt && formFuelReceipt.size > 0) {
+          receiptUrl = `/uploads/${orgId}/${runId}/${formFuelReceipt.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+       }
        
        if (formFuelLiters !== null && formFuelLiters !== undefined && formFuelLiters !== "") {
           final_fuel_liters = Number(formFuelLiters);
@@ -3222,10 +3228,18 @@ export async function updateRun(formData: FormData) {
              dataToUpdate.cost_fuel = cost_fuel;
 
              const existingFuelLog = await prisma.fuelLog.findFirst({ where: { run_id: runId } });
+             
+             const fuelLogData = {
+               liters: final_fuel_liters, 
+               total_cost: cost_fuel, 
+               price_per_liter: actual_fuel_price,
+               ...(receiptUrl ? { receipt_url: receiptUrl } : {})
+             };
+
              if (existingFuelLog) {
                 operations.push(prisma.fuelLog.update({
                    where: { id: existingFuelLog.id },
-                   data: { liters: final_fuel_liters, total_cost: cost_fuel, price_per_liter: actual_fuel_price }
+                   data: fuelLogData
                 }));
              } else {
                 operations.push(prisma.fuelLog.create({
@@ -3236,7 +3250,8 @@ export async function updateRun(formData: FormData) {
                      total_cost: cost_fuel,
                      liters: final_fuel_liters,
                      price_per_liter: actual_fuel_price,
-                     fueled_at: run.return_time || new Date()
+                     fueled_at: run.return_time || new Date(),
+                     ...(receiptUrl ? { receipt_url: receiptUrl } : {})
                    }
                 }));
              }
@@ -3309,7 +3324,8 @@ export async function updateRun(formData: FormData) {
                category: 'fuel_cost',
                amount: cost_fuel,
                entry_date: run.return_time || new Date(),
-               description: `Coût Gasoil - Tournée ${run.run_code || runId}`
+               description: `Coût Gasoil - Tournée ${run.run_code || runId}`,
+               ...(receiptUrl ? { document_url: receiptUrl } : {})
            });
        }
 
