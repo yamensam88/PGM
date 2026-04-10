@@ -193,10 +193,14 @@ export function CreateEmployeeForm() {
             Initialisation des compteurs (Reprise d'historique)
          </h4>
          <p className="text-[11px] text-slate-500">Pour un salarié existant, renseignez ses soldes actuels. Laissez à 0 pour un nouveau salarié.</p>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-               <Label htmlFor="paidLeaveBalance" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Congés Payés (Jours)</Label>
+               <Label htmlFor="paidLeaveBalance" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Congés Payés (Solde)</Label>
                <Input id="paidLeaveBalance" name="paidLeaveBalance" type="number" step="0.5" defaultValue="0" className="bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="paidLeaveReferenceDate" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Date de Réf. du Solde</Label>
+               <Input id="paidLeaveReferenceDate" name="paidLeaveReferenceDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600" />
             </div>
             <div className="space-y-2">
                <Label htmlFor="justifiedAbsences" className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Absences Justifiées</Label>

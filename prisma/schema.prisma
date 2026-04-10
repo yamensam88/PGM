@@ -137,9 +137,10 @@ model Driver {
   status                   String?      @default("active") @db.VarChar(50) // active, inactive, suspended
   notes                    String?
 
-  paid_leave_balance       Decimal?     @default(0) @db.Decimal(5, 2)
-  justified_absences       Decimal?     @default(0) @db.Decimal(5, 2)
-  unjustified_absences     Decimal?     @default(0) @db.Decimal(5, 2)
+  paid_leave_balance          Decimal?     @default(0) @db.Decimal(5, 2)
+  paid_leave_reference_date   DateTime?    @db.Date
+  justified_absences          Decimal?     @default(0) @db.Decimal(5, 2)
+  unjustified_absences        Decimal?     @default(0) @db.Decimal(5, 2)
 
   departure_date           DateTime?    @db.Date
   departure_reason         String?      @db.VarChar(100) // démission, licenciement faute grave, etc.

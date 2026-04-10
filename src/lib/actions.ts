@@ -206,6 +206,7 @@ export async function createEmployee(formData: FormData) {
     const monthlyNetSalaryStr = formData.get("monthlyNetSalary") as string;
     
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
+    const paidLeaveReferenceDateStr = formData.get("paidLeaveReferenceDate") as string;
     const justifiedAbsencesStr = formData.get("justifiedAbsences") as string;
     const unjustifiedAbsencesStr = formData.get("unjustifiedAbsences") as string;
     
@@ -283,6 +284,7 @@ export async function createEmployee(formData: FormData) {
         hourly_cost: globalMonthlyCost,
         monthly_net_salary: monthlyNetSalary,
         paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
+        paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,
         justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,
         unjustified_absences: unjustifiedAbsencesStr ? Number(unjustifiedAbsencesStr) : 0,
       } as any // Bypass strict typescript generated schema if needed 
@@ -324,6 +326,7 @@ export async function updateEmployee(formData: FormData) {
     const hireDateStr = formData.get("hireDate") as string;
     
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
+    const paidLeaveReferenceDateStr = formData.get("paidLeaveReferenceDate") as string;
     const justifiedAbsencesStr = formData.get("justifiedAbsences") as string;
     const unjustifiedAbsencesStr = formData.get("unjustifiedAbsences") as string;
     
@@ -389,6 +392,7 @@ export async function updateEmployee(formData: FormData) {
              employment_type: employmentType,
              hire_date: hireDate,
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
+             paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,
              justified_absences: justifiedAbsencesStr ? Number(justifiedAbsencesStr) : 0,
              unjustified_absences: unjustifiedAbsencesStr ? Number(unjustifiedAbsencesStr) : 0,
              status: status,

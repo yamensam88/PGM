@@ -150,10 +150,14 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
 
       <div className="space-y-4 p-5 mt-4 border border-slate-200 bg-emerald-50/50 rounded-xl">
          <h4 className="text-[13px] font-semibold text-slate-700">Mise à jour des compteurs</h4>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div className="space-y-2">
-               <Label htmlFor="paidLeaveBalance" className="text-[11px] font-medium text-slate-500 uppercase">Congés Payés</Label>
+               <Label htmlFor="paidLeaveBalance" className="text-[11px] font-medium text-slate-500 uppercase">Congés Payés (Solde)</Label>
                <Input id="paidLeaveBalance" name="paidLeaveBalance" type="number" step="0.5" defaultValue={employee.paid_leave_balance || "0"} className="bg-white border-slate-200 text-slate-700" />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="paidLeaveReferenceDate" className="text-[11px] font-medium text-slate-500 uppercase">Date de référence du solde</Label>
+               <Input id="paidLeaveReferenceDate" name="paidLeaveReferenceDate" type="date" defaultValue={employee.paid_leave_reference_date ? new Date(employee.paid_leave_reference_date).toISOString().split('T')[0] : ''} className="bg-white border-slate-200 text-slate-700" title="Date à partir de laquelle les 2,08j / mois s'accumulent" />
             </div>
             <div className="space-y-2">
                <Label htmlFor="justifiedAbsences" className="text-[11px] font-medium text-slate-500 uppercase">Abs. Justifiées</Label>

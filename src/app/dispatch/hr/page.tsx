@@ -201,16 +201,48 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           const absenceTypes = ['absence', 'sick_leave', 'vacation'];
           const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
           const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
-          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => {
-             const baseVacation = Number((d as any).paid_leave_balance || 0);
-             const consumed = ((d as any).hr_events || []).filter((e: any) => e.event_type === 'vacation').reduce((daysSum: number, e: any) => {
-                const start = new Date(e.start_date);
-                const end = e.end_date ? new Date(e.end_date) : start;
-                const diffTime = end.getTime() - start.getTime();
-                return daysSum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
-             }, 0);
-             return sum + Math.max(0, baseVacation - consumed);
-          }, 0);
+          const calculateDynamicLeaveBalance = (d: any) => {
+             const baseVacation = Number(d.paid_leave_balance || 0);
+             const refDateStr = d.paid_leave_reference_date;
+             
+             let accruedDays = 0;
+             let cutoffDate = new Date(0);
+             
+             if (refDateStr) {
+                const refDate = new Date(refDateStr);
+                cutoffDate = refDate;
+                const today = new Date();
+                const diffTime = today.getTime() - refDate.getTime();
+                if (diffTime > 0) {
+                   const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
+                   accruedDays = diffMonths * 2.08;
+                }
+             } else if (d.hire_date) {
+                const hireDate = new Date(d.hire_date);
+                cutoffDate = hireDate;
+                const today = new Date();
+                const diffTime = today.getTime() - hireDate.getTime();
+                if (diffTime > 0) {
+                   const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.436875);
+                   accruedDays = diffMonths * 2.08;
+                }
+             }
+             
+             const totalBase = baseVacation + accruedDays;
+             
+             const consumed = (d.hr_events || [])
+                .filter((e: any) => e.event_type === 'vacation' && new Date(e.start_date) >= cutoffDate)
+                .reduce((daysSum: number, e: any) => {
+                   const start = new Date(e.start_date);
+                   const end = e.end_date ? new Date(e.end_date) : start;
+                   const diffTime = Math.max(0, end.getTime() - start.getTime());
+                   return daysSum + Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                }, 0);
+                
+             return Math.max(0, totalBase - consumed);
+          };
+
+          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + calculateDynamicLeaveBalance(d), 0);
           const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
           const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
           
@@ -433,8 +465,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                const diffTime = end.getTime() - start.getTime();
                                return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
                              }, 0);
-                             const baseVacation = Number((driver as any).paid_leave_balance || 0);
-                             const leaveBalance = baseVacation - calculateDays(((driver as any).hr_events || []), 'vacation');
+                             const leaveBalance = calculateDynamicLeaveBalance(driver);
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
                              const todayObj = new Date();
