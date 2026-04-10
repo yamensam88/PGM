@@ -3324,8 +3324,7 @@ export async function updateRun(formData: FormData) {
                category: 'fuel_cost',
                amount: cost_fuel,
                entry_date: run.return_time || new Date(),
-               description: `Coût Gasoil - Tournée ${run.run_code || runId}`,
-               ...(receiptUrl ? { document_url: receiptUrl } : {})
+               description: `Coût Gasoil - Tournée ${run.run_code || runId}`
            });
        }
 
