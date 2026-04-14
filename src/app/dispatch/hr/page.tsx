@@ -22,6 +22,7 @@ import { EditEmployeeDialog } from "@/components/hr/EditEmployeeDialog";
 import { EditBonusForm } from "@/components/forms/EditBonusForm";
 import { BonusActions } from "@/components/hr/BonusActions";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
+import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 
 export const dynamic = 'force-dynamic';
 
@@ -321,86 +322,64 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
           return (
             <div>
-              <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Indicateurs RH ({(filter || 'monthly') === 'monthly' ? 'Ce Mois' : 'Aujourd\'hui / Période'})</h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 ">
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Effectif Global</h3>
-                     <Users className="w-4 h-4 text-zinc-600" />
+              <div className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 w-full lg:w-fit flex flex-col justify-between">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs de Personnels</h3>
+                <div className="flex justify-between items-center pb-2">
+                  <div className="text-center flex-1 px-4">
+                     <DriverMetricBox 
+                       valueClass="text-2xl 2xl:text-3xl text-slate-800" 
+                       labelClass="text-slate-400" 
+                       count={actifsChauffeurs} 
+                       label={actifsChauffeurs > 1 ? 'Actifs' : 'Actif'} 
+                       title="Effectif Actif" 
+                       drivers={drivers.filter(d => d.status === 'active')} 
+                     />
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-slate-900">{totalDrivers}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{activeDrivers} Actifs sur base</p>
+                  <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
+                  <div className="text-center flex-1 px-4">
+                     <DriverMetricBox 
+                       valueClass="text-2xl 2xl:text-3xl text-emerald-500" 
+                       labelClass="text-emerald-500/70" 
+                       count={presentsChauffeurs} 
+                       label={presentsChauffeurs > 1 ? 'Présents' : 'Présent'} 
+                       title="Personnels Présents" 
+                       drivers={drivers.filter(d => presentsChauffeursSet.has(d.id))} 
+                     />
                   </div>
-                </Card>
-                
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Disponibilité Réelle</h3>
-                     <UserCheck className={`w-4 h-4 ${Number(realAvailability) < 90 ? 'text-amber-500' : 'text-emerald-500'}`} />
+                  <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
+                  <div className="text-center flex-1 px-4">
+                     <DriverMetricBox 
+                       valueClass="text-2xl 2xl:text-3xl text-[#0A1A2F]" 
+                       labelClass="text-[#0A1A2F]/60" 
+                       count={absentsChauffeurs} 
+                       label={absentsChauffeurs > 1 ? 'Absents' : 'Absent'} 
+                       title="Personnels Absents" 
+                       drivers={drivers.filter(d => absentsChauffeursSet.has(d.id))} 
+                     />
                   </div>
-                  <div>
-                    <div className={`text-3xl font-bold tracking-tight ${Number(realAvailability) < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>{realAvailability}%</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{totalDrivers - currentlyAbsent} aptes aujourd'hui</p>
+                  <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
+                  <div className="text-center flex-1 px-4">
+                     <DriverMetricBox 
+                       valueClass="text-2xl 2xl:text-3xl text-teal-500" 
+                       labelClass="text-teal-400" 
+                       count={congesChauffeurs} 
+                       label={congesChauffeurs > 1 ? 'Congés' : 'Congé'} 
+                       title="Personnels en Congés" 
+                       drivers={drivers.filter(d => congesChauffeursSet.has(d.id))} 
+                     />
                   </div>
-                </Card>
-
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Maladie (Période)</h3>
-                     <BriefcaseMedical className="w-4 h-4 text-red-500" />
+                  <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
+                  <div className="text-center flex-1 px-4">
+                     <DriverMetricBox 
+                       valueClass="text-2xl 2xl:text-3xl text-blue-500" 
+                       labelClass="text-blue-500/80" 
+                       count={nonAffectesChauffeurs} 
+                       label="Non Affectés" 
+                       title="Personnels Non Affectés" 
+                       drivers={drivers.filter(d => d.status === 'active' && !presentsChauffeursSet.has(d.id) && !absentsChauffeursSet.has(d.id) && !congesChauffeursSet.has(d.id))} 
+                     />
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-red-400">{sickLeaves.length}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{sickLeaves.length > 1 ? 'Arrêts' : 'Arrêt'} sur la période</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Sanctions</h3>
-                     <UserX className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-orange-400">
-                       {sanctions.length}
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{sanctions.length > 1 ? 'Avertissements/Retards' : 'Avertissement/Retard'}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Abs. Injustifiées</h3>
-                     <UserX className="w-4 h-4 text-rose-500" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-rose-400">{unjustifiedAbsences.length}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">Cumul sur la période</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-white border-slate-200 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Congés Restants</h3>
-                     <Palmtree className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-emerald-400">{totalPaidLeaveBalance}</div>
-                    <p className="text-[11px] text-slate-500 mt-1 font-medium">{totalPaidLeaveBalance > 1 ? 'Jours cumulés dispo.' : 'Jour cumulé dispo.'}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-blue-950/10 border-blue-900/30 shadow-none flex flex-col justify-between p-5">
-                  <div className="flex flex-row items-center justify-between pb-2">
-                     <h3 className="text-[11px] font-semibold text-blue-500 uppercase tracking-widest">Masse Salariale Est.</h3>
-                     <Receipt className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold tracking-tight text-blue-400">{estimatedMonthlyPayroll.toLocaleString('fr-FR', {maximumFractionDigits: 0})} €</div>
-                    <p className="text-[11px] text-blue-500/70 mt-1 font-medium">Base Lissée: {dailyPayrollBase.toFixed(2)} €/j calendaire</p>
-                  </div>
-                </Card>
+                </div>
               </div>
             </div>
           );
