@@ -184,7 +184,7 @@ export function CreateRunForm({
                         <Input type="number" value={clientData.packages_delivered} onChange={(e) => updateClientField(clientData.id, "packages_delivered", Number(e.target.value))} className="h-8 text-sm bg-white" />
                      </div>
                      <div className="space-y-1">
-                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Retournés</Label>
+                        <Label className="text-[10px] uppercase text-slate-500 font-semibold">Avisés</Label>
                         <Input type="number" value={clientData.packages_returned} onChange={(e) => updateClientField(clientData.id, "packages_returned", Number(e.target.value))} className="h-8 text-sm bg-white" />
                      </div>
                      <div className="space-y-1">

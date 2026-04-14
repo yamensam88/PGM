@@ -131,7 +131,7 @@ export function UnifiedDeliveryForm({
                      <Input type="number" value={runStats[r.id]?.loaded} onChange={e => handleStatChange(r.id, 'loaded', e.target.value)} className="h-10" />
                   </div>
                   <div className="space-y-1.5">
-                     <Label className="text-sm font-semibold text-zinc-600">Colis Retournés</Label>
+                     <Label className="text-sm font-semibold text-zinc-600">Colis Avisés</Label>
                      <Input type="number" value={runStats[r.id]?.returned} onChange={e => handleStatChange(r.id, 'returned', e.target.value)} className="h-10" />
                   </div>
                   <div className="space-y-1.5">
@@ -157,7 +157,7 @@ export function UnifiedDeliveryForm({
                 <p className="text-xl font-bold">{totalLoaded}</p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 mb-1">Total Colis Retournés</p>
+                <p className="text-sm text-slate-500 mb-1">Total Colis Avisés</p>
                 <p className="text-xl font-bold">{totalReturned}</p>
               </div>
               <div>
