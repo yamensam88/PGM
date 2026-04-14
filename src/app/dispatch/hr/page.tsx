@@ -23,6 +23,7 @@ import { EditBonusForm } from "@/components/forms/EditBonusForm";
 import { BonusActions } from "@/components/hr/BonusActions";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
+import { EmployeeCalendarDialog } from "@/components/hr/EmployeeCalendarDialog";
 
 export const dynamic = 'force-dynamic';
 
@@ -426,25 +427,30 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                  new Date(r.date).getFullYear() === now.getFullYear()
                              );
                              const presentDays = currentMonthRuns.length;
+                             const presentDates = currentMonthRuns.map((r: any) => new Date(r.date));
                              
-                             const calculateDays = (events: any[], type: string) => events.filter((e: any) => e.event_type === type).reduce((sum: number, e: any) => {
-                               const start = new Date(e.start_date);
-                               const end = e.end_date ? new Date(e.end_date) : start;
-                               const diffTime = end.getTime() - start.getTime();
-                               return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
-                             }, 0);
+                             const calculateDates = (events: any[], type: string, currentMonthOnly: boolean = false) => {
+                               const dates: Date[] = [];
+                               events.filter((e: any) => e.event_type === type).forEach((e: any) => {
+                                  if (currentMonthOnly && (new Date(e.start_date).getMonth() !== now.getMonth() || new Date(e.start_date).getFullYear() !== now.getFullYear())) return;
+                                  let current = new Date(e.start_date);
+                                  current.setHours(0,0,0,0);
+                                  const end = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+                                  end.setHours(0,0,0,0);
+                                  while (current <= end) {
+                                    dates.push(new Date(current));
+                                    current.setDate(current.getDate() + 1);
+                                  }
+                               });
+                               return dates;
+                             };
 
-                             const sickDays = calculateDays(((driver as any).hr_events || []), 'sick_leave');
-                             const unjustifiedAbs = ((driver as any).hr_events || []).filter((e: any) => 
-                                 e.event_type === 'absence' && 
-                                 new Date(e.start_date).getMonth() === now.getMonth() &&
-                                 new Date(e.start_date).getFullYear() === now.getFullYear()
-                             ).reduce((sum: number, e: any) => {
-                               const start = new Date(e.start_date);
-                               const end = e.end_date ? new Date(e.end_date) : start;
-                               const diffTime = end.getTime() - start.getTime();
-                               return sum + (diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0);
-                             }, 0);
+                             const sickDates = calculateDates(((driver as any).hr_events || []), 'sick_leave');
+                             const unjustifiedAbsDates = calculateDates(((driver as any).hr_events || []), 'absence', true);
+                             const vacationDates = calculateDates(((driver as any).hr_events || []), 'vacation');
+
+                             const sickDays = sickDates.length;
+                             const unjustifiedAbs = unjustifiedAbsDates.length;
                              const leaveBalance = calculateDynamicLeaveBalance(driver);
                              const getsBonus = sickDays === 0 && ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length === 0 && presentDays >= 10;
 
@@ -523,21 +529,35 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                   </Badge>
                                   <p className="text-[10px] uppercase text-slate-500 font-semibold tracking-wider">{driver.employment_type}</p>
                                 </td>
-                                <td className="px-6 py-4 font-medium text-center text-slate-600">{presentDays} j</td>
-                                <td className="px-6 py-4 font-medium text-center text-red-400">{sickDays > 0 ? `${sickDays} j` : '-'}</td>
-                                <td className="px-6 py-4 text-center">
-                                  {unjustifiedAbs > 0 ? (
-                                    <div className="flex flex-col items-center">
-                                      <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded text-[11px]">{unjustifiedAbs} j</span>
-                                      <span className="text-[10px] text-red-500 font-semibold mt-1">
-                                        -{(unjustifiedAbs * Number(driver.daily_base_cost || 0)).toFixed(2)}€
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="font-medium text-slate-400">-</span>
-                                  )}
+                                <td className="px-6 py-4 font-medium text-center text-slate-600">
+                                   <EmployeeCalendarDialog title="Jours de Présence (Mois Actuel)" subtitle={`${driver.first_name} ${driver.last_name}`} dates={presentDates} colorType="emerald">
+                                     {presentDays} j
+                                   </EmployeeCalendarDialog>
                                 </td>
-                                <td className="px-6 py-4 font-medium text-center text-blue-400">{leaveBalance > 0 ? `${leaveBalance} j` : '0 j'}</td>
+                                <td className="px-6 py-4 font-medium text-center text-red-400">
+                                   <EmployeeCalendarDialog title="Jours de Maladie" subtitle={`${driver.first_name} ${driver.last_name}`} dates={sickDates} colorType="orange">
+                                     {sickDays > 0 ? `${sickDays} j` : '-'}
+                                   </EmployeeCalendarDialog>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <EmployeeCalendarDialog title="Absences Injustifiées (Mois Actuel)" subtitle={`${driver.first_name} ${driver.last_name}`} dates={unjustifiedAbsDates} colorType="red">
+                                    {unjustifiedAbs > 0 ? (
+                                      <div className="flex flex-col items-center">
+                                        <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded text-[11px]">{unjustifiedAbs} j</span>
+                                        <span className="text-[10px] text-red-500 font-semibold mt-1">
+                                          -{(unjustifiedAbs * Number(driver.daily_base_cost || 0)).toFixed(2)}€
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="font-medium text-slate-400">-</span>
+                                    )}
+                                  </EmployeeCalendarDialog>
+                                </td>
+                                <td className="px-6 py-4 font-medium text-center text-blue-400">
+                                  <EmployeeCalendarDialog title="Historique des Congés Pris" subtitle={`${driver.first_name} ${driver.last_name}`} dates={vacationDates} colorType="blue">
+                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-[11px] font-bold">{leaveBalance > 0 ? `${leaveBalance.toFixed(2)} j` : '0 j'}</span>
+                                  </EmployeeCalendarDialog>
+                                </td>
                                 <td className="px-6 py-4 text-center">
                                     {getsBonus ? (
                                        <Badge className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-none font-medium text-xs">Oui</Badge>
