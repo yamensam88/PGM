@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, ShieldAlert, Zap, Route, Users, LayoutDashboard, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { InteractiveSimulator } from "@/components/marketing/InteractiveSimulator";
 
 export const metadata = {
   title: "PGM | Le SaaS d'Exploitation Transport & Livraison",
@@ -49,14 +50,13 @@ export default function LandingPage() {
               <span className="text-orange-500 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-orange-400 md:to-red-500 inline-block pb-2 pt-2 md:pt-0">aveugle.</span>
             </h1>
 
-            <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-10 leading-relaxed font-light space-y-4">
+            <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-8 leading-relaxed font-light space-y-4">
               <p>
-                L'idée de PGM part d'un constat de dirigeant : <strong>« Je pilotais à l'aveugle, je gérais en mode ambulancier, je subissais la situation au lieu de la maîtriser. »</strong>
-              </p>
-              <p className="text-base md:text-lg">
-                Volumes de colis explosifs, gestion des absences, sinistres des véhicules... Le quotidien vous happe. Plus le temps de calculer sa rentabilité réelle, ni d'avoir un discours juste et factuel avec chaque chauffeur. <strong className="text-zinc-200">PGM a été créé pour arrêter de subir et enfin maîtriser (Pilotage • Gestion • Maîtrise).</strong>
+                Le <strong>Cockpit Financier</strong> de référence conçu pour les transporteurs routiers de 3 à 50 véhicules. Calculez enfin votre coût de revient réel, votre <strong>seuil de rentabilité</strong> et surveillez la marge nette de vos contrats au jour le jour.
               </p>
             </div>
+
+            <InteractiveSimulator />
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <Link href="/register" className="h-14 px-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(249,115,22,0.5)]">
@@ -145,9 +145,12 @@ export default function LandingPage() {
                   <div className="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20">
                      <ShieldAlert className="w-7 h-7" />
                   </div>
+                  <Badge variant="outline" className="mb-4 bg-black/40 border-slate-700/50 text-slate-400 font-mono text-[10px] tracking-widest shadow-none rounded-sm">
+                    [ DIAGNOSTIC POSTE PAR POSTE ]
+                  </Badge>
                   <h3 className="text-xl font-bold text-white mb-3">Radar des Anomalies</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                     L'algorithme analyse toutes les clôtures et factures. Retrouvez instantanément les chauffeurs ayant une surconsommation de gasoil (plus de 12L/100) ou causant le plus d'usure mécanique.
+                     Carburant, entretien, péages, salaires : PGM identifie les écarts et les quantifie pour que vous compreniez exactement pourquoi votre marge baisse. Retrouvez instantanément les chauffeurs ayant une surconsommation.
                   </p>
                </div>
 
@@ -156,9 +159,12 @@ export default function LandingPage() {
                   <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20">
                      <BarChart3 className="w-7 h-7" />
                   </div>
+                  <Badge variant="outline" className="mb-4 bg-black/40 border-slate-700/50 text-slate-400 font-mono text-[10px] tracking-widest shadow-none rounded-sm">
+                    [ BREAK-EVEN & MARGE RÉELLE ]
+                  </Badge>
                   <h3 className="text-xl font-bold text-white mb-3">Marge Nette Temps Réel</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                     Chaque tournée est décortiquée. PGM impute automatiquement le coût du chauffeur, le coût du véhicule (assurance, entretien), et le gasoil face au chiffre d'affaires du donneur d'ordre.
+                     Chaque tournée est décortiquée. PGM impute automatiquement le coût réel du chauffeur, l'usure du véhicule et le gasoil face au chiffre d'affaires du donneur d'ordre, pour un résultat comptable immédiat.
                   </p>
                </div>
 
@@ -167,9 +173,12 @@ export default function LandingPage() {
                   <div className="w-14 h-14 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20">
                      <LayoutDashboard className="w-7 h-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">Anticipation RH Totale</h3>
+                  <Badge variant="outline" className="mb-4 bg-black/40 border-slate-700/50 text-slate-400 font-mono text-[10px] tracking-widest shadow-none rounded-sm">
+                    [ SIMULATION AO ]
+                  </Badge>
+                  <h3 className="text-xl font-bold text-white mb-3">Anticipation et Appels d'Offres</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                     Planifiez les tournées en toute sécurité. Le système bloque automatiquement l'assignation d'un chauffeur si ses congés payés ou un arrêt maladie intersectent avec la date de la livraison.
+                     Simulez la signature d'un nouveau contrat en vous basant sur vos données réelles. Gérez les absences RH et projetez votre rentabilité future pour ne plus jamais signer de tournée à perte.
                   </p>
                </div>
             </div>
