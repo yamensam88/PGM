@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as PieChartIcon, Package, Map, ShieldAlert, Brain, CheckCircle2, Activity, TrendingDown, Car, Users, AlertCircle, Sparkles } from "lucide-react";
+import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as PieChartIcon, Package, Map, ShieldAlert, Brain, CheckCircle2, Activity, TrendingDown, Car, Users, AlertCircle, Sparkles, Fuel } from "lucide-react";
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { countWorkingDays } from "@/lib/calendar";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
@@ -20,6 +20,7 @@ import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { FleetRadarAlerts } from "@/components/dashboard/FleetRadarAlerts";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 import { VehicleMetricBox } from "@/components/dashboard/VehicleMetricBox";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -268,6 +269,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   const totalRevenue = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.revenue_calculated || 0), 0);
   const totalFuelCost = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_fuel || 0), 0);
+  const totalFuelLiters = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.fuel_consumed_liters || 0), 0);
   const totalFleetCostActive = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_vehicle || 0), 0);
   const totalDriverCostActive = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.cost_driver || 0), 0);
   const totalRunsMargin = completedRunsBefore.reduce((sum: number, r: any) => sum + Number(r.margin_net || 0), 0);
@@ -825,7 +827,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
         </div>
 
         {/* Financial KPIs Row */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5 mb-8">
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">CA Période</h3>
             <div>
@@ -853,6 +855,68 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
               </p>
             </div>
           </Card>
+
+          <Dialog>
+            <DialogTrigger className="text-left w-full">
+              <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-orange-200 transition-all duration-300 cursor-pointer group h-full">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap flex items-center justify-between">
+                   Gasoil Pompé
+                   <Fuel className="w-3 h-3 text-slate-300 group-hover:text-orange-400 transition-colors" />
+                </h3>
+                <div>
+                  <div className="text-2xl 2xl:text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight whitespace-nowrap">
+                     {totalFuelLiters.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })} L
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Coût : {totalFuelCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</p>
+                </div>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl">
+                   <Fuel className="w-5 h-5 text-orange-500" />
+                   Détail des pleins de Gasoil
+                </DialogTitle>
+                <DialogDescription>
+                   Historique exhaustif des pleins déclarés par les chauffeurs sur la période sélectionnée.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="mt-4 border rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-sm text-left">
+                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Date</th>
+                        <th className="px-4 py-3 font-semibold">Chauffeur</th>
+                        <th className="px-4 py-3 font-semibold">Véhicule</th>
+                        <th className="px-4 py-3 font-semibold text-right">Volume</th>
+                        <th className="px-4 py-3 font-semibold text-right">Coût</th>
+                      </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-100">
+                      {completedRunsBefore.filter((r: any) => Number(r.fuel_consumed_liters || 0) > 0).length === 0 ? (
+                         <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Aucun plein déclaré sur cette période.</td></tr>
+                      ) : (
+                         completedRunsBefore
+                           .filter((r: any) => Number(r.fuel_consumed_liters || 0) > 0)
+                           .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                           .map((run: any) => (
+                            <tr key={run.id} className="hover:bg-slate-50/50">
+                               <td className="px-4 py-3 whitespace-nowrap text-slate-600 font-medium">
+                                 {new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(run.date))}
+                               </td>
+                               <td className="px-4 py-3 text-slate-800 font-semibold">{run.driver?.first_name} {run.driver?.last_name}</td>
+                               <td className="px-4 py-3 text-slate-500 font-mono text-xs">{run.vehicle?.plate_number}</td>
+                               <td className="px-4 py-3 text-right bg-orange-50/30 text-orange-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
+                               <td className="px-4 py-3 text-right text-slate-600 font-medium">{Number(run.cost_fuel).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</td>
+                            </tr>
+                         ))
+                      )}
+                   </tbody>
+                </table>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Volume de Livraison</h3>

@@ -62,6 +62,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Incidents</TableHead>
+            <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
             {!isExploitationMode && (
               <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-right px-4">Marge Nette</TableHead>
             )}
@@ -137,6 +138,19 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                     </div>
                   </TableCell>
 
+                  <TableCell className="text-right px-4">
+                     <div className="flex flex-col items-end gap-0.5">
+                        {row.runs.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0) > 0 ? (
+                           <>
+                             <span className="text-[12px] font-bold text-orange-600">{row.runs.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0).toFixed(1)} L</span>
+                             <span className="text-[10px] font-medium text-slate-400">{row.runs.reduce((sum, r) => sum + Number(r.cost_fuel || 0), 0).toFixed(2)} €</span>
+                           </>
+                        ) : (
+                           <span className="text-slate-300 font-medium text-[13px]">-</span>
+                        )}
+                     </div>
+                  </TableCell>
+
                   {!isExploitationMode && (
                     <>
                       <TableCell className="text-right px-4">
@@ -169,7 +183,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                 {/* EXPANDED ROW: RUNS DETAILS FOR THE ZONE */}
                 {isExpanded && (
                   <TableRow className="bg-slate-50/30 hover:bg-slate-50/30">
-                    <TableCell colSpan={isExploitationMode ? 10 : 11} className="p-0 border-b border-slate-100">
+                    <TableCell colSpan={isExploitationMode ? 11 : 12} className="p-0 border-b border-slate-100">
                       <div className="pl-14 pr-6 py-6 border-l-2 border-orange-400 bg-gradient-to-r from-orange-50/40 to-transparent">
                          <div className="mb-4 flex items-center gap-2">
                             <Map className="w-4 h-4 text-orange-500" />

@@ -173,6 +173,19 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
            </div>
         </TableCell>
 
+        <TableCell className="text-right px-4">
+           <div className="flex flex-col items-end gap-0.5">
+              {Number(run.fuel_consumed_liters) > 0 ? (
+                 <>
+                   <span className="text-[12px] font-bold text-orange-600">{Number(run.fuel_consumed_liters).toFixed(1)} L</span>
+                   <span className="text-[10px] font-medium text-slate-400">{Number(run.cost_fuel).toFixed(2)} €</span>
+                 </>
+              ) : (
+                 <span className="text-slate-300 font-medium text-[13px]">-</span>
+              )}
+           </div>
+        </TableCell>
+
         {!isExploitationMode && (
           <>
             <TableCell className="text-right px-4">
@@ -331,6 +344,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Statut</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Dommages</TableHead>
+              <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
               {!isExploitationMode && (
                 <>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">CA</TableHead>
