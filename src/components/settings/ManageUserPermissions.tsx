@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Settings2, Loader2, LayoutDashboard, Route, Users, History } from "lucide-react";
+import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck } from "lucide-react";
 import { updateUserPermissions } from "@/lib/actions";
 
 type PermissionItem = {
@@ -18,7 +18,9 @@ const permissionModules: PermissionItem[] = [
   { id: "/dispatch/runs", label: "Exploitation & Flotte", icon: Route },
   { id: "/dispatch/hr", label: "Ressources Humaines", icon: Users },
   { id: "/dispatch/retroactive", label: "Simulateur / Reprise", icon: History },
-  { id: "/dispatch/settings", label: "Paramètres Globaux", icon: Settings2 }
+  { id: "/dispatch/settings", label: "Paramètres Globaux", icon: Settings },
+  { id: "/dispatch/settings/billing", label: "Abonnement", icon: CreditCard },
+  { id: "/driver", label: "Interface Chauffeur", icon: Truck }
 ];
 
 export function ManageUserPermissions({ userId, userName, initialPermissions }: { userId: string, userName: string, initialPermissions: any }) {
@@ -55,7 +57,7 @@ export function ManageUserPermissions({ userId, userName, initialPermissions }: 
       {/* @ts-expect-error asChild is currently invalid for DialogTrigger in this version */}
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 relative" title="Gérer les accès">
-            <Settings2 className="w-4 h-4" />
+            <Settings className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
