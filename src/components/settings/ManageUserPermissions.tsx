@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck } from "lucide-react";
+import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck, Map, Briefcase } from "lucide-react";
 import { updateUserPermissions } from "@/lib/actions";
 
 type PermissionItem = {
@@ -20,7 +20,10 @@ const permissionModules: PermissionItem[] = [
   { id: "/dispatch/retroactive", label: "Simulateur / Reprise", icon: History },
   { id: "/dispatch/settings", label: "Paramètres Globaux", icon: Settings },
   { id: "/dispatch/settings/billing", label: "Abonnement", icon: CreditCard },
-  { id: "/driver", label: "Interface Chauffeur", icon: Truck }
+  { id: "/driver", label: "Interface Chauffeur", icon: Truck },
+  { id: "https://pro.viafleet.io/", label: "Suivi Véhic.", icon: Map },
+  { id: "https://gestiontournee.colisprive.com/Mop/", label: "Portail CP", icon: Briefcase },
+  { id: "https://cps.gofoexpress.fr/login", label: "Portail GF", icon: Truck }
 ];
 
 export function ManageUserPermissions({ userId, userName, initialPermissions }: { userId: string, userName: string, initialPermissions: any }) {
