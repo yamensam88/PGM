@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { RunsTable } from "@/components/dashboard/RunsTable";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Edit, Wrench, Trash2, AlertTriangle, History } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Wrench, Trash2, AlertTriangle, History, Fuel } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -446,6 +446,9 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
            const totalKm = completedRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
            const avgKmPerRun = completedRuns.length > 0 ? (totalKm / completedRuns.length).toFixed(0) : "0";
 
+           const totalFuelLiters = completedRuns.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0);
+           const totalFuelCost = completedRuns.reduce((sum, r) => sum + Number(r.cost_fuel || 0), 0);
+
            return (
              <>
                {/* Effectifs & KPIs Top Bar */}
@@ -541,6 +544,68 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        </div>
                      </div>
                   </div>
+
+                 <Dialog>
+                   <DialogTrigger className="text-left flex-1 min-w-[180px]">
+                     <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-orange-200 transition-all duration-300 cursor-pointer group h-full">
+                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap flex items-center justify-between">
+                          Gasoil Pompé
+                          <Fuel className="w-3 h-3 text-slate-300 group-hover:text-orange-400 transition-colors" />
+                       </h3>
+                       <div>
+                         <div className="text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight whitespace-nowrap">
+                            {totalFuelLiters.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })} L
+                         </div>
+                         <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Coût : {totalFuelCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</p>
+                       </div>
+                     </Card>
+                   </DialogTrigger>
+                   <DialogContent className="w-[98vw] max-w-[98vw] md:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 overflow-x-hidden">
+                     <DialogHeader>
+                       <DialogTitle className="flex items-center gap-2 text-xl">
+                          <Fuel className="w-5 h-5 text-orange-500" />
+                          Détail des pleins de Gasoil
+                       </DialogTitle>
+                       <DialogDescription>
+                          Historique exhaustif des pleins de carburant dans le contexte de votre sélection.
+                       </DialogDescription>
+                     </DialogHeader>
+                     
+                     <div className="mt-4 border rounded-xl shadow-sm overflow-x-auto w-full max-w-full">
+                       <table className="w-full text-sm text-left min-w-[500px]">
+                          <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] uppercase tracking-wider">
+                             <tr>
+                               <th className="px-4 py-3 font-semibold">Date</th>
+                               <th className="px-4 py-3 font-semibold">Chauffeur</th>
+                               <th className="px-4 py-3 font-semibold">Véhicule</th>
+                               <th className="px-4 py-3 font-semibold text-right">Volume</th>
+                               <th className="px-4 py-3 font-semibold text-right">Coût</th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                             {completedRuns.filter((r: any) => Number(r.fuel_consumed_liters || 0) > 0).length === 0 ? (
+                                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Aucun plein sur cette sélection.</td></tr>
+                             ) : (
+                                completedRuns
+                                  .filter((r: any) => Number(r.fuel_consumed_liters || 0) > 0)
+                                  .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                  .map((run: any) => (
+                                   <tr key={run.id} className="hover:bg-slate-50/50">
+                                      <td className="px-4 py-3 whitespace-nowrap text-slate-600 font-medium">
+                                        {new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(run.date))}
+                                      </td>
+                                      <td className="px-4 py-3 text-slate-800 font-semibold">{run.driver?.first_name} {run.driver?.last_name}</td>
+                                      <td className="px-4 py-3 text-slate-500 font-mono text-xs">{run.vehicle?.plate_number}</td>
+                                      <td className="px-4 py-3 text-right bg-orange-50/30 text-orange-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
+                                      <td className="px-4 py-3 text-right text-slate-600 font-medium">{Number(run.cost_fuel).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</td>
+                                   </tr>
+                                ))
+                             )}
+                          </tbody>
+                       </table>
+                     </div>
+                   </DialogContent>
+                 </Dialog>
 
                  <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Volume de Livraison</h3>

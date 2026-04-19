@@ -871,7 +871,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                 </div>
               </Card>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="w-[98vw] max-w-[98vw] md:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 overflow-x-hidden">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-xl">
                    <Fuel className="w-5 h-5 text-orange-500" />
@@ -882,8 +882,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="mt-4 border rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-sm text-left">
+              <div className="mt-4 border rounded-xl shadow-sm overflow-x-auto w-full max-w-full">
+                <table className="w-full text-sm text-left min-w-[500px]">
                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] uppercase tracking-wider">
                       <tr>
                         <th className="px-4 py-3 font-semibold">Date</th>

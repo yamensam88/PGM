@@ -2832,17 +2832,24 @@ export async function updateGlobalSettings(formData: FormData) {
 
     const currentSettings = (org.settings_json as any) || {};
 
+    const parseFormNumber = (key: string, fallback: number) => {
+      const val = formData.get(key);
+      if (val === null || val === undefined || val === '') return fallback;
+      const parsed = Number(String(val).replace(',', '.'));
+      return isNaN(parsed) ? fallback : parsed;
+    };
+
     const updatedSettings = {
       ...currentSettings,
-      cost_rent: Number(formData.get("cost_rent")) || 0,
-      cost_office_salaries: Number(formData.get("cost_office_salaries")) || 0,
-      cost_admin_vehicles: Number(formData.get("cost_admin_vehicles")) || 0,
-      cost_software: Number(formData.get("cost_software")) || 0,
-      cost_insurances: Number(formData.get("cost_insurances")) || 0,
-      cost_fees: Number(formData.get("cost_fees")) || 0,
-      cost_others: Number(formData.get("cost_others")) || 0,
-      fuel_price_per_km: Number(formData.get("fuel_price_per_km")) || 0.18,
-      fuel_price_per_liter: Number(formData.get("fuel_price_per_liter")) || 1.80,
+      cost_rent: parseFormNumber("cost_rent", 0),
+      cost_office_salaries: parseFormNumber("cost_office_salaries", 0),
+      cost_admin_vehicles: parseFormNumber("cost_admin_vehicles", 0),
+      cost_software: parseFormNumber("cost_software", 0),
+      cost_insurances: parseFormNumber("cost_insurances", 0),
+      cost_fees: parseFormNumber("cost_fees", 0),
+      cost_others: parseFormNumber("cost_others", 0),
+      fuel_price_per_km: parseFormNumber("fuel_price_per_km", 0.18),
+      fuel_price_per_liter: parseFormNumber("fuel_price_per_liter", 1.80),
     };
 
     const monthly_total_fixed_costs = 
@@ -2888,10 +2895,17 @@ export async function updateTariffs(formData: FormData) {
 
     if (!client) throw new Error("Client introuvable.");
 
-    const unit_price_package = Number(formData.get("unit_price_package")) || 0;
-    const bonus_relay_point = Number(formData.get("bonus_relay_point")) || 0;
-    const unit_price_stop = Number(formData.get("unit_price_stop")) || 0;
-    const base_daily_flat = Number(formData.get("base_daily_flat")) || 0;
+    const parseFormNumber = (key: string, fallback: number) => {
+      const val = formData.get(key);
+      if (val === null || val === undefined || val === '') return fallback;
+      const parsed = Number(String(val).replace(',', '.'));
+      return isNaN(parsed) ? fallback : parsed;
+    };
+
+    const unit_price_package = parseFormNumber("unit_price_package", 0);
+    const bonus_relay_point = parseFormNumber("bonus_relay_point", 0);
+    const unit_price_stop = parseFormNumber("unit_price_stop", 0);
+    const base_daily_flat = parseFormNumber("base_daily_flat", 0);
 
     let targetRateCardId;
     if (client.rate_cards && client.rate_cards.length > 0) {
