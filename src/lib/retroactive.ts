@@ -302,6 +302,9 @@ export async function applyRetroactiveCosts(
           updatedCount++;
         }
       }
+    }, {
+      maxWait: 15000, // 15 seconds max wait to connect to prisma
+      timeout: 120000 // 120 seconds max execution time for the transaction
     });
 
     revalidatePath("/dispatch/dashboard");
