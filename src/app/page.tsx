@@ -34,24 +34,7 @@ export default function LandingPage() {
          </div>
       </nav>
 
-      <main className="pt-24 pb-16">
-         {/* Categories Banner */}
-         <div className="w-full border-b border-white/5 bg-white/[0.02]">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex text-[10px] sm:text-xs font-semibold text-zinc-500 uppercase tracking-widest gap-6 overflow-x-auto whitespace-nowrap scrollbar-hide justify-center">
-               <span className="hover:text-white transition-colors cursor-pointer">Transport Routier</span>
-               <span className="text-zinc-800">|</span>
-               <span className="hover:text-white transition-colors cursor-pointer">Sous-Traitants</span>
-               <span className="text-zinc-800">|</span>
-               <span className="hover:text-white transition-colors cursor-pointer">PME Fret</span>
-               <span className="text-zinc-800">|</span>
-               <span className="hover:text-white transition-colors cursor-pointer">Appels d'Offres</span>
-               <span className="text-zinc-800">|</span>
-               <span className="hover:text-white transition-colors cursor-pointer">Messagerie</span>
-               <span className="text-zinc-800">|</span>
-               <span className="hover:text-white transition-colors cursor-pointer">Longue Distance</span>
-            </div>
-         </div>
-
+      <main className="pt-32 pb-16">
          {/* Hero Section */}
          <section className="relative max-w-7xl mx-auto px-6 pt-12 pb-24 text-center">
             {/* Soft background glow */}
@@ -195,59 +178,55 @@ export default function LandingPage() {
                   </Badge>
                   <h3 className="text-xl font-bold text-white mb-3">Anticipation et Appels d'Offres</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                     En quelques minutes, vous savez si un contrat mérite d'être signé, négocié ou refusé. Simulez vos futures tournées en vous basant sur vos historiques de coûts pour ne plus jamais rouler à perte.
+                     Simulez la signature d'un nouveau contrat en vous basant sur vos données réelles. Gérez les absences RH et projetez votre rentabilité future pour ne plus jamais signer de tournée à perte.
                   </p>
                </div>
             </div>
          </section>
 
-         {/* Methodology Section */}
+         {/* Pricing Section */}
          <section className="max-w-5xl mx-auto px-6 mb-32">
-            <div className="bg-[#050812] border border-white/5 rounded-3xl p-10 md:p-16 shadow-2xl relative overflow-hidden">
-               <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+            <div className="bg-gradient-to-b from-zinc-900 to-[#030712] border border-white/10 rounded-3xl p-10 md:p-16 text-center shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] rounded-full pointer-events-none" />
+               <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
                
-               <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Aucun calcul fantôme.</h2>
-                  <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-                    PGM s'appuie sur la doctrine de la donnée vraie. Vous ne pilotez plus sur une intuition, mais sur de l'analytique pure.
-                  </p>
-               </div>
+               <div className="relative z-10">
+                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">Un tarif calqué sur votre réussite.</h2>
+                 <p className="text-zinc-400 text-lg mb-12 max-w-2xl mx-auto">
+                   Pas d'engagement, pas de frais cachés. Vous payez proportionnellement à la taille réelle de votre flotte sur le terrain.
+                 </p>
 
-               <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 rounded-2xl flex items-start gap-4 hover:border-emerald-500/30 transition-colors">
-                     <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                     <div>
-                        <h4 className="text-emerald-400 font-bold uppercase tracking-wider text-xs mb-1">Mesuré</h4>
-                        <p className="text-zinc-400 text-sm">Donnée réelle saisie quotidiennement par les exploitants de la flotte.</p>
-                     </div>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 rounded-2xl flex items-start gap-4 hover:border-blue-500/30 transition-colors">
-                     <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                     <div>
-                        <h4 className="text-blue-400 font-bold uppercase tracking-wider text-xs mb-1">Projeté</h4>
-                        <p className="text-zinc-400 text-sm">Extrapolé mathématiquement de vos propres tendances et marges lissées.</p>
-                     </div>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 rounded-2xl flex items-start gap-4 hover:border-orange-500/30 transition-colors">
-                     <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
-                     <div>
-                        <h4 className="text-orange-400 font-bold uppercase tracking-wider text-xs mb-1">Estimé</h4>
-                        <p className="text-zinc-400 text-sm">Hypothèse financière documentée et validée par les indices routiers.</p>
-                     </div>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 rounded-2xl flex items-start gap-4">
-                     <div className="w-2 h-2 rounded-full bg-zinc-600 mt-1.5"></div>
-                     <div>
-                        <h4 className="text-zinc-400 font-bold uppercase tracking-wider text-xs mb-1">Manquant</h4>
-                        <p className="text-zinc-500 text-sm italic">Aucun indicateur de rentabilité n'est deviné ni laissé au hasard avec PGM.</p>
-                     </div>
-                  </div>
-               </div>
-               
-               <div className="mt-16 text-center">
-                   <Link href="/register" className="h-14 px-8 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg inline-flex items-center gap-2 transition-all">
-                      Rejoindre l'infrastructure PGM <ArrowRight className="w-5 h-5" />
-                   </Link>
+                 <div className="bg-black/40 border border-white/10 rounded-2xl p-8 max-w-xl mx-auto backdrop-blur-sm">
+                    <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-6">
+                       <div className="text-left">
+                          <h4 className="text-2xl font-bold text-white">Forfait Pro</h4>
+                          <p className="text-orange-400 font-medium">1 à 5 chauffeurs actifs</p>
+                       </div>
+                       <div className="text-right">
+                          <span className="text-4xl font-black text-white">200€</span>
+                          <span className="text-zinc-500"> / mois</span>
+                       </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 mb-8 text-left">
+                       <div className="flex items-center gap-3">
+                          <Users className="w-5 h-5 text-zinc-400" />
+                          <span className="text-white font-medium">Croissance d'effectif</span>
+                       </div>
+                       <div className="font-bold text-emerald-400">+100€ <span className="text-zinc-500 font-normal text-sm">/ 3 chauffeurs supp.</span></div>
+                    </div>
+
+                    <ul className="space-y-4 text-left mb-8">
+                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Plateforme Exploitation Complète</li>
+                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Modules RH & Entretien Véhicules</li>
+                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Intelligence Artificielle intégrée</li>
+                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Support prioritaire</li>
+                    </ul>
+
+                    <Link href="/register" className="block w-full h-14 leading-[56px] text-center rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg transition-colors">
+                       Créer mon espace entreprise
+                    </Link>
+                 </div>
                </div>
             </div>
          </section>

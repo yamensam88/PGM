@@ -1,0 +1,18 @@
+a85121a revert: Restore previous landing page before competitor UI contrast
+7c3e5db feat(marketing): 10x premium UI upgrade with framer-motion and 3D effects
+f8f6f92 feat(marketing): remove pricing, add categories banner and methodology section from mooventis
+4ac42e5 feat(marketing): add interactive margin simulator and update landing page copy
+0bd070f fix: Disable text gradient on mobile to fix complete disappearance
+9e21c47 fix: Fix iOS WebKit disappearing text bug for gradient text
+fb3c4df fix: Fix text clipping on mobile for the word aveugle
+da15d31 style: Restore text brand and use image for icon only
+0350c3f feat: Add founder story to marketing copy
+72872af feat: Remove base cost card and update app logo
+a1a8fcd style: Add developer credit to landing page footer
+91d9e4b style: Unify PGM branding and icons across pages
+96b4867 copy: Modernize Hero section and translate to dernier kilometre
+f366dec style: Add detailed pseudo-components to landing page mockup
+2c0d525 style: Change landing page dashboard mockup to light theme for better contrast
+088b6aa feat: Phase 2 & 3 - Complete SaaS Onboarding and Premium Landing Page
+46c3c43 Deploy PGM
+4c3fe1f Initial commit from Create Next App
