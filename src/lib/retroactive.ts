@@ -10,19 +10,14 @@ export interface SimulationResult {
   date: Date;
   driver_name: string;
   vehicle_plate: string;
-  
   old_revenue: number;
   new_revenue: number;
-  
   old_cost_driver: number;
   new_cost_driver: number;
-  
   old_cost_vehicle: number;
   new_cost_vehicle: number;
-  
   old_margin: number;
   new_margin: number;
-  
   delta: number;
 }
 
@@ -34,10 +29,16 @@ export interface SimulationSummary {
   results: SimulationResult[];
 }
 
+interface RunContext {
+  firstRunDriverSet: Set<string>;
+  firstRunVehicleSet: Set<string>;
+  vehicleCumulativeKm: Map<string, number>;
+}
+
 /**
- * Helper performant pour recalculer les montants d'une DailyRun
+ * Helper ultra-performant, 100% en mmoire (0 requte DB)
  */
-async function calculateRunFreshValues(run: any) {
+function calculateRunFreshValues(run: any, context: RunContext) {
   // 1. Calculate new Revenue
   let rateCard = run.rate_card;
   if (!rateCard && run.client?.rate_cards?.length) {
@@ -59,21 +60,11 @@ async function calculateRunFreshValues(run: any) {
   const new_revenue = base_flat + (price_stop * colis_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
   // 2. Calculate new Costs
-  const startOfDay = new Date(run.date);
-  startOfDay.setUTCHours(0, 0, 0, 0);
-  const endOfDay = new Date(run.date);
-  endOfDay.setUTCHours(23, 59, 59, 999);
+  const isFirstDriverRun = context.firstRunDriverSet.has(run.id);
+  const new_cost_driver = !isFirstDriverRun ? 0 : Number(run.driver?.daily_base_cost || 0);
 
-  // Check if it was the first run of the day for this driver/vehicle
-  const priorDriverRuns = await prisma.dailyRun.count({
-    where: { driver_id: run.driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed', created_at: { lt: run.created_at } }
-  });
-  const new_cost_driver = priorDriverRuns > 0 ? 0 : Number(run.driver?.daily_base_cost || 0);
-
-  const priorVehicleRuns = await prisma.dailyRun.count({
-    where: { vehicle_id: run.vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed', created_at: { lt: run.created_at } }
-  });
-  const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(run.vehicle?.fixed_monthly_cost || 0) + Number(run.vehicle?.rental_monthly_cost || 0) + Number(run.vehicle?.insurance_monthly_cost || 0)) / 25.33;
+  const isFirstVehicleRun = context.firstRunVehicleSet.has(run.id);
+  const base_fleet_cost = !isFirstVehicleRun ? 0 : (Number(run.vehicle?.fixed_monthly_cost || 0) + Number(run.vehicle?.rental_monthly_cost || 0) + Number(run.vehicle?.insurance_monthly_cost || 0)) / 25.33;
   
   const km_diff = Number(run.km_total || 0);
   const variable_fleet_cost = km_diff * Number(run.vehicle?.internal_cost_per_km || 0);
@@ -82,12 +73,7 @@ async function calculateRunFreshValues(run: any) {
   if (run.vehicle?.ownership_type === 'rented' && run.vehicle?.monthly_km_limit && run.vehicle.monthly_km_limit > 0) {
       const limit = Number(run.vehicle.monthly_km_limit);
       const extraCost = Number(run.vehicle.extra_km_cost || 0.18);
-      const monthStart = new Date(run.date.getFullYear(), run.date.getMonth(), 1);
-      const priorRunsThisMonth = await prisma.dailyRun.findMany({
-          where: { vehicle_id: run.vehicle_id, date: { gte: monthStart, lt: run.date }, status: 'completed' },
-          select: { km_total: true }
-      });
-      const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Number(r.km_total || 0), 0);
+      const previousTotal = context.vehicleCumulativeKm.get(run.id) || 0;
       
       if (previousTotal >= limit) {
           penalty_cost = km_diff * extraCost;
@@ -102,8 +88,55 @@ async function calculateRunFreshValues(run: any) {
 }
 
 /**
- * Recalcule virtuellement la marge pour une période donnée.
+ * Construit un contexte global en 1 seule requte
  */
+async function buildRunContext(orgId: string, startDate: Date, endDate: Date): Promise<RunContext> {
+  // on redescend au 1er du mois de la slection pour avoir l'historique kilomtrique exact
+  const startOfMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  
+  const allRuns = await prisma.dailyRun.findMany({
+    where: { organization_id: orgId, date: { gte: startOfMonth, lte: endDate }, status: 'completed' },
+    select: { id: true, driver_id: true, vehicle_id: true, date: true, created_at: true, km_total: true },
+    orderBy: { created_at: 'asc' }
+  });
+
+  const firstRunDriverSet = new Set<string>();
+  const firstRunVehicleSet = new Set<string>();
+  const seenDriverDate = new Set<string>();
+  const seenVehicleDate = new Set<string>();
+  
+  const vehicleCumulativeKm = new Map<string, number>();
+  const vehicleRunningTotal = new Map<string, number>();
+
+  for (const r of allRuns) {
+    const dStr = r.date.toISOString().split('T')[0];
+    
+    // Driver First Run
+    const dKey = `${r.driver_id}_${dStr}`;
+    if (!seenDriverDate.has(dKey)) {
+      seenDriverDate.add(dKey);
+      firstRunDriverSet.add(r.id);
+    }
+
+    // Vehicle First Run
+    const vKey = `${r.vehicle_id}_${dStr}`;
+    if (!seenVehicleDate.has(vKey)) {
+      seenVehicleDate.add(vKey);
+      firstRunVehicleSet.add(r.id);
+    }
+
+    // Vehicle KM Total Reset per month
+    const mStr = dStr.substring(0, 7); // YYYY-MM
+    const vmKey = `${r.vehicle_id}_${mStr}`;
+    const currentTotal = vehicleRunningTotal.get(vmKey) || 0;
+    
+    vehicleCumulativeKm.set(r.id, currentTotal);
+    vehicleRunningTotal.set(vmKey, currentTotal + Number(r.km_total || 0));
+  }
+
+  return { firstRunDriverSet, firstRunVehicleSet, vehicleCumulativeKm };
+}
+
 export async function simulateRetroactiveCosts(
   startDateStr: string,
   endDateStr: string,
@@ -111,7 +144,7 @@ export async function simulateRetroactiveCosts(
 ): Promise<{ success: boolean; data?: SimulationSummary; error?: string }> {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    if (!session?.user?.organization_id) throw new Error("Non autoris.");
     const orgId = session.user.organization_id;
 
     const startDate = new Date(startDateStr);
@@ -128,6 +161,7 @@ export async function simulateRetroactiveCosts(
     if (filters?.vehicle_id && filters.vehicle_id !== "all") whereClause.vehicle_id = filters.vehicle_id;
     if (filters?.client_id && filters.client_id !== "all") whereClause.client_id = filters.client_id;
 
+    // 1. Rcuprer la cible (Dtaill avec relations)
     const runs = await prisma.dailyRun.findMany({
       where: whereClause,
       include: {
@@ -139,49 +173,41 @@ export async function simulateRetroactiveCosts(
       orderBy: { date: 'asc' }
     });
 
+    // 2. Pr-calculer le contexte en 1 grosse requte lgre
+    const context = await buildRunContext(orgId, startDate, endDate);
+
     const results: SimulationResult[] = [];
     let total_old_margin = 0;
     let total_new_margin = 0;
 
-    // Process in chunks of 20 for extreme performance and to avoid Vercel timeouts
-    const CHUNK_SIZE = 20;
-    for (let i = 0; i < runs.length; i += CHUNK_SIZE) {
-      const chunk = runs.slice(i, i + CHUNK_SIZE);
+    // 3. Calcul pur 100% RAM, super rapide, 0 Timeout DB.
+    for (const run of runs) {
+      const { new_revenue, new_cost_driver, new_cost_vehicle } = calculateRunFreshValues(run, context);
+      const cost_fuel = Number(run.cost_fuel || 0);
+
+      const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
+      const old_margin = Number(run.margin_net || 0);
       
-      await Promise.all(chunk.map(async (run) => {
-        const { new_revenue, new_cost_driver, new_cost_vehicle } = await calculateRunFreshValues(run);
-        const cost_fuel = Number(run.cost_fuel || 0);
+      const old_revenue = Number(run.revenue_calculated || 0);
+      const old_cost_driver = Number(run.cost_driver || 0);
+      const old_cost_vehicle = Number(run.cost_vehicle || 0);
 
-        const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
-        const old_margin = Number(run.margin_net || 0);
-        
-        const old_revenue = Number(run.revenue_calculated || 0);
-        const old_cost_driver = Number(run.cost_driver || 0);
-        const old_cost_vehicle = Number(run.cost_vehicle || 0);
-
-        // Only add if there is a semantic difference (to avoid noise)
-        if (Math.abs(new_margin - old_margin) > 0.01) {
-          results.push({
-            run_id: run.id,
-            date: run.date,
-            driver_name: `${run.driver?.first_name} ${run.driver?.last_name}`,
-            vehicle_plate: run.vehicle?.plate_number || 'Inconnu',
-            
-            old_revenue, new_revenue,
-            old_cost_driver, new_cost_driver,
-            old_cost_vehicle, new_cost_vehicle,
-            
-            old_margin, new_margin,
-            delta: new_margin - old_margin
-          });
-          total_old_margin += old_margin;
-          total_new_margin += new_margin;
-        }
-      }));
+      if (Math.abs(new_margin - old_margin) > 0.01) {
+        results.push({
+          run_id: run.id,
+          date: run.date,
+          driver_name: `${run.driver?.first_name} ${run.driver?.last_name}`,
+          vehicle_plate: run.vehicle?.plate_number || 'Inconnu',
+          old_revenue, new_revenue,
+          old_cost_driver, new_cost_driver,
+          old_cost_vehicle, new_cost_vehicle,
+          old_margin, new_margin,
+          delta: new_margin - old_margin
+        });
+        total_old_margin += old_margin;
+        total_new_margin += new_margin;
+      }
     }
-
-    // Sort results by date so the UI looks consistent (since Promise.all might resolve out of order)
-    results.sort((a, b) => a.date.getTime() - b.date.getTime());
 
     return {
       success: true,
@@ -200,9 +226,6 @@ export async function simulateRetroactiveCosts(
   }
 }
 
-/**
- * Applique définitivement la recalculation en BDD
- */
 export async function applyRetroactiveCosts(
   startDateStr: string,
   endDateStr: string,
@@ -210,7 +233,7 @@ export async function applyRetroactiveCosts(
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    if (!session?.user?.organization_id) throw new Error("Non autoris.");
     const orgId = session.user.organization_id;
 
     const startDate = new Date(startDateStr);
@@ -227,6 +250,7 @@ export async function applyRetroactiveCosts(
     if (filters?.vehicle_id && filters.vehicle_id !== "all") whereClause.vehicle_id = filters.vehicle_id;
     if (filters?.client_id && filters.client_id !== "all") whereClause.client_id = filters.client_id;
 
+    // 1. Load targets
     const runs = await prisma.dailyRun.findMany({
       where: whereClause,
       include: {
@@ -234,105 +258,82 @@ export async function applyRetroactiveCosts(
         vehicle: true,
         client: { include: { rate_cards: true } },
         rate_card: true,
+        financial_entries: true // Include this to prevent inside-transaction finds!
       },
       orderBy: { date: 'asc' }
     });
 
-    let updatedCount = 0;
+    // 2. Pre-calculate the context completely in memory 
+    const context = await buildRunContext(orgId, startDate, endDate);
 
-    // Pre-calculate all fresh values concurrently BEFORE opening the transaction 
-    // to bypass Vercel 10s timeout & keep the transaction strictly for fast writes.
-    const freshValuesMap = new Map<string, {new_revenue: number, new_cost_driver: number, new_cost_vehicle: number}>();
-    const CHUNK_SIZE = 20;
-    for (let i = 0; i < runs.length; i += CHUNK_SIZE) {
-      const chunk = runs.slice(i, i + CHUNK_SIZE);
-      await Promise.all(chunk.map(async (run) => {
-        const values = await calculateRunFreshValues(run);
-        freshValuesMap.set(run.id, values);
-      }));
+    const modifications: any[] = [];
+
+    // 3. Calculate all modifications outside the transaction and prepare a flat list
+    for (const run of runs) {
+      const { new_revenue, new_cost_driver, new_cost_vehicle } = calculateRunFreshValues(run, context);
+      const cost_fuel = Number(run.cost_fuel || 0);
+
+      const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
+      const old_margin = Number(run.margin_net || 0);
+
+      if (Math.abs(new_margin - old_margin) > 0.01) {
+          
+        let revEntry = run.financial_entries.find((e: any) => e.category === 'delivery_revenue' && e.entry_type === 'revenue');
+        let drvEntry = run.financial_entries.find((e: any) => e.category === 'driver_cost' && e.entry_type === 'cost');
+        let vehEntry = run.financial_entries.find((e: any) => e.category === 'vehicle_wear_cost' && e.entry_type === 'cost');
+
+        modifications.push({
+            run, new_revenue, new_cost_driver, new_cost_vehicle, new_margin,
+            revEntry, drvEntry, vehEntry
+        });
+      }
     }
 
+    // 4. Ultra-fast transaction that does ZERO findFirst, only purely targeted Updates/Creations.
     await prisma.$transaction(async (tx) => {
-      for (const run of runs) {
-        const cachedOpts = freshValuesMap.get(run.id);
-        if (!cachedOpts) continue;
-        const { new_revenue, new_cost_driver, new_cost_vehicle } = cachedOpts;
-        const cost_fuel = Number(run.cost_fuel || 0);
-
-        const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
-        const old_margin = Number(run.margin_net || 0);
-
-        if (Math.abs(new_margin - old_margin) > 0.01) {
-          // 1. Update DailyRun
+      for (const mod of modifications) {
+          // A. Update Run
           await tx.dailyRun.update({
-            where: { id: run.id },
+            where: { id: mod.run.id },
             data: {
-              revenue_calculated: new_revenue,
-              cost_driver: new_cost_driver,
-              cost_vehicle: new_cost_vehicle,
-              margin_net: new_margin
+              revenue_calculated: mod.new_revenue,
+              cost_driver: mod.new_cost_driver,
+              cost_vehicle: mod.new_cost_vehicle,
+              margin_net: mod.new_margin
             }
           });
 
-          // 2. Update Ledger Entries (FinancialEntry)
-          // a. Revenue
-          const revenueEntry = await tx.financialEntry.findFirst({
-            where: { run_id: run.id, category: 'delivery_revenue', entry_type: 'revenue' }
-          });
-          if (revenueEntry) {
-            await tx.financialEntry.update({ where: { id: revenueEntry.id }, data: { amount: new_revenue } });
-          } else if (new_revenue > 0) {
-            await tx.financialEntry.create({
-              data: {
-                organization_id: orgId, run_id: run.id, entry_type: 'revenue', category: 'delivery_revenue',
-                amount: new_revenue, entry_date: run.date, description: `Chiffre d'Affaires Rétroactif - Tournée ${run.id}`
-              }
-            });
+          // B. Update Revenue Entry
+          if (mod.revEntry) {
+              await tx.financialEntry.update({ where: { id: mod.revEntry.id }, data: { amount: mod.new_revenue } });
+          } else if (mod.new_revenue > 0) {
+              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, entry_type: 'revenue', category: 'delivery_revenue', amount: mod.new_revenue, entry_date: mod.run.date, description: `Chiffre d'Affaires Rétroactif - Tournée ${mod.run.id}` }});
           }
 
-          // b. Driver Cost
-          const driverCostEntry = await tx.financialEntry.findFirst({
-            where: { run_id: run.id, category: 'driver_cost', entry_type: 'cost' }
-          });
-          if (driverCostEntry) {
-            if (new_cost_driver > 0) await tx.financialEntry.update({ where: { id: driverCostEntry.id }, data: { amount: new_cost_driver } });
-            else await tx.financialEntry.delete({ where: { id: driverCostEntry.id } }); // Driver payload can be 0 if amortized
-          } else if (new_cost_driver > 0) {
-             await tx.financialEntry.create({
-              data: {
-                organization_id: orgId, run_id: run.id, driver_id: run.driver_id, entry_type: 'cost', category: 'driver_cost',
-                amount: new_cost_driver, entry_date: run.date, description: `Coût Chauffeur Rétroactif - Tournée ${run.id}`
-              }
-            });
+          // C. Update Driver Entry
+          if (mod.drvEntry) {
+              if (mod.new_cost_driver > 0) await tx.financialEntry.update({ where: { id: mod.drvEntry.id }, data: { amount: mod.new_cost_driver } });
+              else await tx.financialEntry.delete({ where: { id: mod.drvEntry.id } }); 
+          } else if (mod.new_cost_driver > 0) {
+              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, driver_id: mod.run.driver_id, entry_type: 'cost', category: 'driver_cost', amount: mod.new_cost_driver, entry_date: mod.run.date, description: `Coût Chauffeur Rétroactif - Tournée ${mod.run.id}` }});
           }
 
-          // c. Vehicle Cost
-          const vehicleCostEntry = await tx.financialEntry.findFirst({
-            where: { run_id: run.id, category: 'vehicle_wear_cost', entry_type: 'cost' }
-          });
-          if (vehicleCostEntry) {
-            if (new_cost_vehicle > 0) await tx.financialEntry.update({ where: { id: vehicleCostEntry.id }, data: { amount: new_cost_vehicle } });
-            else await tx.financialEntry.delete({ where: { id: vehicleCostEntry.id } });
-          } else if (new_cost_vehicle > 0) {
-             await tx.financialEntry.create({
-              data: {
-                organization_id: orgId, run_id: run.id, vehicle_id: run.vehicle_id, entry_type: 'cost', category: 'vehicle_wear_cost',
-                amount: new_cost_vehicle, entry_date: run.date, description: `Coût Véhicule Rétroactif - Tournée ${run.id}`
-              }
-            });
+          // D. Update Vehicle Entry
+          if (mod.vehEntry) {
+              if (mod.new_cost_vehicle > 0) await tx.financialEntry.update({ where: { id: mod.vehEntry.id }, data: { amount: mod.new_cost_vehicle } });
+              else await tx.financialEntry.delete({ where: { id: mod.vehEntry.id } });
+          } else if (mod.new_cost_vehicle > 0) {
+              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, vehicle_id: mod.run.vehicle_id, entry_type: 'cost', category: 'vehicle_wear_cost', amount: mod.new_cost_vehicle, entry_date: mod.run.date, description: `Coût Véhicule Rétroactif - Tournée ${mod.run.id}` }});
           }
-
-          updatedCount++;
-        }
       }
     }, {
-      maxWait: 15000, // 15 seconds max wait to connect to prisma
-      timeout: 120000 // 120 seconds max execution time for the transaction
+      maxWait: 15000, 
+      timeout: 120000 
     });
 
     revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
-    return { success: true, message: `Historique mis à jour avec succès. ${updatedCount} tournées affectées.` };
+    return { success: true, message: `Historique mis à jour avec succès. ${modifications.length} tournées affectées.` };
   } catch (error: any) {
     console.error("applyRetroactiveCosts error:", error);
     return { success: false, error: error.message };
