@@ -43,9 +43,9 @@ export default function LandingPage() {
               Né de l'expérience terrain
             </Badge>
 
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-tight md:leading-[1.1]">
-              Ne pilotez plus à l'<br className="block md:hidden" />
-              <span className="text-orange-500 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-orange-400 md:to-red-500 inline-block pb-2 pt-2 md:pt-0">aveugle.</span>
+            <h1 className="text-6xl md:text-8xl lg:text-[110px] xl:text-[130px] font-black tracking-tighter text-white mb-8 leading-[0.95] md:leading-[0.9]">
+              Ne pilotez plus <br className="hidden sm:block" />
+              <span className="text-orange-500 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-orange-400 md:to-red-500 inline-block pb-4 pt-2 md:pt-0 mt-2">à l'aveugle.</span>
             </h1>
 
             <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-8 leading-relaxed font-light space-y-4">
