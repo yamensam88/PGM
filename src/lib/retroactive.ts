@@ -143,36 +143,45 @@ export async function simulateRetroactiveCosts(
     let total_old_margin = 0;
     let total_new_margin = 0;
 
-    for (const run of runs) {
-      const { new_revenue, new_cost_driver, new_cost_vehicle } = await calculateRunFreshValues(run);
-      const cost_fuel = Number(run.cost_fuel || 0);
-
-      const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
-      const old_margin = Number(run.margin_net || 0);
+    // Process in chunks of 20 for extreme performance and to avoid Vercel timeouts
+    const CHUNK_SIZE = 20;
+    for (let i = 0; i < runs.length; i += CHUNK_SIZE) {
+      const chunk = runs.slice(i, i + CHUNK_SIZE);
       
-      const old_revenue = Number(run.revenue_calculated || 0);
-      const old_cost_driver = Number(run.cost_driver || 0);
-      const old_cost_vehicle = Number(run.cost_vehicle || 0);
+      await Promise.all(chunk.map(async (run) => {
+        const { new_revenue, new_cost_driver, new_cost_vehicle } = await calculateRunFreshValues(run);
+        const cost_fuel = Number(run.cost_fuel || 0);
 
-      // Only add if there is a semantic difference (to avoid noise)
-      if (Math.abs(new_margin - old_margin) > 0.01) {
-        results.push({
-          run_id: run.id,
-          date: run.date,
-          driver_name: `${run.driver?.first_name} ${run.driver?.last_name}`,
-          vehicle_plate: run.vehicle?.plate_number || 'Inconnu',
-          
-          old_revenue, new_revenue,
-          old_cost_driver, new_cost_driver,
-          old_cost_vehicle, new_cost_vehicle,
-          
-          old_margin, new_margin,
-          delta: new_margin - old_margin
-        });
-        total_old_margin += old_margin;
-        total_new_margin += new_margin;
-      }
+        const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
+        const old_margin = Number(run.margin_net || 0);
+        
+        const old_revenue = Number(run.revenue_calculated || 0);
+        const old_cost_driver = Number(run.cost_driver || 0);
+        const old_cost_vehicle = Number(run.cost_vehicle || 0);
+
+        // Only add if there is a semantic difference (to avoid noise)
+        if (Math.abs(new_margin - old_margin) > 0.01) {
+          results.push({
+            run_id: run.id,
+            date: run.date,
+            driver_name: `${run.driver?.first_name} ${run.driver?.last_name}`,
+            vehicle_plate: run.vehicle?.plate_number || 'Inconnu',
+            
+            old_revenue, new_revenue,
+            old_cost_driver, new_cost_driver,
+            old_cost_vehicle, new_cost_vehicle,
+            
+            old_margin, new_margin,
+            delta: new_margin - old_margin
+          });
+          total_old_margin += old_margin;
+          total_new_margin += new_margin;
+        }
+      }));
     }
+
+    // Sort results by date so the UI looks consistent (since Promise.all might resolve out of order)
+    results.sort((a, b) => a.date.getTime() - b.date.getTime());
 
     return {
       success: true,
@@ -231,9 +240,23 @@ export async function applyRetroactiveCosts(
 
     let updatedCount = 0;
 
+    // Pre-calculate all fresh values concurrently BEFORE opening the transaction 
+    // to bypass Vercel 10s timeout & keep the transaction strictly for fast writes.
+    const freshValuesMap = new Map<string, {new_revenue: number, new_cost_driver: number, new_cost_vehicle: number}>();
+    const CHUNK_SIZE = 20;
+    for (let i = 0; i < runs.length; i += CHUNK_SIZE) {
+      const chunk = runs.slice(i, i + CHUNK_SIZE);
+      await Promise.all(chunk.map(async (run) => {
+        const values = await calculateRunFreshValues(run);
+        freshValuesMap.set(run.id, values);
+      }));
+    }
+
     await prisma.$transaction(async (tx) => {
       for (const run of runs) {
-        const { new_revenue, new_cost_driver, new_cost_vehicle } = await calculateRunFreshValues(run);
+        const cachedOpts = freshValuesMap.get(run.id);
+        if (!cachedOpts) continue;
+        const { new_revenue, new_cost_driver, new_cost_vehicle } = cachedOpts;
         const cost_fuel = Number(run.cost_fuel || 0);
 
         const new_margin = new_revenue - new_cost_driver - new_cost_vehicle - cost_fuel;
