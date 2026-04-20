@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, ShieldAlert, Zap, Route, Users, LayoutDashboard, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { InteractiveSimulator } from "@/components/marketing/InteractiveSimulator";
-
 export const metadata = {
   title: "PGM | Le SaaS d'Exploitation Transport & Livraison",
   description: "Optimisez vos flottes, détectez les fraudes et maximisez votre marge nette en temps réel.",
@@ -55,8 +53,6 @@ export default function LandingPage() {
                 Le <strong>Cockpit Financier</strong> de référence conçu pour les transporteurs routiers de 3 à 50 véhicules. Calculez enfin votre coût de revient réel, votre <strong>seuil de rentabilité</strong> et surveillez la marge nette de vos contrats au jour le jour.
               </p>
             </div>
-
-            <InteractiveSimulator />
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <Link href="/register" className="h-14 px-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(249,115,22,0.5)]">
@@ -180,53 +176,6 @@ export default function LandingPage() {
                   <p className="text-zinc-400 leading-relaxed">
                      Simulez la signature d'un nouveau contrat en vous basant sur vos données réelles. Gérez les absences RH et projetez votre rentabilité future pour ne plus jamais signer de tournée à perte.
                   </p>
-               </div>
-            </div>
-         </section>
-
-         {/* Pricing Section */}
-         <section className="max-w-5xl mx-auto px-6 mb-32">
-            <div className="bg-gradient-to-b from-zinc-900 to-[#030712] border border-white/10 rounded-3xl p-10 md:p-16 text-center shadow-2xl relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] rounded-full pointer-events-none" />
-               <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
-               
-               <div className="relative z-10">
-                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">Un tarif calqué sur votre réussite.</h2>
-                 <p className="text-zinc-400 text-lg mb-12 max-w-2xl mx-auto">
-                   Pas d'engagement, pas de frais cachés. Vous payez proportionnellement à la taille réelle de votre flotte sur le terrain.
-                 </p>
-
-                 <div className="bg-black/40 border border-white/10 rounded-2xl p-8 max-w-xl mx-auto backdrop-blur-sm">
-                    <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-6">
-                       <div className="text-left">
-                          <h4 className="text-2xl font-bold text-white">Forfait Pro</h4>
-                          <p className="text-orange-400 font-medium">1 à 5 chauffeurs actifs</p>
-                       </div>
-                       <div className="text-right">
-                          <span className="text-4xl font-black text-white">200€</span>
-                          <span className="text-zinc-500"> / mois</span>
-                       </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 mb-8 text-left">
-                       <div className="flex items-center gap-3">
-                          <Users className="w-5 h-5 text-zinc-400" />
-                          <span className="text-white font-medium">Croissance d'effectif</span>
-                       </div>
-                       <div className="font-bold text-emerald-400">+100€ <span className="text-zinc-500 font-normal text-sm">/ 3 chauffeurs supp.</span></div>
-                    </div>
-
-                    <ul className="space-y-4 text-left mb-8">
-                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Plateforme Exploitation Complète</li>
-                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Modules RH & Entretien Véhicules</li>
-                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Intelligence Artificielle intégrée</li>
-                       <li className="flex items-center gap-3 text-zinc-300"><CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0"/> Support prioritaire</li>
-                    </ul>
-
-                    <Link href="/register" className="block w-full h-14 leading-[56px] text-center rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg transition-colors">
-                       Créer mon espace entreprise
-                    </Link>
-                 </div>
                </div>
             </div>
          </section>
