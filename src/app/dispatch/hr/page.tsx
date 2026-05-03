@@ -421,29 +421,63 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                        </thead>
                        <tbody className="divide-y divide-[#27272a]/50">
                           {drivers.filter(d => d.status === 'active').map(driver => {
-                             const now = new Date();
-                             const currentMonthRuns = (driver.daily_runs || []).filter(r => 
-                                 new Date(r.date).getMonth() === now.getMonth() && 
-                                 new Date(r.date).getFullYear() === now.getFullYear()
-                             );
-                             const presentDays = currentMonthRuns.length;
-                             const presentDates = currentMonthRuns.map((r: any) => new Date(r.date));
-                             
-                             const calculateDates = (events: any[], type: string, currentMonthOnly: boolean = false) => {
+                             const calculateDates = (events: any[], type: string, strictPeriod: boolean = false) => {
                                const dates: Date[] = [];
+                               const dateStrings = new Set<string>();
+                               
+                               // We reset hours to 0 to make reliable integer comparisons
+                               const sDate = new Date(startDate); sDate.setHours(0,0,0,0);
+                               const eDate = new Date(endDate); eDate.setHours(23,59,59,999);
+                               
                                events.filter((e: any) => e.event_type === type).forEach((e: any) => {
-                                  if (currentMonthOnly && (new Date(e.start_date).getMonth() !== now.getMonth() || new Date(e.start_date).getFullYear() !== now.getFullYear())) return;
                                   let current = new Date(e.start_date);
                                   current.setHours(0,0,0,0);
                                   const end = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
                                   end.setHours(0,0,0,0);
                                   while (current <= end) {
-                                    dates.push(new Date(current));
+                                    if (!strictPeriod || (current.getTime() >= sDate.getTime() && current.getTime() <= eDate.getTime())) {
+                                       const dStr = current.toISOString();
+                                       if (!dateStrings.has(dStr)) {
+                                          dateStrings.add(dStr);
+                                          dates.push(new Date(current));
+                                       }
+                                    }
                                     current.setDate(current.getDate() + 1);
                                   }
                                });
                                return dates;
                              };
+
+                             const presentDatesSet = new Set<string>();
+                             const presentDates: Date[] = [];
+                             
+                             const sDate = new Date(startDate); sDate.setHours(0,0,0,0);
+                             const eDate = new Date(endDate); eDate.setHours(23,59,59,999);
+                             
+                             // Add system runs
+                             (driver.daily_runs || []).forEach((r: any) => {
+                                 const rDate = new Date(r.date);
+                                 if (rDate.getTime() >= sDate.getTime() && rDate.getTime() <= eDate.getTime()) {
+                                    rDate.setHours(0,0,0,0);
+                                    const dStr = rDate.toISOString();
+                                    if (!presentDatesSet.has(dStr)) {
+                                        presentDatesSet.add(dStr);
+                                        presentDates.push(new Date(rDate));
+                                    }
+                                 }
+                             });
+                             
+                             // Add manual presences
+                             const manualPresencesDates = calculateDates(((driver as any).hr_events || []), 'presence', true);
+                             manualPresencesDates.forEach(d => {
+                                 d.setHours(0,0,0,0);
+                                 const dStr = d.toISOString();
+                                 if (!presentDatesSet.has(dStr)) {
+                                     presentDatesSet.add(dStr);
+                                     presentDates.push(new Date(d));
+                                 }
+                             });
+                             const presentDays = presentDates.length;
 
                              const sickDates = calculateDates(((driver as any).hr_events || []), 'sick_leave');
                              const unjustifiedAbsDates = calculateDates(((driver as any).hr_events || []), 'absence', true);
@@ -759,12 +793,31 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                        </thead>
                        <tbody className="divide-y divide-[#27272a]/50">
                           {drivers.filter(d => d.status === 'active').map(driver => {
-                             const now = new Date();
-                             const currentMonthRuns = (driver.daily_runs || []).filter(r => 
-                                 new Date(r.date).getMonth() === now.getMonth() && 
-                                 new Date(r.date).getFullYear() === now.getFullYear()
-                             );
-                             const presentDays = currentMonthRuns.length;
+                             const sDate = new Date(startDate); sDate.setHours(0,0,0,0);
+                             const eDate = new Date(endDate); eDate.setHours(23,59,59,999);
+                             
+                             const presentDatesSet = new Set<string>();
+                             (driver.daily_runs || []).forEach((r: any) => {
+                                 const rDate = new Date(r.date);
+                                 if (rDate.getTime() >= sDate.getTime() && rDate.getTime() <= eDate.getTime()) {
+                                    rDate.setHours(0,0,0,0);
+                                    presentDatesSet.add(rDate.toISOString());
+                                 }
+                             });
+                             ((driver as any).hr_events || []).forEach((e: any) => {
+                                 if (e.event_type !== 'presence') return;
+                                 let current = new Date(e.start_date);
+                                 current.setHours(0,0,0,0);
+                                 const end = e.end_date ? new Date(e.end_date) : new Date(e.start_date);
+                                 end.setHours(0,0,0,0);
+                                 while (current <= end) {
+                                     if (current.getTime() >= sDate.getTime() && current.getTime() <= eDate.getTime()) {
+                                         presentDatesSet.add(current.toISOString());
+                                     }
+                                     current.setDate(current.getDate() + 1);
+                                 }
+                             });
+                             const presentDays = presentDatesSet.size;
                              
                              const sickDays = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sick_leave').length * 2;
                              const sanctions = ((driver as any).hr_events || []).filter((e: any) => e.event_type === 'sanction').length;
@@ -772,11 +825,11 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              const getsBonus = sickDays === 0 && sanctions === 0 && presentDays >= 10;
                              const defaultBonusAmt = (driver as any).base_bonus_amount ? Number((driver as any).base_bonus_amount) : 0;
                              
-                             // Find the current month's decision
+                             // Find the current period's decision
                              const bonusEvents = ((driver as any).hr_events || []).filter((e: any) => 
                                  e.event_type === 'bonus' && 
-                                 new Date(e.start_date).getMonth() === now.getMonth() &&
-                                 new Date(e.start_date).getFullYear() === now.getFullYear()
+                                 new Date(e.start_date).getTime() >= sDate.getTime() &&
+                                 new Date(e.start_date).getTime() <= eDate.getTime()
                              );
                              const currentBonusEvent = bonusEvents.length > 0 ? bonusEvents[0] : null;
 
@@ -820,8 +873,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 <td className="px-6 py-4 flex justify-end">
                                    <BonusActions 
                                       driverId={driver.id}
-                                      currentMonth={now.getMonth()}
-                                      currentYear={now.getFullYear()}
+                                      currentMonth={sDate.getMonth()}
+                                      currentYear={sDate.getFullYear()}
                                       amount={defaultBonusAmt}
                                       currentStatus={currentBonusEvent ? currentBonusEvent.status : null}
                                    />

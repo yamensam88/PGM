@@ -289,47 +289,47 @@ export async function applyRetroactiveCosts(
       }
     }
 
-    // 4. Ultra-fast transaction that does ZERO findFirst, only purely targeted Updates/Creations.
-    await prisma.$transaction(async (tx) => {
-      for (const mod of modifications) {
-          // A. Update Run
-          await tx.dailyRun.update({
-            where: { id: mod.run.id },
-            data: {
-              revenue_calculated: mod.new_revenue,
-              cost_driver: mod.new_cost_driver,
-              cost_vehicle: mod.new_cost_vehicle,
-              margin_net: mod.new_margin
-            }
-          });
+    // 4. Ultra-fast transaction using Prisma Batch API (no sequential round-trips)
+    const txPromises = [];
 
-          // B. Update Revenue Entry
-          if (mod.revEntry) {
-              await tx.financialEntry.update({ where: { id: mod.revEntry.id }, data: { amount: mod.new_revenue } });
-          } else if (mod.new_revenue > 0) {
-              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, entry_type: 'revenue', category: 'delivery_revenue', amount: mod.new_revenue, entry_date: mod.run.date, description: `Chiffre d'Affaires Rétroactif - Tournée ${mod.run.id}` }});
+    for (const mod of modifications) {
+        // A. Update Run
+        txPromises.push(prisma.dailyRun.update({
+          where: { id: mod.run.id },
+          data: {
+            revenue_calculated: mod.new_revenue,
+            cost_driver: mod.new_cost_driver,
+            cost_vehicle: mod.new_cost_vehicle,
+            margin_net: mod.new_margin
           }
+        }));
 
-          // C. Update Driver Entry
-          if (mod.drvEntry) {
-              if (mod.new_cost_driver > 0) await tx.financialEntry.update({ where: { id: mod.drvEntry.id }, data: { amount: mod.new_cost_driver } });
-              else await tx.financialEntry.delete({ where: { id: mod.drvEntry.id } }); 
-          } else if (mod.new_cost_driver > 0) {
-              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, driver_id: mod.run.driver_id, entry_type: 'cost', category: 'driver_cost', amount: mod.new_cost_driver, entry_date: mod.run.date, description: `Coût Chauffeur Rétroactif - Tournée ${mod.run.id}` }});
-          }
+        // B. Update Revenue Entry
+        if (mod.revEntry) {
+            txPromises.push(prisma.financialEntry.update({ where: { id: mod.revEntry.id }, data: { amount: mod.new_revenue } }));
+        } else if (mod.new_revenue > 0) {
+            txPromises.push(prisma.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, entry_type: 'revenue', category: 'delivery_revenue', amount: mod.new_revenue, entry_date: mod.run.date, description: `Chiffre d'Affaires Rétroactif - Tournée ${mod.run.id}` }}));
+        }
 
-          // D. Update Vehicle Entry
-          if (mod.vehEntry) {
-              if (mod.new_cost_vehicle > 0) await tx.financialEntry.update({ where: { id: mod.vehEntry.id }, data: { amount: mod.new_cost_vehicle } });
-              else await tx.financialEntry.delete({ where: { id: mod.vehEntry.id } });
-          } else if (mod.new_cost_vehicle > 0) {
-              await tx.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, vehicle_id: mod.run.vehicle_id, entry_type: 'cost', category: 'vehicle_wear_cost', amount: mod.new_cost_vehicle, entry_date: mod.run.date, description: `Coût Véhicule Rétroactif - Tournée ${mod.run.id}` }});
-          }
-      }
-    }, {
-      maxWait: 15000, 
-      timeout: 120000 
-    });
+        // C. Update Driver Entry
+        if (mod.drvEntry) {
+            if (mod.new_cost_driver > 0) txPromises.push(prisma.financialEntry.update({ where: { id: mod.drvEntry.id }, data: { amount: mod.new_cost_driver } }));
+            else txPromises.push(prisma.financialEntry.delete({ where: { id: mod.drvEntry.id } })); 
+        } else if (mod.new_cost_driver > 0) {
+            txPromises.push(prisma.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, driver_id: mod.run.driver_id, entry_type: 'cost', category: 'driver_cost', amount: mod.new_cost_driver, entry_date: mod.run.date, description: `Coût Chauffeur Rétroactif - Tournée ${mod.run.id}` }}));
+        }
+
+        // D. Update Vehicle Entry
+        if (mod.vehEntry) {
+            if (mod.new_cost_vehicle > 0) txPromises.push(prisma.financialEntry.update({ where: { id: mod.vehEntry.id }, data: { amount: mod.new_cost_vehicle } }));
+            else txPromises.push(prisma.financialEntry.delete({ where: { id: mod.vehEntry.id } }));
+        } else if (mod.new_cost_vehicle > 0) {
+            txPromises.push(prisma.financialEntry.create({ data: { organization_id: orgId, run_id: mod.run.id, vehicle_id: mod.run.vehicle_id, entry_type: 'cost', category: 'vehicle_wear_cost', amount: mod.new_cost_vehicle, entry_date: mod.run.date, description: `Coût Véhicule Rétroactif - Tournée ${mod.run.id}` }}));
+        }
+    }
+
+    // Execute all queries at once
+    await prisma.$transaction(txPromises);
 
     revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
