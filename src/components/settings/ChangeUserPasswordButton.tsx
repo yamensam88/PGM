@@ -39,17 +39,18 @@ export function ChangeUserPasswordButton({ userId, userName, disabled }: { userI
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* @ts-ignore */}
-      <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          disabled={disabled || isPending}
-          className="text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors h-8 w-8"
-          title="Modifier le mot de passe"
-        >
-           <Key className="w-4 h-4" />
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={disabled || isPending}
+            className="text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors h-8 w-8"
+            title="Modifier le mot de passe"
+          />
+        }
+      >
+        <Key className="w-4 h-4" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>

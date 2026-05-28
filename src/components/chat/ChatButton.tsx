@@ -27,14 +27,11 @@ export function ChatButton() {
 
   return (
     <Sheet>
-      {/* @ts-expect-error asChild type mismatch */}
-      <SheetTrigger asChild>
-        <button className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-500 transition-colors relative">
-          <MessageSquare className="w-5 h-5" />
-          {unread > 0 && (
-             <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
-          )}
-        </button>
+      <SheetTrigger render={<button className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-500 transition-colors relative" />}>
+        <MessageSquare className="w-5 h-5" />
+        {unread > 0 && (
+           <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
+        )}
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px] p-0 flex flex-col bg-slate-50">
          <ChatPanelContent />

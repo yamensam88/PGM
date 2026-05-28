@@ -57,11 +57,8 @@ export function ManageUserPermissions({ userId, userName, initialPermissions }: 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* @ts-expect-error asChild is currently invalid for DialogTrigger in this version */}
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 relative" title="Gérer les accès">
-            <Settings className="w-4 h-4" />
-        </Button>
+      <DialogTrigger render={<Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 relative" title="Gérer les accès" />}>
+        <Settings className="w-4 h-4" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

@@ -57,11 +57,8 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      {/* @ts-ignore */}
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden text-slate-500 hover:text-orange-500 mr-2">
-          <Menu className="w-6 h-6" />
-        </Button>
+      <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden text-slate-500 hover:text-orange-500 mr-2" />}>
+        <Menu className="w-6 h-6" />
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
         <Suspense fallback={<div className="w-full h-full bg-white"></div>}>

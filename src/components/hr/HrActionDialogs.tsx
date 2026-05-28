@@ -12,10 +12,8 @@ export function CreateAbsenceDialog({ drivers }: { drivers: any[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm">
-          Déclarer Absence / Maladie / Congés
-        </Button>
+      <DialogTrigger render={<Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm" />}>
+        Déclarer Absence / Maladie / Congés
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
         <DialogHeader>
@@ -37,10 +35,8 @@ export function CreatePenaltyDialog({ drivers }: { drivers: any[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:text-red-400">
-          Pénalité Client / Exploitation
-        </Button>
+      <DialogTrigger render={<Button variant="outline" className="border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:text-red-400" />}>
+        Pénalité Client / Exploitation
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
         <DialogHeader>
