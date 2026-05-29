@@ -11,6 +11,8 @@
  */
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import { orgCan, type Feature } from "@/lib/plans";
 
 export type Role =
   | "admin"
@@ -67,6 +69,19 @@ export async function requireOwner(): Promise<AuthedSession> {
   const session = await requireSession();
   if (session.user.role !== "owner") {
     throw new Error("Acces refuse : reserve au proprietaire (Direction).");
+  }
+  return session;
+}
+
+/** Exige que l'offre de l'organisation inclue la fonctionnalite (verrouillage par palier). Essai = acces complet. */
+export async function requireFeature(feature: Feature): Promise<AuthedSession> {
+  const session = await requireSession();
+  const org = await prisma.organization.findUnique({
+    where: { id: session.user.organization_id },
+    select: { subscription_plan: true, subscription_status: true },
+  });
+  if (!orgCan(org, feature)) {
+    throw new Error("Cette fonctionnalite n'est pas incluse dans votre offre. Passez a l'offre superieure pour y acceder.");
   }
   return session;
 }

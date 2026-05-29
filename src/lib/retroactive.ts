@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { computeRunFinancials, type RunFinancialContext } from "@/lib/finance";
+import { requireFeature } from "@/lib/authz";
 
 export interface SimulationResult {
   run_id: string;
@@ -188,6 +189,7 @@ export async function applyRetroactiveCosts(
   filters?: { driver_id?: string; vehicle_id?: string; client_id?: string }
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
+    await requireFeature("retroactive");
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;

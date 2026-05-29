@@ -6,6 +6,7 @@ import OnboardingTour from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { allowedFeatures } from "@/lib/plans";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Lock, AlertCircle, ArrowRight, Ban } from "lucide-react";
@@ -30,9 +31,11 @@ export default async function DispatchLayout({
   let isTrialing = false;
   let isSuspended = false;
   let renewalDaysRemaining: number | null = null;
+  let planFeatures: string[] = [];
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
+    planFeatures = allowedFeatures(org);
     
     if (userRole === "owner") {
       const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
@@ -74,7 +77,7 @@ export default async function DispatchLayout({
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-[#f8f9fc]">
-      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} />
+      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />
       <div className="flex flex-col flex-1 w-full md:pl-64 transition-all duration-300">
         <OnboardingTour />
 
@@ -102,7 +105,7 @@ export default async function DispatchLayout({
            </div>
          )}
  
-         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} />} />
+         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (

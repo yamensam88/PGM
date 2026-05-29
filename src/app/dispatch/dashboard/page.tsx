@@ -9,6 +9,7 @@ import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { countWorkingDays } from "@/lib/calendar";
 import { computeRunRevenue } from "@/lib/finance";
+import { orgCan } from "@/lib/plans";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
 import { MarginWaterfall } from "@/components/dashboard/MarginWaterfall";
@@ -44,6 +45,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
   // 1. Fetch organization settings for global fuel price and fixed costs
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
+  const canDiagnostic = orgCan(org, "margin_diagnostic"); // Waterfall + reco : offre Pro+
   const orgSettings = org?.settings_json as { fuel_price_per_liter?: number; monthly_total_fixed_costs?: number } | null;
   const realCosts: any = ((org?.settings_json as any) && (org?.settings_json as any).real_costs) || null;
   const currentFuelPrice = (priceMode === "real" && realCosts && realCosts.fuel_price_per_liter != null) ? Number(realCosts.fuel_price_per_liter) : (orgSettings?.fuel_price_per_liter || 1.80);
@@ -982,11 +984,13 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
           </Card>
         </div>
 
-        {/* Decomposition de marge + recommandation chiffree */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          <MarginWaterfall revenue={totalRevenue} items={marginWaterfallItems} net={totalMargin} />
-          <StrategicRecommendation reco={strategicReco} />
-        </div>
+        {/* Decomposition de marge + recommandation chiffree (offre Pro+) */}
+        {canDiagnostic && (
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            <MarginWaterfall revenue={totalRevenue} items={marginWaterfallItems} net={totalMargin} />
+            <StrategicRecommendation reco={strategicReco} />
+          </div>
+        )}
 
         {/* Charts Row 1 */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

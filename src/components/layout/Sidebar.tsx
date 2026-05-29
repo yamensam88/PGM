@@ -45,17 +45,17 @@ const allowedPaths: Record<string, string[]> = {
   finance: ['/dispatch/dashboard', '/dispatch/retroactive'],
 };
 
-export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {} }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any }) {
+export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [] }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[] }) {
   return (
     <Suspense fallback={<div className="w-64 bg-white border-r border-slate-100/60 h-screen fixed hidden md:block"></div>}>
       <div className="flex flex-col w-64 bg-white border-r border-slate-100/60 text-slate-600 h-screen fixed top-0 left-0 hidden md:flex z-50 shadow-[4px_0_24px_rgba(0,0,0,0.01)]">
-        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} />
+        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />
       </div>
     </Suspense>
   );
 }
 
-export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {} }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any }) {
+export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [] }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[] }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -65,7 +65,7 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
       <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
         <Suspense fallback={<div className="w-full h-full bg-white"></div>}>
            <div className="flex flex-col w-full bg-white text-slate-600 h-full">
-             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} onNavItemClick={() => setOpen(false)} />
+             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} onNavItemClick={() => setOpen(false)} />
            </div>
         </Suspense>
       </SheetContent>
@@ -73,7 +73,9 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
   );
 }
 
-function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, onNavItemClick?: () => void }) {
+const featureByHref: Record<string, string> = { "/dispatch/hr": "hr" };
+
+function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], onNavItemClick?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -113,6 +115,12 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, onNavIte
           // Override with granular permissions if defined for this specific interface
           if (userPermissions && typeof userPermissions[item.href] === 'boolean') {
               isAllowed = userPermissions[item.href];
+          }
+
+          // Verrouillage par offre : certaines entrees exigent une fonctionnalite incluse dans le palier
+          const reqFeat = featureByHref[item.href];
+          if (reqFeat && !planFeatures.includes(reqFeat)) {
+              isAllowed = false;
           }
 
           const Icon = item.icon;

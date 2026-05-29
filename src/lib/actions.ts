@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireDirection, requireRole, requireOwner } from "@/lib/authz";
+import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -196,6 +196,7 @@ export async function createDriver(formData: FormData) {
 export async function createEmployee(formData: FormData) {
   try {
     await requireRole(["hr"]);
+    await requireFeature("hr");
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;

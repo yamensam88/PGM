@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { RetroactiveSimulationForm } from "@/components/finances/RetroactiveSimulationForm";
 import { RetroToolsTabs } from "@/components/finances/RetroToolsTabs";
 import type { SimulatorDefaults } from "@/components/finances/ContractSimulator";
+import { orgCan } from "@/lib/plans";
 
 const WD = 25.33;
 const num = (v: any): number => {
@@ -27,12 +28,16 @@ export default async function RetroactivePage() {
     fSal: 10000, fLoy: 5000, fVadm: 2000, fAss: 200, fLog: 350, fHon: 400, fAut: 500,
   };
 
+  let canRetro = true;
+
   try {
     const [drivers, vehicles, org] = await Promise.all([
       prisma.driver.findMany({ where: { organization_id: orgId, status: "active" }, select: { daily_base_cost: true, hourly_cost: true } }),
       prisma.vehicle.findMany({ where: { organization_id: orgId, status: "active" }, select: { fixed_monthly_cost: true, rental_monthly_cost: true, insurance_monthly_cost: true, internal_cost_per_km: true } }),
-      prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } }),
+      prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true, subscription_plan: true, subscription_status: true } }),
     ]);
+
+    canRetro = orgCan(org, "retroactive");
 
     const dCosts = drivers.map((d) => (d.hourly_cost ? num(d.hourly_cost) / WD : num(d.daily_base_cost))).filter((x) => x > 0);
     const vCosts = vehicles.map((v) => (num(v.fixed_monthly_cost) + num(v.rental_monthly_cost) + num(v.insurance_monthly_cost)) / WD).filter((x) => x > 0);
@@ -76,7 +81,7 @@ export default async function RetroactivePage() {
           </div>
         </div>
 
-        <RetroToolsTabs defaults={defaults}>
+        <RetroToolsTabs defaults={defaults} canRetro={canRetro}>
           <div className="grid grid-cols-1 gap-6">
             <div className="col-span-1 border border-indigo-100 bg-indigo-50/50 p-6 rounded-2xl">
               <h2 className="text-sm font-bold text-indigo-800 mb-2 uppercase tracking-widest">Comment ca marche ?</h2>
