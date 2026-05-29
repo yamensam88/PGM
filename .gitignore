@@ -44,3 +44,14 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# build/debug artifacts (untracked - generated locally)
+*.log
+build.log
+build_output.log
+log.txt
+log_saas.txt
+temp_git_log.txt
+tsc_errors.log
+eslint_output.json
+pages_list.txt
