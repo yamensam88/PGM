@@ -17,6 +17,8 @@ import { DeleteUserButton } from "@/components/settings/DeleteUserButton";
 import { ChangeUserPasswordButton } from "@/components/settings/ChangeUserPasswordButton";
 import { ManageUserPermissions } from "@/components/settings/ManageUserPermissions";
 import prisma from "@/lib/prisma";
+import { isSectionBlocked } from "@/lib/access";
+import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +27,10 @@ export default async function SettingsPage() {
 
   if (!session?.user?.organization_id) {
     redirect("/login");
+  }
+
+  if (await isSectionBlocked(null)) {
+    return <LockedFeatureScreen />;
   }
 
   const organization = await prisma.organization.findUnique({

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { isSectionBlocked } from "@/lib/access";
+import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
 import { DispatchDashboard } from "@/app/dispatch/dashboard/page";
 import { DirectionRealPrices } from "@/components/finances/DirectionRealPrices";
 import { DirectionRealCosts } from "@/components/finances/DirectionRealCosts";
@@ -17,6 +19,10 @@ export default async function DirectionCockpitPage(props: {
   if ((session.user as any).role !== "owner") redirect("/dispatch/dashboard");
 
   const orgId = session.user.organization_id;
+
+  if (await isSectionBlocked("margin_diagnostic")) {
+    return <LockedFeatureScreen />;
+  }
   const [clients, org] = await Promise.all([
     prisma.client.findMany({ where: { organization_id: orgId }, include: { rate_cards: true }, orderBy: { name: "asc" } }),
     prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } }),

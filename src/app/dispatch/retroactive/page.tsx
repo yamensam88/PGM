@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { isSectionBlocked } from "@/lib/access";
+import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
 import { RetroactiveSimulationForm } from "@/components/finances/RetroactiveSimulationForm";
 import { RetroToolsTabs } from "@/components/finances/RetroToolsTabs";
 import type { SimulatorDefaults } from "@/components/finances/ContractSimulator";
@@ -22,6 +24,10 @@ export default async function RetroactivePage() {
   }
 
   const orgId = (session.user as any).organization_id as string;
+
+  if (await isSectionBlocked("simulator")) {
+    return <LockedFeatureScreen />;
+  }
 
   let defaults: SimulatorDefaults = {
     chauffeurJour: 118, vehiculeJour: 35, gasoilKm: 0.23, usureKm: 0.1, joursMois: WD, parc: 14,

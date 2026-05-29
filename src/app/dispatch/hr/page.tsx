@@ -1,4 +1,6 @@
 import prisma from "@/lib/prisma";
+import { isSectionBlocked } from "@/lib/access";
+import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -34,6 +36,10 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     redirect("/login");
   }
   const orgId = session.user.organization_id;
+
+  if (await isSectionBlocked("hr")) {
+    return <LockedFeatureScreen />;
+  }
 
   const searchParams = await props.searchParams;
   const filter = searchParams.filter;
