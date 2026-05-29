@@ -1177,7 +1177,7 @@ export async function reportIncident(formData: FormData) {
       gps_latitude: gps_lat,
       gps_longitude: gps_lng,
       ai_validation_flag: false,
-      resolution_status: "open",
+      resolution_status: "pending",
     }
   });
 

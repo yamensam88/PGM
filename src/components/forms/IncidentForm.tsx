@@ -25,16 +25,23 @@ export function IncidentForm({ runId }: IncidentFormProps) {
     const formData = new FormData(e.currentTarget);
     formData.append("runId", runId);
 
-    // Mock GPS Fetching for the prototype if valid
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        formData.append("gps_lat", position.coords.latitude.toString());
-        formData.append("gps_lng", position.coords.longitude.toString());
-      });
-    }
+    // Récupère la position GPS (avec timeout) AVANT l'envoi
+    const getPosition = () => new Promise<void>((resolve) => {
+      if (!navigator.geolocation) return resolve();
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          formData.append("gps_lat", position.coords.latitude.toString());
+          formData.append("gps_lng", position.coords.longitude.toString());
+          resolve();
+        },
+        () => resolve(),
+        { timeout: 5000 }
+      );
+    });
 
     startTransition(async () => {
       try {
+        await getPosition();
         const result = await reportIncident(formData);
         if (result.success) {
            router.push(`/driver/runs/${runId}/finish`);
