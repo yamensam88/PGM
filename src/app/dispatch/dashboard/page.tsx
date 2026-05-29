@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as PieChartIcon, Package, Map, ShieldAlert, Brain, CheckCircle2, Activity, TrendingDown, Car, Users, AlertCircle, Sparkles, Fuel } from "lucide-react";
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { countWorkingDays } from "@/lib/calendar";
+import { computeRunRevenue } from "@/lib/finance";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
 import { ZoneProfitabilityChart } from "@/components/dashboard/ZoneProfitabilityChart";
@@ -25,7 +26,8 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function DispatchDashboardPage(props: { searchParams: Promise<{ filter?: string, from?: string, to?: string }> }) {
+export async function DispatchDashboard(props: { searchParams: Promise<{ filter?: string, from?: string, to?: string }>; priceMode?: "displayed" | "real" }) {
+  const priceMode = props.priceMode ?? "displayed";
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.organization_id) {
@@ -42,6 +44,7 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
   const orgSettings = org?.settings_json as { fuel_price_per_liter?: number; monthly_total_fixed_costs?: number } | null;
   const currentFuelPrice = orgSettings?.fuel_price_per_liter || 1.80;
+  const realRates: Record<string, any> = ((org?.settings_json as any) && (org?.settings_json as any).real_rates) || {};
 
   // Determine today's date in Paris to align with what the user considers 'Today'
   const parisFormat = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -108,11 +111,17 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
 
   // Use STRICT database constants to prevent Historical Drift
   const allRuns = rawRuns.map((run) => {
-    const revenue = run.revenue_calculated ? Number(run.revenue_calculated) : 0;
+    const displayedRevenue = run.revenue_calculated ? Number(run.revenue_calculated) : 0;
+    const realRate = realRates[run.client_id];
+    const revenue = priceMode === "real" && realRate
+      ? computeRunRevenue({ rate_card: realRate, packages_delivered: run.packages_delivered, packages_relay: run.packages_relay, stops_completed: run.stops_completed })
+      : displayedRevenue;
     const fleetCost = run.cost_vehicle ? Number(run.cost_vehicle) : 0;
     const driverCost = run.cost_driver ? Number(run.cost_driver) : 0;
     const fuelCost = run.cost_fuel ? Number(run.cost_fuel) : 0;
-    const calculatedMargin = run.margin_net ? Number(run.margin_net) : (revenue - fleetCost - driverCost - fuelCost);
+    const calculatedMargin = priceMode === "real"
+      ? (revenue - fleetCost - driverCost - fuelCost)
+      : (run.margin_net ? Number(run.margin_net) : (revenue - fleetCost - driverCost - fuelCost));
 
     const runDateStr = run.date.toISOString().split('T')[0];
 
@@ -1087,4 +1096,8 @@ export default async function DispatchDashboardPage(props: { searchParams: Promi
       </div>
     </div>
   );
+}
+
+export default async function DispatchDashboardPage(props: { searchParams: Promise<{ filter?: string; from?: string; to?: string }> }) {
+  return DispatchDashboard(props);
 }
