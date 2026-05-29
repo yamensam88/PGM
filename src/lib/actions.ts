@@ -2,6 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { requireDirection, requireRole } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -62,6 +63,7 @@ export async function registerOrganization(formData: FormData) {
  */
 export async function toggleSaaSClientStatus(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     const orgId = session?.user?.organization_id;
     if (!orgId) throw new Error("Non autorisé.");
@@ -97,6 +99,7 @@ export async function toggleSaaSClientStatus(formData: FormData) {
  */
 export async function updateBillingInterval(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     const orgId = session?.user?.organization_id;
     if (!orgId) throw new Error("Non autorisé.");
@@ -124,6 +127,7 @@ export async function updateBillingInterval(formData: FormData) {
  */
 export async function createDriver(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -191,6 +195,7 @@ export async function createDriver(formData: FormData) {
  */
 export async function createEmployee(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -312,6 +317,7 @@ export async function createEmployee(formData: FormData) {
  */
 export async function updateEmployee(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -420,6 +426,7 @@ export async function updateEmployee(formData: FormData) {
  */
 export async function createAdminUser(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -471,6 +478,7 @@ export async function createAdminUser(formData: FormData) {
  */
 export async function deleteAdminUser(userId: string) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -502,6 +510,7 @@ export async function deleteAdminUser(userId: string) {
  */
 export async function updateAdminUserPassword(userId: string, newPasswordStr: string) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -535,6 +544,7 @@ export async function updateAdminUserPassword(userId: string, newPasswordStr: st
  */
 export async function deleteDriver(driverId: string) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -592,6 +602,7 @@ export async function deleteDriver(driverId: string) {
  */
 export async function updateDriverNetSalary(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -627,6 +638,7 @@ export async function updateDriverNetSalary(formData: FormData) {
  */
 export async function updateDriverGlobalCost(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -667,6 +679,7 @@ export async function updateDriverGlobalCost(formData: FormData) {
  */
 export async function updateDriverBonusAmount(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -700,6 +713,7 @@ export async function updateDriverBonusAmount(formData: FormData) {
  */
 export async function toggleMonthlyBonus(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1080,6 +1094,7 @@ export async function finishRun(formData: FormData) {
  */
 export async function deleteRun(runId: string) {
   try {
+    await requireRole(["dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1247,6 +1262,7 @@ export async function startRun(formData: FormData) {
  * Server Action: Create Daily Run
  */
 export async function createRun(formData: FormData) {
+  await requireRole(["dispatcher", "manager"]);
   const session = await getServerSession(authOptions);
   if (!session || !session.user || !session.user.organization_id) {
       throw new Error("Non autorisé.");
@@ -1608,6 +1624,7 @@ export async function generateAiProfitabilityReport(runId: string) {
  */
 export async function addMaintenanceLog(formData: FormData) {
   try {
+    await requireRole(["dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1700,6 +1717,7 @@ export async function addMaintenanceLog(formData: FormData) {
  */
 export async function reportVehicleDamage(formData: FormData) {
   try {
+    await requireRole(["dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1771,6 +1789,7 @@ export async function reportVehicleDamage(formData: FormData) {
 // DISPATCH/VEHICLES - Create a new vehicle
 export async function addVehicle(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1827,6 +1846,7 @@ export async function addVehicle(formData: FormData) {
 // DIRECTION/SETTINGS - Update global fuel price
 export async function updateFuelPrice(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -2208,6 +2228,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
 // HR DOCUMENTS - Upload Document (MVP Simulation)
 export async function uploadHrDocument(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2247,6 +2268,7 @@ export async function uploadHrDocument(formData: FormData) {
 // HR DOCUMENTS - Delete Document
 export async function deleteHrDocument(documentId: string) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2274,6 +2296,7 @@ export async function deleteHrDocument(documentId: string) {
 // deleted old reportVehicleDamage
 
 export async function setVehicleAppointment(vehicleId: string, date: string, nature: string) {
+  await requireRole(["dispatcher", "manager"]);
   const session = await getServerSession(authOptions);
   if (!session?.user?.organization_id) {
     return { success: false, error: "Non autorisé" };
@@ -2302,6 +2325,7 @@ export async function setVehicleAppointment(vehicleId: string, date: string, nat
  */
 export async function recordDriverPenalty(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2356,6 +2380,7 @@ export async function recordDriverPenalty(formData: FormData) {
 
 export async function updateDriverPenalty(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2418,6 +2443,7 @@ export async function updateDriverPenalty(formData: FormData) {
 
 export async function deleteDriverPenalty(eventId: string) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2466,6 +2492,7 @@ export async function deleteDriverPenalty(eventId: string) {
  */
 export async function recordDriverAbsence(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2537,6 +2564,7 @@ export async function recordDriverAbsence(formData: FormData) {
  */
 export async function updateDriverAbsence(formData: FormData) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2607,6 +2635,7 @@ export async function updateDriverAbsence(formData: FormData) {
  */
 export async function deleteDriverAbsence(eventId: string) {
   try {
+    await requireRole(["hr"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2827,6 +2856,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
  */
 export async function updateGlobalSettings(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -2888,6 +2918,7 @@ export async function updateGlobalSettings(formData: FormData) {
  */
 export async function updateTariffs(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -2949,6 +2980,7 @@ export async function updateTariffs(formData: FormData) {
 
 export async function createClient(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2992,6 +3024,7 @@ export async function createClient(formData: FormData) {
 
 export async function createZone(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3022,6 +3055,7 @@ export async function createZone(formData: FormData) {
 
 export async function deleteClient(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3050,6 +3084,7 @@ export async function deleteClient(formData: FormData) {
 
 export async function toggleClientStatus(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3074,6 +3109,7 @@ export async function toggleClientStatus(formData: FormData) {
 
 export async function deleteZone(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3103,6 +3139,7 @@ export async function deleteZone(formData: FormData) {
  */
 export async function updateRun(formData: FormData) {
   try {
+    await requireRole(["dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -3384,6 +3421,7 @@ export async function updateRun(formData: FormData) {
  */
 export async function updateVehicle(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -3455,6 +3493,7 @@ export async function updateVehicle(formData: FormData) {
  */
 export async function archiveVehicle(vehicleId: string) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -3480,6 +3519,7 @@ export async function archiveVehicle(vehicleId: string) {
  */
 export async function createRateCard(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3521,6 +3561,7 @@ export async function createRateCard(formData: FormData) {
  */
 export async function deleteRateCard(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3552,6 +3593,7 @@ export async function deleteRateCard(formData: FormData) {
  */
 export async function updateRateCard(formData: FormData) {
   try {
+    await requireDirection();
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
