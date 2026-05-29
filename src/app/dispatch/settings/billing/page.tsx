@@ -15,13 +15,13 @@ type Tier = { key: string; label: string; monthly: number | null; min: number; m
 function tierForVehicles(n: number): Tier {
   if (n <= 5) return { key: "starter", label: "Starter", monthly: 99, min: 1, max: 5, quote: false };
   if (n <= 15) return { key: "pro", label: "Pro", monthly: 249, min: 6, max: 15, quote: false };
-  return { key: "business", label: "Business", monthly: null, min: 16, max: 50, quote: true };
+  return { key: "business", label: "Business", monthly: null, min: 16, max: Infinity, quote: true };
 }
 
 const ALL_TIERS: Tier[] = [
   { key: "starter", label: "Starter", monthly: 99, min: 1, max: 5, quote: false },
   { key: "pro", label: "Pro", monthly: 249, min: 6, max: 15, quote: false },
-  { key: "business", label: "Business", monthly: null, min: 16, max: 50, quote: true },
+  { key: "business", label: "Business", monthly: null, min: 16, max: Infinity, quote: true },
 ];
 
 export default async function BillingPage() {
@@ -51,7 +51,8 @@ export default async function BillingPage() {
   // Progression dans le palier (vehicules)
   const tierWidth = tier.max - tier.min + 1;
   const posInTier = Math.min(Math.max(activeVehicles - tier.min + 1, 0), tierWidth);
-  const progressPercentage = (posInTier / tierWidth) * 100;
+  const progressPercentage = tier.quote ? 100 : (posInTier / tierWidth) * 100;
+  const tierRange = tier.quote ? `${tier.min} et plus` : `${tier.min} a ${tier.max}`;
   const vehiclesToNext = !tier.quote ? Math.max(0, tier.max - activeVehicles) : 0;
 
   return (
@@ -133,10 +134,10 @@ export default async function BillingPage() {
                     <Truck className="w-4 h-4 text-indigo-500" /> Taille de flotte
                   </h4>
                   <p className="text-[13px] text-slate-500 mt-0.5">
-                    Vous exploitez {activeVehicles} vehicule(s) actif(s) (palier {tier.label} : {tier.min} a {tier.max}).
+                    Vous exploitez {activeVehicles} vehicule(s) actif(s) (palier {tier.label} : {tierRange}).
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-indigo-600">{activeVehicles} / {tier.max}</span>
+                <span className="text-2xl font-bold text-indigo-600">{tier.quote ? `${activeVehicles} vehicules` : `${activeVehicles} / ${tier.max}`}</span>
               </div>
               <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-600 transition-all duration-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }} />
@@ -165,7 +166,7 @@ export default async function BillingPage() {
                       {active && <span className="text-[9px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-1.5 py-0.5 rounded">Actuel</span>}
                     </div>
                     <div className="text-lg font-black text-slate-900">{t.quote ? "Sur devis" : `${t.monthly}€`}</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">{t.min} a {t.max} vehicules</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">{t.quote ? `${t.min} et plus` : `${t.min} a ${t.max}`} vehicules</div>
                   </div>
                 );
               })}

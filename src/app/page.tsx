@@ -58,7 +58,7 @@ export default function LandingPage() {
 
             <div className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-10 leading-relaxed font-light space-y-4">
               <p>
-                Le <strong>Cockpit Financier</strong> de référence conçu pour les transporteurs routiers de 3 à 50 véhicules. Tout ce dont vous avez besoin pour ne plus jamais perdre de marge sans le savoir.
+                Le <strong>Cockpit Financier</strong> de référence conçu pour les transporteurs routiers, quelle que soit la taille de leur flotte. Tout ce dont vous avez besoin pour ne plus jamais perdre de marge sans le savoir.
               </p>
             </div>
 

@@ -4,7 +4,7 @@
  * Tarification (alignée sur la landing, par nombre de véhicules) :
  *   - Starter  (99 €/mois)  : 1 à 5 véhicules
  *   - Pro      (249 €/mois) : 6 à 15 véhicules
- *   - Business (sur devis)  : 16 à 50 véhicules
+ *   - Business (sur devis)  : 16 véhicules et plus (sans limite)
  *
  * Règle d'essai : pendant la période d'essai (subscription_status === "trialing"),
  * l'utilisateur a accès uniquement à la Direction et à l'Exploitation & Flotte (découverte).

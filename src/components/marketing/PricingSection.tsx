@@ -51,7 +51,7 @@ const tiers: Tier[] = [
   },
   {
     name: "Business",
-    fleet: "16 à 50 véhicules",
+    fleet: "16 véhicules et plus",
     monthly: null,
     annual: null,
     featured: false,
