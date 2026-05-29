@@ -133,6 +133,12 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
              return null;
           }
 
+          // Portails CP / GF : interfaces internes PGM (acces direct aux sites de nos clients).
+          // Jamais exposees aux entreprises abonnees ; visibles uniquement pour le compte maitre.
+          if ((item.name === "Portail CP" || item.name === "Portail GF") && !isSuperAdmin) {
+             return null;
+          }
+
           if (!isAllowed) {
              return (
                <span key={item.name} className="flex items-center px-4 py-3 text-[13px] font-medium rounded-xl text-zinc-600 opacity-50 cursor-not-allowed">
