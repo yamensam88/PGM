@@ -68,8 +68,8 @@ export function AnalyticsChart({ runs, filter }: AnalyticsChartProps) {
         >
           <defs>
             <linearGradient id="colorRevenu" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorCout" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.2} />
@@ -106,10 +106,10 @@ export function AnalyticsChart({ runs, filter }: AnalyticsChartProps) {
           <Area 
             type="monotone" 
             dataKey="Revenu" 
-            stroke="#2563eb" 
+            stroke="#4f46e5" 
             strokeWidth={3}
             fill="url(#colorRevenu)" 
-            activeDot={{ r: 6, strokeWidth: 0, fill: '#2563eb' }}
+            activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5' }}
           />
           <Area 
             type="monotone" 

@@ -79,7 +79,7 @@ export default async function DispatchLayout({
         <OnboardingTour />
 
         {isTrialing && !isTrialLocked && (
-          <div className="bg-orange-500 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-orange-600/50">
+          <div className="bg-indigo-500 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-indigo-600/50">
              <div className="flex items-center gap-2">
                <AlertCircle className="w-4 h-4 hidden sm:block" />
                <span>Période d'essai en cours : Il vous reste {remainingTrialDays} jour{remainingTrialDays > 1 ? 's' : ''}.</span>
@@ -91,12 +91,12 @@ export default async function DispatchLayout({
          )}
 
          {renewalDaysRemaining !== null && (
-           <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-blue-700/50">
+           <div className="bg-indigo-600 text-white px-4 py-3 flex items-center justify-center flex-wrap gap-4 text-sm font-medium sticky top-0 z-50 shadow-sm border-b border-indigo-700/50">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 hidden sm:block" />
                 <span>Votre cycle de facturation se renouvelle dans {renewalDaysRemaining} jour{renewalDaysRemaining > 1 ? 's' : ''}.</span>
               </div>
-              <Link href="/dispatch/settings/billing" className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 transition-colors text-xs font-bold uppercase tracking-wider ml-auto sm:ml-4 border border-blue-400">
+              <Link href="/dispatch/settings/billing" className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 transition-colors text-xs font-bold uppercase tracking-wider ml-auto sm:ml-4 border border-indigo-400">
                  Gérer mon forfait <ArrowRight className="w-3 h-3" />
               </Link>
            </div>
@@ -128,7 +128,7 @@ export default async function DispatchLayout({
                   </p>
                </div>
                <div className="w-full h-px bg-slate-100 my-4"></div>
-               <Link href="/dispatch/settings/billing" className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
+               <Link href="/dispatch/settings/billing" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
                   Débloquer mon espace avec l'abonnement <ArrowRight className="w-5 h-5" />
                </Link>
             </div>

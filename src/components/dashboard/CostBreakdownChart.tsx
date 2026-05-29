@@ -28,7 +28,7 @@ interface CostBreakdownChartProps {
   periodAdminFixedCosts?: number;
 }
 
-const COLORS = ['#3b82f6', '#8b5cf6', '#f43f5e', '#f97316', '#10b981', '#0ea5e9', '#14b8a6'];
+const COLORS = ['#6366f1', '#8b5cf6', '#f43f5e', '#6366f1', '#10b981', '#0ea5e9', '#14b8a6'];
 
 export function CostBreakdownChart({ 
   runs, 

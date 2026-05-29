@@ -70,17 +70,17 @@ export function FleetRadarAlerts({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Box 1 : Carburant */}
-              <div className="bg-white/60 border border-orange-100 rounded-xl p-4 shadow-sm">
-                <h3 className="text-xs font-bold text-orange-800 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <Flame className="w-4 h-4 text-orange-500" /> Gasoil Pied Lourd {">"} 12L/100
+              <div className="bg-white/60 border border-indigo-100 rounded-xl p-4 shadow-sm">
+                <h3 className="text-xs font-bold text-indigo-800 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Flame className="w-4 h-4 text-indigo-500" /> Gasoil Pied Lourd {">"} 12L/100
                 </h3>
                 {fuelAnomalies.length > 0 ? (
                   <ul className="space-y-3">
                     {fuelAnomalies.map((a, i) => (
-                      <li key={i} className="flex justify-between items-center text-sm border-b border-orange-50 pb-2 last:border-0">
+                      <li key={i} className="flex justify-between items-center text-sm border-b border-indigo-50 pb-2 last:border-0">
                         <span className="font-semibold text-slate-700">{a.driverName}</span>
                         <div className="text-right">
-                          <span className="font-bold text-orange-600">{a.avgConsumption.toFixed(1)} L/100</span>
+                          <span className="font-bold text-indigo-600">{a.avgConsumption.toFixed(1)} L/100</span>
                           <span className="block text-[10px] text-slate-400">sur {a.totalKm.toFixed(0)} km</span>
                         </div>
                       </li>

@@ -107,7 +107,7 @@ export function CreateAbsenceForm({ drivers, onSuccess }: CreateAbsenceFormProps
         >
           Annuler
         </Button>
-        <Button type="submit" disabled={isPending} className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm shadow-blue-900/20">
+        <Button type="submit" disabled={isPending} className="bg-indigo-600 text-slate-900 hover:bg-indigo-700 shadow-sm shadow-indigo-900/20">
           {isPending ? "Enregistrement..." : "Déclarer l'événement"}
         </Button>
       </div>

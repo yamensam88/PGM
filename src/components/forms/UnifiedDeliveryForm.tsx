@@ -108,7 +108,7 @@ export function UnifiedDeliveryForm({
                required 
                value={vehicleId}
                onChange={e => setVehicleId(e.target.value)}
-               className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+               className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
              >
                 <option value="">Sélectionner un véhicule</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.plate_number}</option>)}
@@ -205,7 +205,7 @@ export function UnifiedDeliveryForm({
              name="fuel_receipt" 
              type="file" 
              accept="image/*,.pdf" 
-             className="text-slate-500 file:bg-blue-50 file:text-blue-700 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-blue-100 cursor-pointer h-10 pt-1.5 w-full" 
+             className="text-slate-500 file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-indigo-100 cursor-pointer h-10 pt-1.5 w-full" 
           />
         </div>
 
@@ -219,7 +219,7 @@ export function UnifiedDeliveryForm({
           <button 
             type="submit" 
             disabled={isPending}
-            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-slate-900 px-6 py-2.5 rounded-md font-medium text-[15px] transition-colors disabled:opacity-50"
+            className="bg-[#4f46e5] hover:bg-[#4338ca] text-slate-900 px-6 py-2.5 rounded-md font-medium text-[15px] transition-colors disabled:opacity-50"
           >
             {isPending ? "Enregistrement..." : "Enregistrer la livraison"}
           </button>

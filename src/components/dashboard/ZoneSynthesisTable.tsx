@@ -57,12 +57,12 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Tournées</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Total Colis</TableHead>
             <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-center">Livrés</TableHead>
-            <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-center">Avisés</TableHead>
+            <TableHead className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest text-center">Avisés</TableHead>
             <TableHead className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest text-center">Retours</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Incidents</TableHead>
-            <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
+            <TableHead className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
             {!isExploitationMode && (
               <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-right px-4">Marge Nette</TableHead>
             )}
@@ -79,17 +79,17 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
               <React.Fragment key={row.zone.id}>
                 <TableRow 
                   onClick={() => toggleExpand(row.zone.id)}
-                  className={`cursor-pointer transition-colors duration-200 group border-0 ${isExpanded ? 'bg-orange-50/40' : 'hover:bg-slate-50/50'}`}
+                  className={`cursor-pointer transition-colors duration-200 group border-0 ${isExpanded ? 'bg-indigo-50/40' : 'hover:bg-slate-50/50'}`}
                 >
                   <TableCell className="w-10 px-2 text-center text-slate-400">
-                    {isExpanded ? <ChevronDown className="w-4 h-4 mx-auto text-orange-500" /> : <ChevronRight className="w-4 h-4 mx-auto group-hover:text-orange-500 transition-colors" />}
+                    {isExpanded ? <ChevronDown className="w-4 h-4 mx-auto text-indigo-500" /> : <ChevronRight className="w-4 h-4 mx-auto group-hover:text-indigo-500 transition-colors" />}
                   </TableCell>
                   <TableCell className="font-bold text-[13px] text-slate-800 px-4">
                     {row.zone.name}
                   </TableCell>
                   
                   <TableCell className="text-center">
-                    <span className="text-[12px] font-bold bg-orange-50 text-orange-600 px-2.5 py-1 rounded-md border border-orange-100/50">
+                    <span className="text-[12px] font-bold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-md border border-indigo-100/50">
                       {row.runs_count}
                     </span>
                   </TableCell>
@@ -118,7 +118,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                   <TableCell className="text-right px-4">
                     <div className="flex flex-col items-end gap-0.5">
                        {row.maintenance_cost > 0 && (
-                         <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                         <span className="text-[11px] font-semibold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
                            {row.maintenance_cost.toFixed(0)}€ Maint.
                          </span>
                        )}
@@ -142,7 +142,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                      <div className="flex flex-col items-end gap-0.5">
                         {row.runs.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0) > 0 ? (
                            <>
-                             <span className="text-[12px] font-bold text-orange-600">{row.runs.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0).toFixed(1)} L</span>
+                             <span className="text-[12px] font-bold text-indigo-600">{row.runs.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0).toFixed(1)} L</span>
                              <span className="text-[10px] font-medium text-slate-400">{row.runs.reduce((sum, r) => sum + Number(r.cost_fuel || 0), 0).toFixed(2)} €</span>
                            </>
                         ) : (
@@ -164,7 +164,7 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+                            className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" 
                             onClick={(e) => { e.stopPropagation(); setHistoryZone({ id: row.zone.id, name: row.zone.name, runs: row.runs }); }} 
                             title="Historique financier de la zone"
                             type="button"
@@ -184,10 +184,10 @@ export function ZoneSynthesisTable({ data, isExploitationMode }: { data: ZoneSyn
                 {isExpanded && (
                   <TableRow className="bg-slate-50/30 hover:bg-slate-50/30">
                     <TableCell colSpan={isExploitationMode ? 11 : 12} className="p-0 border-b border-slate-100">
-                      <div className="pl-14 pr-6 py-6 border-l-2 border-orange-400 bg-gradient-to-r from-orange-50/40 to-transparent">
+                      <div className="pl-14 pr-6 py-6 border-l-2 border-indigo-400 bg-gradient-to-r from-indigo-50/40 to-transparent">
                          <div className="mb-4 flex items-center gap-2">
-                            <Map className="w-4 h-4 text-orange-500" />
-                            <h4 className="text-[12px] font-bold text-orange-900 uppercase tracking-widest">
+                            <Map className="w-4 h-4 text-indigo-500" />
+                            <h4 className="text-[12px] font-bold text-indigo-900 uppercase tracking-widest">
                                Détail des Tournées de la Zone : {row.zone.name}  ({row.runs.length})
                             </h4>
                          </div>

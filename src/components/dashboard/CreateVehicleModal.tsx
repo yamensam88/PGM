@@ -10,7 +10,7 @@ export function CreateVehicleModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="bg-blue-600 inline-flex items-center justify-center whitespace-nowrap rounded-md h-10 px-4 py-2 text-slate-50 hover:bg-blue-700 font-medium shadow-sm transition-colors">
+      <DialogTrigger className="bg-indigo-600 inline-flex items-center justify-center whitespace-nowrap rounded-md h-10 px-4 py-2 text-slate-50 hover:bg-indigo-700 font-medium shadow-sm transition-colors">
         + Nouveau Véhicule
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

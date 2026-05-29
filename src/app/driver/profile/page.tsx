@@ -44,7 +44,7 @@ export default async function DriverProfilePage() {
       
       {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-6 mb-4 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-extrabold text-3xl shadow-lg ring-4 ring-blue-50 mb-3">
+        <div className="w-20 h-20 bg-gradient-to-tr from-indigo-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-extrabold text-3xl shadow-lg ring-4 ring-indigo-50 mb-3">
           {targetDriver.first_name.charAt(0)}
         </div>
         <h3 className="text-xl font-bold text-zinc-900 leading-tight">{targetDriver.first_name} {targetDriver.last_name}</h3>

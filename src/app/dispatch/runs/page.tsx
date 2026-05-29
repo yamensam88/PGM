@@ -210,7 +210,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const activeDriverIds = new Set(rawDrivers.filter(d => d.status === 'active').map(d => d.id));
 
   const calendarEvents = rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
-     let color = "#3b82f6";
+     let color = "#6366f1";
      let title = d.first_name + " " + d.last_name;
      if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
      else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
@@ -378,7 +378,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
                   <DialogHeader>
-                    <DialogTitle className="text-blue-500">Déclarer Présence / Absence</DialogTitle>
+                    <DialogTitle className="text-indigo-500">Déclarer Présence / Absence</DialogTitle>
                     <DialogDescription className="text-slate-500">
                       Enregistrez une présence manuelle, une absence ou un arrêt pour un chauffeur.
                     </DialogDescription>
@@ -390,7 +390,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
               </Dialog>
 
               <Dialog>
-                <DialogTrigger className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
+                <DialogTrigger className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-2">
                   <Plus className="h-4 w-4" />
                   Créer une tournée
                 </DialogTrigger>
@@ -498,8 +498,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                        </div>
                        <div className="flex-1 border-l border-zinc-200 dark:border-slate-700">
                          <DriverMetricBox 
-                           valueClass="text-blue-500" 
-                           labelClass="text-blue-400" 
+                           valueClass="text-indigo-500" 
+                           labelClass="text-indigo-400" 
                            count={idleChauffeurs} 
                            label="Non Affectés" 
                            title="Chauffeurs Non Affectés" 
@@ -547,10 +547,10 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
 
                  <Dialog>
                    <DialogTrigger className="text-left flex-1 min-w-[180px]">
-                     <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-orange-200 transition-all duration-300 cursor-pointer group h-full">
+                     <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-indigo-200 transition-all duration-300 cursor-pointer group h-full">
                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap flex items-center justify-between">
                           Gasoil Pompé
-                          <Fuel className="w-3 h-3 text-slate-300 group-hover:text-orange-400 transition-colors" />
+                          <Fuel className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors" />
                        </h3>
                        <div>
                          <div className="text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight whitespace-nowrap">
@@ -563,7 +563,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                    <DialogContent className="w-[98vw] max-w-[98vw] md:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 overflow-x-hidden">
                      <DialogHeader>
                        <DialogTitle className="flex items-center gap-2 text-xl">
-                          <Fuel className="w-5 h-5 text-orange-500" />
+                          <Fuel className="w-5 h-5 text-indigo-500" />
                           Détail des pleins de Gasoil
                        </DialogTitle>
                        <DialogDescription>
@@ -596,7 +596,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                       </td>
                                       <td className="px-4 py-3 text-slate-800 font-semibold">{run.driver?.first_name} {run.driver?.last_name}</td>
                                       <td className="px-4 py-3 text-slate-500 font-mono text-xs">{run.vehicle?.plate_number}</td>
-                                      <td className="px-4 py-3 text-right bg-orange-50/30 text-orange-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
+                                      <td className="px-4 py-3 text-right bg-indigo-50/30 text-indigo-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
                                       <td className="px-4 py-3 text-right text-slate-600 font-medium">{Number(run.cost_fuel).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</td>
                                    </tr>
                                 ))
@@ -610,7 +610,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                  <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Volume de Livraison</h3>
                   <div>
-                    <div className={`text-3xl font-extrabold tracking-tight ${Number(txLivraison) >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
+                    <div className={`text-3xl font-extrabold tracking-tight ${Number(txLivraison) >= 95 ? 'text-emerald-500' : 'text-indigo-500'}`}>
                       {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-2xl text-slate-700">{totalLoaded}</span>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {txLivraison}%</p>
@@ -630,7 +630,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                  <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 flex-1 min-w-[180px]">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Productivité Moy.</h3>
                   <div>
-                    <div className="text-3xl font-extrabold tracking-tight text-blue-600">
+                    <div className="text-3xl font-extrabold tracking-tight text-indigo-600">
                       {productiviteTournee}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Colis livrés / tournée</p>
@@ -732,11 +732,11 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                             <TableHead>Catégorie</TableHead>
                             <TableHead>Statut</TableHead>
                             <TableHead className="text-right">Kilométrage absolu</TableHead>
-                            <TableHead className="text-right bg-blue-50/50">Forfait Mensuel (Ce Mois)</TableHead>
+                            <TableHead className="text-right bg-indigo-50/50">Forfait Mensuel (Ce Mois)</TableHead>
                             <TableHead className="text-right">Propriété</TableHead>
                             <TableHead className="text-right">Coût Fixe Mensuel (€)</TableHead>
                             <TableHead className="text-center px-0">RDV / Intervention Prévue</TableHead>
-                            <TableHead className="text-right text-orange-600 font-semibold">Entretien (€)</TableHead>
+                            <TableHead className="text-right text-indigo-600 font-semibold">Entretien (€)</TableHead>
                             <TableHead className="text-right text-red-600 font-semibold">Sinistres (€)</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                           </TableRow>
@@ -757,8 +757,8 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                   penaltyCost = excess * vehicle.extra_km_cost;
                                   warningText = <div className="text-xs text-red-500 font-semibold mt-1">Dépassement: +{excess}km (~{penaltyCost.toFixed(2)}€)</div>;
                                } else if (currentMonthKm >= limit * 0.9) {
-                                  kmStatusColor = "text-orange-500 font-semibold";
-                                  warningText = <div className="text-xs text-orange-500 mt-1">Attention: Proche limite ({limit - currentMonthKm}km restants)</div>;
+                                  kmStatusColor = "text-indigo-500 font-semibold";
+                                  warningText = <div className="text-xs text-indigo-500 mt-1">Attention: Proche limite ({limit - currentMonthKm}km restants)</div>;
                                }
                             }
 
@@ -780,7 +780,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                                 ) : vehicle.status === 'archived' ? (
                                   <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300">Archivé</Badge>
                                 ) : vehicle.status === 'inactive' ? (
-                                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300">Inactif</Badge>
+                                  <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300">Inactif</Badge>
                                 ) : (
                                   <Badge variant="outline" className="bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-white dark:text-slate-600">{vehicle.status}</Badge>
                                 )}
@@ -788,7 +788,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                               <TableCell className="text-right font-medium text-zinc-600 dark:text-slate-500">
                                  {vehicle.current_km?.toLocaleString('fr-FR')} km
                               </TableCell>
-                              <TableCell className="text-right bg-blue-50/20">
+                              <TableCell className="text-right bg-indigo-50/20">
                                 {isRented && limit ? (
                                    <div className="flex flex-col items-end">
                                       <span className={`text-[13px] ${kmStatusColor}`}>{currentMonthKm} / {limit} km</span>
@@ -814,7 +814,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
                               <TableCell className="text-center p-1 align-top">
                                 <VehicleAppointmentCell vehicle={vehicle} />
                               </TableCell>
-                              <TableCell className="text-right font-medium text-orange-600">
+                              <TableCell className="text-right font-medium text-indigo-600">
                                 {vehicle.financial_entries.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-right font-semibold text-red-600">

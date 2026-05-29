@@ -95,7 +95,7 @@ export function HrDocumentManager({ driver }: { driver: Driver }) {
                <p className="text-sm text-slate-500">{driver.first_name} {driver.last_name}</p>
             </div>
             {!showForm && (
-                <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 text-slate-900 gap-2 h-9 text-sm">
+                <Button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 text-slate-900 gap-2 h-9 text-sm">
                    <UploadCloud className="w-4 h-4" /> Ajouter
                 </Button>
             )}
@@ -105,10 +105,10 @@ export function HrDocumentManager({ driver }: { driver: Driver }) {
             {error && <div className="p-3 mb-4 bg-red-50 text-red-600 text-sm rounded-md border border-red-100">{error}</div>}
 
             {showForm ? (
-               <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm mb-4">
+               <div className="bg-white p-5 rounded-lg border border-indigo-100 shadow-sm mb-4">
                   <div className="flex justify-between items-center mb-4">
                      <h3 className="font-semibold text-zinc-800 flex items-center gap-2">
-                        <UploadCloud className="w-4 h-4 text-blue-500"/>
+                        <UploadCloud className="w-4 h-4 text-indigo-500"/>
                         Nouveau Document
                      </h3>
                      <Button variant="ghost" size="sm" onClick={() => setShowForm(false)} className="h-8 w-8 p-0 text-slate-500">
@@ -170,12 +170,12 @@ export function HrDocumentManager({ driver }: { driver: Driver }) {
             {!showForm && documents.length > 0 && (
                <div className="space-y-3">
                   {documents.sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()).map(doc => (
-                     <div key={doc.id} className="flex items-center justify-between p-3.5 bg-white border border-zinc-200 rounded-lg shadow-sm hover:border-blue-200 transition-colors">
+                     <div key={doc.id} className="flex items-center justify-between p-3.5 bg-white border border-zinc-200 rounded-lg shadow-sm hover:border-indigo-200 transition-colors">
                         <div className="flex items-center gap-3">
                            <div className={`p-2 rounded-md ${
                               doc.document_type === 'paie' ? 'bg-emerald-50 text-emerald-600' :
                               doc.document_type === 'maladie' ? 'bg-red-50 text-red-600' :
-                              'bg-blue-50 text-blue-600'
+                              'bg-indigo-50 text-indigo-600'
                            }`}>
                               {doc.document_type === 'paie' ? <FileText className="w-5 h-5"/> : <FileBadge className="w-5 h-5"/>}
                            </div>
@@ -192,7 +192,7 @@ export function HrDocumentManager({ driver }: { driver: Driver }) {
                            <Button 
                              variant="outline" 
                              size="icon" 
-                             className="h-8 w-8 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border-none"
+                             className="h-8 w-8 text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-none"
                              title="Ouvrir le document (Simulation)"
                            >
                               <LinkIcon className="w-4 h-4" />

@@ -19,8 +19,8 @@ export function EmployeeCalendarDialog({ title, dates, children, colorType, subt
   const colorMap = {
     emerald: "bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white rounded-md",
     red: "bg-red-500 text-white hover:bg-red-600 hover:text-white rounded-md",
-    orange: "bg-orange-500 text-white hover:bg-orange-600 hover:text-white rounded-md",
-    blue: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white rounded-md",
+    orange: "bg-indigo-500 text-white hover:bg-indigo-600 hover:text-white rounded-md",
+    blue: "bg-indigo-500 text-white hover:bg-indigo-600 hover:text-white rounded-md",
   }
 
   return (

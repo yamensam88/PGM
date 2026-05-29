@@ -58,7 +58,7 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Tournées</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Total Colis</TableHead>
             <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-center">Livrés</TableHead>
-            <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-center">Avisés</TableHead>
+            <TableHead className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest text-center">Avisés</TableHead>
             <TableHead className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest text-center">Retours</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
             <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
@@ -96,7 +96,7 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
                     {row.packages_relay > 0 && <div className="text-[10px] text-slate-400 leading-tight">dont {row.packages_relay} relais</div>}
                   </TableCell>
                   <TableCell className="text-center text-[13px] text-emerald-600 font-bold">{row.packages_delivered}</TableCell>
-                  <TableCell className="text-center text-[13px] text-orange-500 font-bold">{row.packages_advised}</TableCell>
+                  <TableCell className="text-center text-[13px] text-indigo-500 font-bold">{row.packages_advised}</TableCell>
                   <TableCell className="text-center text-[13px] text-rose-500 font-bold">{row.packages_returned}</TableCell>
                   
                   <TableCell className="text-center">
@@ -116,7 +116,7 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
                   <TableCell className="text-right px-4">
                     <div className="flex flex-col items-end gap-0.5">
                        {row.maintenance_cost > 0 && (
-                         <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                         <span className="text-[11px] font-semibold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
                            {row.maintenance_cost.toFixed(0)}€ Maint.
                          </span>
                        )}
@@ -147,7 +147,7 @@ export function DriverSynthesisTable({ data }: { data: SynthesisRow[] }) {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+                        className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" 
                         onClick={(e) => { e.stopPropagation(); setHistoryDriver(row.driver); }} 
                         title="Historique Financier du Chauffeur (Cockpit)"
                         type="button"

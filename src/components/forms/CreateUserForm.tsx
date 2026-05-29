@@ -59,7 +59,7 @@ export function CreateUserForm() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute top-2 right-2 text-slate-500 hover:text-blue-600"
+            className="absolute top-2 right-2 text-slate-500 hover:text-indigo-600"
             onClick={copyCredentials}
             title="Copier les identifiants"
           >
@@ -125,7 +125,7 @@ export function CreateUserForm() {
         </div>
       </div>
 
-      <Button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 text-slate-900">
+      <Button type="submit" disabled={isPending} className="w-full bg-indigo-600 hover:bg-indigo-700 text-slate-900">
         {isPending ? "Création en cours..." : "Créer l'utilisateur"}
       </Button>
     </form>

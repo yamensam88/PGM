@@ -32,7 +32,7 @@ export default async function DriverIncidentsPage() {
   if (!currentRun) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4 text-center mt-20 bg-white m-4 rounded-2xl shadow-sm border border-zinc-100">
-         <Info className="w-12 h-12 text-blue-500 mb-4 mx-auto" />
+         <Info className="w-12 h-12 text-indigo-500 mb-4 mx-auto" />
          <h2 className="text-xl font-bold text-zinc-900 leading-tight mb-2">Aucune tournée active</h2>
          <p className="text-zinc-500 text-sm">Vous n'avez pas de véhicule assigné aujourd'hui pour déclarer un sinistre affectant une tournée.</p>
       </div>

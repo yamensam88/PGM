@@ -162,7 +162,7 @@ export default async function RunDetailsPage({
                 {/* Départ */}
                 <div className="flex gap-4">
                     <div className="flex flex-col items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full mt-1.5" />
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full mt-1.5" />
                         <div className="w-0.5 h-16 bg-zinc-200 dark:bg-zinc-700 mt-2" />
                     </div>
                     <div>
@@ -175,13 +175,13 @@ export default async function RunDetailsPage({
                 {run.incidents.map((incident, index) => (
                     <div key={incident.id} className="flex gap-4">
                         <div className="flex flex-col items-center">
-                            <div className="w-3 h-3 bg-orange-500 rounded-full mt-1.5" />
+                            <div className="w-3 h-3 bg-indigo-500 rounded-full mt-1.5" />
                             {index < run.incidents.length - 1 || run.status === 'completed' ? (
                                 <div className="w-0.5 h-full min-h-[4rem] bg-zinc-200 dark:bg-zinc-700 mt-2" />
                             ) : null}
                         </div>
                         <div className="pb-6">
-                            <Badge variant="outline" className="border-orange-500 text-orange-600 mb-1">Incident Callisé</Badge>
+                            <Badge variant="outline" className="border-indigo-500 text-indigo-600 mb-1">Incident Callisé</Badge>
                             <p className="font-medium">{incident.incident_type}</p>
                             <p className="text-sm text-slate-500">{new Date(incident.created_at || '').toLocaleString("fr-FR")}</p>
                             {incident.description && <p className="text-sm mt-2 p-3 bg-zinc-50 dark:bg-slate-50 rounded-md border border-zinc-100 dark:border-slate-200">{incident.description}</p>}

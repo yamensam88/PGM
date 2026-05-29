@@ -28,9 +28,9 @@ export function AiProfitabilityCard({ runId, initialReport }: { runId: string, i
   if (!report) {
     return (
       <div className="bg-white text-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center space-y-4 h-full">
-         <Sparkles className="w-8 h-8 text-blue-400" />
+         <Sparkles className="w-8 h-8 text-indigo-400" />
          <p className="text-center text-slate-600 text-sm">Générez une analyse de rentabilité pilotée par l'IA pour cette tournée.</p>
-         <Button onClick={handleGenerate} disabled={isPending} className="bg-blue-600 hover:bg-blue-700">
+         <Button onClick={handleGenerate} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700">
              {isPending ? "Analyse en cours..." : "Analyser la rentabilité"}
          </Button>
       </div>
@@ -40,13 +40,13 @@ export function AiProfitabilityCard({ runId, initialReport }: { runId: string, i
   const isGood = report.profitability_score >= 65;
 
   return (
-    <div className={`p-6 rounded-2xl shadow-sm border ${isGood ? 'bg-emerald-950/30 border-emerald-900/50' : 'bg-orange-950/30 border-orange-900/50'} h-full flex flex-col`}>
+    <div className={`p-6 rounded-2xl shadow-sm border ${isGood ? 'bg-emerald-950/30 border-emerald-900/50' : 'bg-indigo-950/30 border-indigo-900/50'} h-full flex flex-col`}>
         <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-400" />
+                <Sparkles className="w-4 h-4 text-indigo-400" />
                 Analyse IA
             </h3>
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${isGood ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>
+            <div className={`px-3 py-1 rounded-full text-xs font-bold ${isGood ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
                 Score: {report.profitability_score}/100
             </div>
         </div>

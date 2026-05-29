@@ -57,7 +57,7 @@ function LoginForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-blue-500 px-3 text-base rounded-lg"
+            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-indigo-500 px-3 text-base rounded-lg"
           />
         </div>
       </div>
@@ -73,11 +73,11 @@ function LoginForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-blue-500 px-3 text-base rounded-lg"
+            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-indigo-500 px-3 text-base rounded-lg"
           />
         </div>
         <div className="flex justify-end pt-1">
-          <Link href="/forgot-password" className="text-[13px] font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+          <Link href="/forgot-password" className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
             Mot de passe oublié ?
           </Link>
         </div>
@@ -96,7 +96,7 @@ function LoginForm() {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full flex justify-center items-center h-12 border border-transparent rounded-lg shadow-sm text-[15px] font-medium text-slate-900 bg-[#2563eb] hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+          className="w-full flex justify-center items-center h-12 border border-transparent rounded-lg shadow-sm text-[15px] font-medium text-slate-900 bg-[#4f46e5] hover:bg-[#4338ca] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
         >
           {loading ? "Connexion en cours..." : "Se connecter"}
         </button>
@@ -121,7 +121,7 @@ export default function LoginPage() {
               PGM
             </span>
           </div>
-          <p className="mt-2 text-sm font-bold text-[#ea580c] tracking-wider uppercase">
+          <p className="mt-2 text-sm font-bold text-[#4f46e5] tracking-wider uppercase">
             Pilotage • Gestion • Maîtrise
           </p>
           <p className="mt-2 text-xs text-slate-500 text-center max-w-xs">

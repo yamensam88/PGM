@@ -69,7 +69,7 @@ export function EditGlobalCostForm({ driverId, initialCost }: { driverId: string
         </div>
       )}
 
-      <Button disabled={isPending} type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium">
+      <Button disabled={isPending} type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium">
         {isPending ? "Enregistrement..." : "Enregistrer"}
       </Button>
     </form>

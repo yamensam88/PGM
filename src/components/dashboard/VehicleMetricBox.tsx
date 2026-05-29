@@ -48,7 +48,7 @@ export function VehicleMetricBox({
                        </span>
                        <span className="text-[11px] text-slate-500 mt-0.5">{v.brand} {v.model}</span>
                      </div>
-                     <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-2 sm:mt-0">{ownershipLabel}</span>
+                     <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-2 sm:mt-0">{ownershipLabel}</span>
                    </li>
                  );
                })}

@@ -43,7 +43,7 @@ export function FinishRunForm({ runId, initialKmStart }: FinishRunFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+      <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
         Clôturer la Tournée
       </h2>
       
@@ -101,7 +101,7 @@ export function FinishRunForm({ runId, initialKmStart }: FinishRunFormProps) {
       </div>
 
       {/* Fuel Section (Financial Entries) */}
-      <div className="space-y-4 bg-white border-l-4 border-blue-500 p-5 rounded-r-xl shadow-sm text-slate-800">
+      <div className="space-y-4 bg-white border-l-4 border-indigo-500 p-5 rounded-r-xl shadow-sm text-slate-800">
         <h3 className="font-semibold text-lg">Point Carburant (Optionnel)</h3>
         <p className="text-xs text-slate-500 mb-2">Les informations saisies ici impacteront directement la rentabilité journalière affichée pour la Direction.</p>
         <div className="grid grid-cols-2 gap-4">
@@ -121,7 +121,7 @@ export function FinishRunForm({ runId, initialKmStart }: FinishRunFormProps) {
              name="fuel_receipt" 
              type="file" 
              accept="image/*,.pdf" 
-             className="text-slate-500 bg-white border-slate-300 file:bg-blue-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-blue-700 cursor-pointer" 
+             className="text-slate-500 bg-white border-slate-300 file:bg-indigo-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-indigo-700 cursor-pointer" 
           />
         </div>
       </div>
@@ -147,7 +147,7 @@ export function FinishRunForm({ runId, initialKmStart }: FinishRunFormProps) {
         </div>
       )}
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-slate-900" disabled={isPending}>
+      <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-slate-900" disabled={isPending}>
         {isPending ? "Validation en cours..." : "Terminer et Valider"}
       </Button>
     </form>

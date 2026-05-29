@@ -41,7 +41,7 @@ export async function requestPasswordReset(formData: FormData) {
            <p>Bonjour ${user.first_name || 'utilisateur'},</p>
            <p>Vous avez demandé à réinitialiser le mot de passe de votre compte TransportOS.</p>
            <p>Cliquez sur le bouton ci-dessous pour configurer un nouveau mot de passe :</p>
-           <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Réinitialiser mon mot de passe</a>
+           <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Réinitialiser mon mot de passe</a>
            <p>Ce lien de sécurité expirera dans une heure.</p>
            <p style="color: #666; font-size: 13px;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail. Votre mot de passe actuel restera inchangé.</p>
         </div>

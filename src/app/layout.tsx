@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ea580c",
+  themeColor: "#4f46e5",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -44,7 +44,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextTopLoader color="#ea580c" showSpinner={false} />
+        <NextTopLoader color="#4f46e5" showSpinner={false} />
         <AuthProvider>
           {children}
           <Toaster position="bottom-right" richColors theme="system" />

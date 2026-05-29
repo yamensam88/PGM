@@ -48,14 +48,14 @@ export default async function DriverLayout({ children }: { children: React.React
         </div>
         <div className="flex items-center gap-3">
            {isExploitation && (
-             <Link href="/dispatch/dashboard" className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1.5 rounded-full border border-blue-200 flex items-center gap-1 shadow-sm whitespace-nowrap">
+             <Link href="/dispatch/dashboard" className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1.5 rounded-full border border-indigo-200 flex items-center gap-1 shadow-sm whitespace-nowrap">
                <ChevronLeft className="w-3 h-3" /> Exploit.
              </Link>
            )}
            {!isLocked && (
              <button className="text-zinc-400 hover:text-zinc-800 transition-colors p-2 relative bg-zinc-50 rounded-full border border-zinc-100">
                <Bell className="w-[18px] h-[18px]" />
-               <span className="absolute top-1.5 right-2 w-2 h-2 bg-orange-600 rounded-full border-2 border-zinc-50"></span>
+               <span className="absolute top-1.5 right-2 w-2 h-2 bg-indigo-600 rounded-full border-2 border-zinc-50"></span>
              </button>
            )}
            <UserButton />
@@ -63,7 +63,7 @@ export default async function DriverLayout({ children }: { children: React.React
       </header>
 
       {/* Desktop Helper Warning - Shown only on large screens since this is a mobile app */}
-      <div className="hidden md:flex bg-orange-50 border-b border-orange-200 p-2 justify-center items-center text-orange-700 text-sm font-medium">
+      <div className="hidden md:flex bg-indigo-50 border-b border-indigo-200 p-2 justify-center items-center text-indigo-700 text-sm font-medium">
         L'interface Chauffeur est optimisée pour une utilisation sur téléphone mobile.
       </div>
 

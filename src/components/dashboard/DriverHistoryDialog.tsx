@@ -88,8 +88,8 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
             <div className="drag-handle p-5 md:p-6 flex-shrink-0 border-b border-slate-200/50 bg-white/60 cursor-move hover:bg-white/80 transition-colors flex items-start justify-between group select-none">
               <div className="flex-1">
                 <DialogTitle className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-orange-500 transition-colors hidden sm:block"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-                   <span className="truncate">Historique Financier : <span className="text-orange-600 truncate">{driverName}</span></span>
+                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-indigo-500 transition-colors hidden sm:block"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                   <span className="truncate">Historique Financier : <span className="text-indigo-600 truncate">{driverName}</span></span>
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium text-slate-500 mt-1 sm:ml-9 pointer-events-none">
                   Fenêtre dynamique détachable &bull; Vue consolidée des performances
@@ -106,7 +106,7 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
 
             {loading ? (
               <div className="py-32 flex flex-col items-center justify-center space-y-4 flex-1">
-                <div className="w-10 h-10 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+                <div className="w-10 h-10 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pointer-events-none">Initialisation du Cockpit...</p>
               </div>
             ) : data ? (
@@ -131,12 +131,12 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                      <p className="text-lg md:text-2xl font-extrabold text-red-600 truncate">{data.totalDamages?.toFixed(2) || '0.00'} €</p>
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-slate-100 ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden group">
-                     <p className="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-blue-600 transition-colors">Entretien / Usure</p>
-                     <p className="text-lg md:text-2xl font-extrabold text-blue-600 truncate">{data.totalMaintenance?.toFixed(2) || '0.00'} €</p>
+                     <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-indigo-600 transition-colors">Entretien / Usure</p>
+                     <p className="text-lg md:text-2xl font-extrabold text-indigo-600 truncate">{data.totalMaintenance?.toFixed(2) || '0.00'} €</p>
                   </div>
-                  <div className="bg-white p-5 rounded-2xl border border-orange-50 ring-1 ring-orange-900/5 hover:shadow-[0_8px_30px_rgba(249,115,22,0.06)] transition-all duration-300 overflow-hidden group">
-                     <p className="text-[11px] font-bold text-orange-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-orange-500 transition-colors">Pénalités Client</p>
-                     <p className="text-lg md:text-2xl font-extrabold text-orange-600 truncate">{data.totalPenalties.toFixed(2)} €</p>
+                  <div className="bg-white p-5 rounded-2xl border border-indigo-50 ring-1 ring-indigo-900/5 hover:shadow-[0_8px_30px_rgba(249,115,22,0.06)] transition-all duration-300 overflow-hidden group">
+                     <p className="text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-indigo-500 transition-colors">Pénalités Client</p>
+                     <p className="text-lg md:text-2xl font-extrabold text-indigo-600 truncate">{data.totalPenalties.toFixed(2)} €</p>
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-teal-50 ring-1 ring-teal-900/5 hover:shadow-[0_8px_30px_rgba(20,184,166,0.06)] transition-all duration-300 overflow-hidden group">
                      <p className="text-[11px] font-bold text-teal-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-teal-500 transition-colors">Droits Prime</p>
@@ -177,21 +177,21 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                      </div>
                   </div>
-                  <div className="bg-orange-50/50 p-4 rounded-2xl border border-orange-100/60 flex items-center justify-between group">
+                  <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/60 flex items-center justify-between group">
                      <div>
-                       <p className="text-[10px] font-bold text-orange-400/80 uppercase tracking-widest mb-0.5 truncate">Abs. Injustifiées</p>
-                       <p className="text-xl font-extrabold text-orange-600">{data.unjustifiedAbsenceDays || 0}</p>
+                       <p className="text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest mb-0.5 truncate">Abs. Injustifiées</p>
+                       <p className="text-xl font-extrabold text-indigo-600">{data.unjustifiedAbsenceDays || 0}</p>
                      </div>
-                     <div className="w-8 h-8 rounded-full bg-orange-100/50 flex items-center justify-center text-orange-500">
+                     <div className="w-8 h-8 rounded-full bg-indigo-100/50 flex items-center justify-center text-indigo-500">
                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                      </div>
                   </div>
-                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/60 flex items-center justify-between group">
+                  <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/60 flex items-center justify-between group">
                      <div>
-                       <p className="text-[10px] font-bold text-blue-400/80 uppercase tracking-widest mb-0.5 truncate">Congés Pris</p>
-                       <p className="text-xl font-extrabold text-blue-600">{data.vacationDays || 0}</p>
+                       <p className="text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest mb-0.5 truncate">Congés Pris</p>
+                       <p className="text-xl font-extrabold text-indigo-600">{data.vacationDays || 0}</p>
                      </div>
-                     <div className="w-8 h-8 rounded-full bg-blue-100/50 flex items-center justify-center text-blue-500">
+                     <div className="w-8 h-8 rounded-full bg-indigo-100/50 flex items-center justify-center text-indigo-500">
                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 22 12 2l10 20Z"/><path d="M12 12v10"/></svg>
                      </div>
                   </div>
@@ -211,8 +211,8 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                   <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100/60 bg-white/50 backdrop-blur-sm">
                        <h3 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2 pointer-events-none">
-                         <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> 
+                         <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> 
                          </div>
                          Évolution de la Rentabilité Directe (CA vs Coûts)
                        </h3>
@@ -222,8 +222,8 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                         <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorRevModal" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f97316" stopOpacity={0.25}/>
-                              <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
+                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                             </linearGradient>
                             <linearGradient id="colorCostModal" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.25}/>
@@ -255,11 +255,11 @@ export function DriverHistoryDialog({ open, onOpenChange, driverId, driverName }
                             type="monotone" 
                             dataKey="revenue" 
                             name="Chiffre d'Affaires"
-                            stroke="#f97316" 
+                            stroke="#6366f1" 
                             strokeWidth={3}
                             fillOpacity={1} 
                             fill="url(#colorRevModal)" 
-                            activeDot={{ r: 6, fill: "#f97316", stroke: "#fff", strokeWidth: 2 }} 
+                            activeDot={{ r: 6, fill: "#6366f1", stroke: "#fff", strokeWidth: 2 }} 
                           />
                           <Area 
                             type="monotone" 

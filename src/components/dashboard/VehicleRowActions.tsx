@@ -60,7 +60,7 @@ export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers:
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30" 
+          className="h-8 w-8 p-0 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/30" 
           onClick={() => setHistoryOpen(true)}
           title="Voir Historique & Coûts"
         >
@@ -70,7 +70,7 @@ export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers:
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-orange-500 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30" 
+            className="h-8 w-8 p-0 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/30" 
             onClick={() => setArchiveOpen(true)}
             title="Archiver"
           >
@@ -136,7 +136,7 @@ export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers:
       <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-orange-600 flex items-center gap-2">
+            <DialogTitle className="text-indigo-600 flex items-center gap-2">
               Confirmer l'archivage
             </DialogTitle>
             <DialogDescription>
@@ -145,7 +145,7 @@ export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers:
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => setArchiveOpen(false)}>Annuler</Button>
-            <Button variant="destructive" className="bg-orange-600 hover:bg-orange-700 text-white" onClick={handleArchive} disabled={isArchiving}>
+            <Button variant="destructive" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleArchive} disabled={isArchiving}>
               {isArchiving ? "Archivage..." : "Archiver"}
             </Button>
           </div>

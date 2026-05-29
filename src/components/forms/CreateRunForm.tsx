@@ -158,7 +158,7 @@ export function CreateRunForm({
                         X Retirer
                      </button>
                   )}
-                  <h4 className="text-xs font-bold text-blue-600 mb-3 uppercase tracking-wider">Client {index + 1}</h4>
+                  <h4 className="text-xs font-bold text-indigo-600 mb-3 uppercase tracking-wider">Client {index + 1}</h4>
                   
                   <div className="mb-4">
                      <div className="space-y-2">
@@ -222,9 +222,9 @@ export function CreateRunForm({
                 <Input id="fuel_receipt" name="fuel_receipt" type="file" accept="image/*,.pdf" className="h-10 pt-2 text-xs" />
               </div>
               <div className="space-y-2 pb-2">
-                 <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md border border-blue-100 dark:border-blue-800">
-                   <input type="checkbox" id="mark_completed" name="mark_completed" value="yes" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
-                   <Label htmlFor="mark_completed" className="text-sm font-bold text-blue-700 dark:text-blue-400 cursor-pointer">Tournée Terminée</Label>
+                 <div className="flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded-md border border-indigo-100 dark:border-indigo-800">
+                   <input type="checkbox" id="mark_completed" name="mark_completed" value="yes" className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                   <Label htmlFor="mark_completed" className="text-sm font-bold text-indigo-700 dark:text-indigo-400 cursor-pointer">Tournée Terminée</Label>
                  </div>
               </div>
            </div>
@@ -242,7 +242,7 @@ export function CreateRunForm({
          <Button type="button" variant="outline" className="mr-4" onClick={() => router.back()}>
            Annuler
          </Button>
-         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-slate-900" disabled={isPending}>
+         <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-slate-900" disabled={isPending}>
            {isPending ? "Création..." : "Planifier la tournée"}
          </Button>
       </div>

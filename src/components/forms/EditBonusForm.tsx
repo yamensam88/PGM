@@ -37,13 +37,13 @@ export function EditBonusForm({ driverId, initialAmount }: { driverId: string, i
     <form onSubmit={handleSubmit} className="space-y-4 pt-4">
       <div className="space-y-2">
          <Label htmlFor="amount" className="text-[13px] font-medium text-slate-600">Montant théorique de la prime (€) *</Label>
-         <Input id="amount" name="amount" type="number" step="1" defaultValue={initialAmount} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-blue-600" />
+         <Input id="amount" name="amount" type="number" step="1" defaultValue={initialAmount} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-indigo-600" />
       </div>
 
       {error && <div className="text-red-500 text-[13px] font-medium bg-red-50 p-3 rounded-md border border-red-100">{error}</div>}
 
       <div className="pt-2">
-        <Button disabled={isPending} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">
+        <Button disabled={isPending} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
           {isPending ? "Mise à jour..." : "Enregistrer la prime par défaut"}
         </Button>
       </div>

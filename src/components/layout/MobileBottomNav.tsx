@@ -29,11 +29,11 @@ export function MobileBottomNav() {
               href={item.href}
               className={cn(
                 "relative flex flex-col items-center justify-center p-1.5 min-w-[70px] transition-all duration-300",
-                isExact ? "text-orange-600" : "text-zinc-400 hover:text-zinc-600"
+                isExact ? "text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
               )}
             >
               {isExact && (
-                <div className="absolute -top-3 w-10 h-1 bg-orange-600 rounded-b-full shadow-[0_0_10px_rgba(234,88,12,0.5)]"></div>
+                <div className="absolute -top-3 w-10 h-1 bg-indigo-600 rounded-b-full shadow-[0_0_10px_rgba(234,88,12,0.5)]"></div>
               )}
               <item.icon className={cn(
                 "w-[22px] h-[22px] mb-1.5 transition-all duration-300", 
@@ -41,7 +41,7 @@ export function MobileBottomNav() {
               )} />
               <span className={cn(
                 "text-[10px] tracking-wide transition-all duration-300", 
-                isExact ? "font-bold text-orange-600" : "font-medium"
+                isExact ? "font-bold text-indigo-600" : "font-medium"
               )}>
                 {item.name}
               </span>

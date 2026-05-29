@@ -59,7 +59,7 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden text-slate-500 hover:text-orange-500 mr-2" />}>
+      <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden text-slate-500 hover:text-indigo-500 mr-2" />}>
         <Menu className="w-6 h-6" />
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
@@ -98,7 +98,7 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, onNavIte
           </div>
           <div className="flex flex-col justify-center truncate">
             <span className="text-xl font-extrabold tracking-tight text-slate-900 leading-none">PGM</span>
-            <span className="text-[10px] font-bold tracking-widest text-[#ea580c] mt-1 truncate uppercase">Pilotage • Gestion • Maîtrise</span>
+            <span className="text-[10px] font-bold tracking-widest text-[#4f46e5] mt-1 truncate uppercase">Pilotage • Gestion • Maîtrise</span>
           </div>
         </div>
       </div>
@@ -142,13 +142,13 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, onNavIte
               <span
                 className={`flex items-center px-4 py-3 text-[13px] font-semibold rounded-xl transition-all relative ${
                   isActive
-                    ? "bg-orange-50 text-orange-600"
+                    ? "bg-indigo-50 text-indigo-600"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 <Icon
                   className={`flex-shrink-0 w-4 h-4 mr-3 transition-colors ${
-                    isActive ? "text-orange-500" : "text-slate-400 group-hover:text-slate-600"
+                    isActive ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-600"
                   }`}
                 />
                 {item.name}

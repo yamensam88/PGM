@@ -96,7 +96,7 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
     if (!client) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center mt-20">
-           <AlertTriangle className="w-12 h-12 text-orange-500 mb-4 mx-auto" />
+           <AlertTriangle className="w-12 h-12 text-indigo-500 mb-4 mx-auto" />
            <h2 className="text-xl font-bold text-zinc-900">Configuration Manquante</h2>
            <p className="text-slate-500 mt-2">L'entreprise doit configurer au moins un client avant que vous n'ayez une tournée générée.</p>
         </div>
@@ -108,7 +108,7 @@ export default async function DriverDeliveriesPage(props: { searchParams: Promis
     if (!fallbackVehicle) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center mt-20">
-           <AlertTriangle className="w-12 h-12 text-orange-500 mb-4 mx-auto" />
+           <AlertTriangle className="w-12 h-12 text-indigo-500 mb-4 mx-auto" />
            <h2 className="text-xl font-bold text-zinc-900">Configuration Manquante</h2>
            <p className="text-slate-500 mt-2">L'entreprise doit enregistrer au moins un véhicule.</p>
         </div>

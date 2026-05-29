@@ -12,12 +12,12 @@ export function CreateAbsenceDialog({ drivers }: { drivers: any[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 shadow-sm" />}>
+      <DialogTrigger render={<Button className="bg-indigo-600 text-slate-900 hover:bg-indigo-700 shadow-sm" />}>
         Déclarer Absence / Maladie / Congés
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
         <DialogHeader>
-          <DialogTitle className="text-blue-500">Nouvelle Déclaration RH</DialogTitle>
+          <DialogTitle className="text-indigo-500">Nouvelle Déclaration RH</DialogTitle>
           <DialogDescription className="text-slate-500">
             Enregistrez une absence, un arrêt maladie ou la pose d'un congé payé pour un chauffeur.
           </DialogDescription>

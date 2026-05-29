@@ -112,8 +112,8 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
             <div className="drag-handle p-5 md:p-6 flex-shrink-0 border-b border-slate-200/50 bg-white/60 cursor-move hover:bg-white/80 transition-colors flex items-start justify-between group select-none">
               <div className="flex-1">
                 <DialogTitle className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-orange-500 transition-colors hidden sm:block"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
-                   <span className="truncate">Historique Financier de la Zone : <span className="text-orange-600 truncate">{zoneName}</span></span>
+                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-indigo-500 transition-colors hidden sm:block"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                   <span className="truncate">Historique Financier de la Zone : <span className="text-indigo-600 truncate">{zoneName}</span></span>
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium text-slate-500 mt-1 sm:ml-9 pointer-events-none">
                   Fenêtre dynamique détachable &bull; Vue consolidée des performances de la zone
@@ -156,17 +156,17 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
                    </p>
                    <p className="text-lg md:text-2xl font-extrabold text-red-600 truncate">{totalDamages.toFixed(2)} €</p>
                 </div>
-                <div className="bg-white p-5 rounded-2xl border border-orange-50 ring-1 ring-orange-900/5 hover:shadow-[0_8px_30px_rgba(249,115,22,0.06)] transition-all duration-300 overflow-hidden group">
-                   <p className="flex items-center gap-1.5 text-[11px] font-bold text-orange-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-orange-500 transition-colors">
+                <div className="bg-white p-5 rounded-2xl border border-indigo-50 ring-1 ring-indigo-900/5 hover:shadow-[0_8px_30px_rgba(249,115,22,0.06)] transition-all duration-300 overflow-hidden group">
+                   <p className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5 truncate group-hover:text-indigo-500 transition-colors">
                      <Scale className="w-3.5 h-3.5" /> Pénalités Client
                    </p>
-                   <p className="text-lg md:text-2xl font-extrabold text-orange-600 truncate">{totalPenalties.toFixed(2)} €</p>
+                   <p className="text-lg md:text-2xl font-extrabold text-indigo-600 truncate">{totalPenalties.toFixed(2)} €</p>
                 </div>
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden group">
-                   <p className="flex items-center gap-1.5 text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-blue-600 transition-colors">
+                   <p className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-1.5 truncate group-hover:text-indigo-600 transition-colors">
                      <AlertTriangle className="w-3.5 h-3.5" /> Entretien / Mécanique
                    </p>
-                   <p className="text-lg md:text-2xl font-extrabold text-blue-600 truncate">{totalMaintenance.toFixed(2)} €</p>
+                   <p className="text-lg md:text-2xl font-extrabold text-indigo-600 truncate">{totalMaintenance.toFixed(2)} €</p>
                 </div>
                 <div className="bg-slate-900 p-5 rounded-2xl shadow-xl ring-1 ring-slate-900/20 flex flex-col justify-center relative overflow-hidden group">
                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-50"></div>
@@ -188,8 +188,8 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-100/60 bg-white/50 backdrop-blur-sm">
                      <h3 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2 pointer-events-none">
-                       <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> 
+                       <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> 
                        </div>
                        Évolution de la Rentabilité Directe (CA vs Coûts de Zone)
                      </h3>
@@ -199,8 +199,8 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
                       <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorRevModal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="colorCostModal" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.25}/>
@@ -232,11 +232,11 @@ export function ZoneHistoryDialog({ open, onOpenChange, zoneId, zoneName, runs }
                           type="monotone" 
                           dataKey="revenue" 
                           name="Chiffre d'Affaires"
-                          stroke="#f97316" 
+                          stroke="#6366f1" 
                           strokeWidth={3}
                           fillOpacity={1} 
                           fill="url(#colorRevModal)" 
-                          activeDot={{ r: 6, fill: "#f97316", stroke: "#fff", strokeWidth: 2 }} 
+                          activeDot={{ r: 6, fill: "#6366f1", stroke: "#fff", strokeWidth: 2 }} 
                         />
                         <Area 
                           type="monotone" 

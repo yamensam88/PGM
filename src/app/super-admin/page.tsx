@@ -108,7 +108,7 @@ export default async function SuperAdminPage() {
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Clients Actifs</h3>
-                 <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                 <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                     <Building2 className="w-4 h-4" />
                  </div>
               </div>
@@ -121,7 +121,7 @@ export default async function SuperAdminPage() {
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Chauffeurs Globaux</h3>
-                 <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-400 flex items-center justify-center">
+                 <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                     <Users className="w-4 h-4" />
                  </div>
               </div>
@@ -193,7 +193,7 @@ export default async function SuperAdminPage() {
                           {org.subscription_status === 'active' ? (
                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-none">Actif</Badge>
                           ) : org.subscription_status === 'trialing' ? (
-                             <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20 shadow-none">En Essai</Badge>
+                             <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-none">En Essai</Badge>
                           ) : org.subscription_status === 'suspended' ? (
                              <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 shadow-none">Désactivé</Badge>
                           ) : (

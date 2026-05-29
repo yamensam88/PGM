@@ -173,7 +173,7 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
       {error && <div className="text-red-500 text-[13px] font-medium bg-red-50 p-3 rounded-md border border-red-100">{error}</div>}
 
       <div className="pt-2">
-        <Button disabled={isPending} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">
+        <Button disabled={isPending} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
           {isPending ? "Mise à jour en cours..." : "Enregistrer les modifications"}
         </Button>
       </div>

@@ -68,7 +68,7 @@ export function AnalyticsCharts({ financialData }: AnalyticsChartsProps) {
                 contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#f8fafc' }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Bar dataKey="revenue" name="Revenus (€)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" name="Revenus (€)" fill="#6366f1" radius={[4, 4, 0, 0]} />
               <Bar dataKey="costs" name="Coûts Flotte & Chauffeurs (€)" fill="#f43f5e" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

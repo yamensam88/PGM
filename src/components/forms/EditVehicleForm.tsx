@@ -147,7 +147,7 @@ export function EditVehicleForm({ vehicle, onSuccess }: EditVehicleFormProps) {
       )}
 
       <div className="flex justify-end gap-3 mt-4">
-        <Button type="submit" disabled={isPending} className="bg-blue-600 text-slate-900 hover:bg-blue-700">
+        <Button type="submit" disabled={isPending} className="bg-indigo-600 text-slate-900 hover:bg-indigo-700">
           {isPending ? "Mise à jour..." : "Mettre à jour"}
         </Button>
       </div>

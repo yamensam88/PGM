@@ -18,7 +18,7 @@ export async function sendWelcomeEmail(to: string, ownerName: string, orgName: s
            <p>Nous sommes ravis d'accueillir <strong>${orgName}</strong> sur notre plateforme.</p>
            <p>Votre période d'essai de 7 jours vient de commencer. Vous avez maintenant accès à l'ensemble de nos fonctionnalités d'exploitation, de suivi RH et de pilotage financier.</p>
            <div style="margin: 30px 0;">
-             <a href="${appUrl}/login" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Accéder à mon espace</a>
+             <a href="${appUrl}/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Accéder à mon espace</a>
            </div>
            <p>Si vous avez la moindre question, n'hésitez pas à répondre directement à cet e-mail.</p>
            <p>À très vite sur PGM !</p>
@@ -39,12 +39,12 @@ export async function sendTrialWarningEmail(to: string, ownerName: string) {
       subject: "⚠️ Il ne vous reste que 48h d'essai sur PGM",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-           <h2 style="color: #ea580c;">Votre essai gratuit expire bientôt</h2>
+           <h2 style="color: #4f46e5;">Votre essai gratuit expire bientôt</h2>
            <p>Bonjour ${ownerName},</p>
            <p>Votre période d'essai gratuit sur PGM prend fin dans <strong>48 heures</strong>.</p>
            <p>Pour continuer à utiliser la plateforme sans interruption de service, pensez à configurer votre facturation dès maintenant.</p>
            <div style="margin: 30px 0;">
-             <a href="${appUrl}/dispatch/settings/billing" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Configurer ma facturation</a>
+             <a href="${appUrl}/dispatch/settings/billing" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Configurer ma facturation</a>
            </div>
         </div>
       `
@@ -63,7 +63,7 @@ export async function sendRenewalWarningEmail(to: string, ownerName: string, day
       subject: `Information : Renouvellement de votre abonnement PGM dans ${daysLeft} jours`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-           <h2 style="color: #2563eb;">Renouvellement imminent</h2>
+           <h2 style="color: #4f46e5;">Renouvellement imminent</h2>
            <p>Bonjour ${ownerName},</p>
            <p>Nous vous informons que votre abonnement PGM se renouvellera automatiquement dans <strong>${daysLeft} jours</strong>.</p>
            <p>Vous n'avez aucune action à effectuer si vous souhaitez conserver votre offre actuelle.</p>

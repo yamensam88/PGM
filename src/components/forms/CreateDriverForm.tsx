@@ -103,7 +103,7 @@ export function CreateDriverForm({ onSuccess }: CreateDriverFormProps) {
           <Button 
             type="submit" 
             disabled={isPending} 
-            className="w-full md:w-auto h-10 bg-blue-600 text-slate-900 hover:bg-blue-700 font-medium px-6 shadow-sm"
+            className="w-full md:w-auto h-10 bg-indigo-600 text-slate-900 hover:bg-indigo-700 font-medium px-6 shadow-sm"
           >
             {isPending ? "Création..." : "Ajouter"}
           </Button>

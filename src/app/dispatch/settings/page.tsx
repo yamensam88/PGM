@@ -56,14 +56,14 @@ export default async function SettingsPage() {
           <TabsList className="grid w-full lg:w-[600px] grid-cols-4 mb-6 bg-zinc-100 dark:bg-white h-11">
             <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-white">Général</TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-white">Utilisateurs</TabsTrigger>
-            <TabsTrigger value="finances" className="data-[state=active]:bg-white dark:data-[state=active]:bg-white text-blue-600 font-medium">Tarifs & Coûts</TabsTrigger>
+            <TabsTrigger value="finances" className="data-[state=active]:bg-white dark:data-[state=active]:bg-white text-indigo-600 font-medium">Tarifs & Coûts</TabsTrigger>
             <TabsTrigger value="security" className="data-[state=active]:bg-white dark:data-[state=active]:bg-white">Sécurité</TabsTrigger>
           </TabsList>
           
           <TabsContent value="general" className="space-y-4">
             <Card className="border-zinc-200 shadow-sm dark:border-slate-200 dark:bg-white/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-blue-500" /> Profil Organisation</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Profil Organisation</CardTitle>
                 <CardDescription>Informations légales et d'identification de votre entreprise.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -81,7 +81,7 @@ export default async function SettingsPage() {
                   <Label htmlFor="address">Adresse du Siège</Label>
                   <Input id="address" defaultValue="14 Avenue de l'Opéra, 75001 Paris" />
                 </div>
-                <Button className="bg-blue-600 text-slate-900 hover:bg-blue-700 w-fit mt-4">Sauvegarder les modifications</Button>
+                <Button className="bg-indigo-600 text-slate-900 hover:bg-indigo-700 w-fit mt-4">Sauvegarder les modifications</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -124,7 +124,7 @@ export default async function SettingsPage() {
                         <Badge variant="outline" className={
                           user.role === 'admin' || user.role === 'owner' ? "bg-emerald-100 text-emerald-800 border-emerald-200" :
                           user.role === 'hr' ? "bg-purple-100 text-purple-800 border-purple-200" :
-                          "bg-blue-100 text-blue-800 border-blue-200"
+                          "bg-indigo-100 text-indigo-800 border-indigo-200"
                         }>
                           {user.role === 'admin' || user.role === 'owner' ? 'Direction' :
                            user.role === 'dispatcher' || user.role === 'manager' ? 'Exploitation' :

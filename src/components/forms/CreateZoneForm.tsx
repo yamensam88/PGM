@@ -64,7 +64,7 @@ export function CreateZoneForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       <div className="flex justify-end pt-4">
-         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-slate-900 w-full md:w-auto" disabled={isPending}>
+         <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-slate-900 w-full md:w-auto" disabled={isPending}>
            {isPending ? "Création..." : "Ajouter la zone"}
          </Button>
       </div>

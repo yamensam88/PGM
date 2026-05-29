@@ -43,7 +43,7 @@ export default async function DriverHome() {
            <p className="text-zinc-500 text-sm font-medium tracking-tight mb-0.5">Bonjour,</p>
            <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight leading-none">{driver.first_name} {driver.last_name}</h1>
          </div>
-         <div className="w-12 h-12 bg-gradient-to-tr from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-md border-2 border-white">
+         <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-red-500 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-md border-2 border-white">
             {driver.first_name.charAt(0)}
          </div>
       </section>
@@ -51,8 +51,8 @@ export default async function DriverHome() {
       {/* Hero Widget: Tournée du jour */}
       <section>
         <h2 className="text-[11px] font-bold tracking-widest uppercase text-zinc-400 mb-3 ml-2">Ma Tournée d'Aujourd'hui</h2>
-        <Link href="/driver/deliveries" className="block focus:outline-none focus:ring-[4px] focus:ring-orange-500/20 rounded-2xl transition-transform active:scale-[0.98]">
-          <div className="bg-gradient-to-br from-orange-500 to-red-600 p-6 rounded-2xl shadow-lg border border-orange-400 text-white overflow-hidden relative">
+        <Link href="/driver/deliveries" className="block focus:outline-none focus:ring-[4px] focus:ring-indigo-500/20 rounded-2xl transition-transform active:scale-[0.98]">
+          <div className="bg-gradient-to-br from-indigo-500 to-red-600 p-6 rounded-2xl shadow-lg border border-indigo-400 text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-4 opacity-20">
               <Truck className="w-24 h-24 transform rotate-[-10deg]" />
             </div>
@@ -84,7 +84,7 @@ export default async function DriverHome() {
 
       {/* Grid Menu */}
       <section className="grid grid-cols-2 gap-4">
-        <Link href="/driver/incidents" className="bg-white px-2 py-6 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center focus:ring-[4px] focus:ring-orange-500/20 transition-transform active:scale-[0.98]">
+        <Link href="/driver/incidents" className="bg-white px-2 py-6 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center focus:ring-[4px] focus:ring-indigo-500/20 transition-transform active:scale-[0.98]">
            <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-3">
              <AlertTriangle className="w-7 h-7" />
            </div>
@@ -93,8 +93,8 @@ export default async function DriverHome() {
         </Link>
 
         {/* Historique or profile could be here */}
-        <Link href="/driver/profile" className="bg-white px-2 py-6 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center focus:ring-[4px] focus:ring-orange-500/20 transition-transform active:scale-[0.98]">
-           <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
+        <Link href="/driver/profile" className="bg-white px-2 py-6 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center focus:ring-[4px] focus:ring-indigo-500/20 transition-transform active:scale-[0.98]">
+           <div className="w-14 h-14 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-3">
              <CheckCircle className="w-7 h-7" />
            </div>
            <span className="font-bold text-zinc-900 text-[15px] mb-1">Mon Compte</span>

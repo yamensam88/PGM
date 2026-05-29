@@ -70,7 +70,7 @@ export default async function BillingPage() {
     <div className="space-y-8 max-w-5xl">
        <header className="border-b border-zinc-200 dark:border-slate-800 pb-5">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-3">
-             <CreditCard className="w-8 h-8 text-blue-500" />
+             <CreditCard className="w-8 h-8 text-indigo-500" />
              Abonnement & Facturation
           </h1>
           <p className="text-slate-500 mt-2">
@@ -133,13 +133,13 @@ export default async function BillingPage() {
                        </h4>
                        <p className="text-[13px] text-slate-500 mt-0.5">Vous exploitez actuellement {activeDriversCount} chauffeurs (Tiers: {currentTierBase === 0 ? '1' : currentTierBase} à {currentTierMax} chauffeurs).</p>
                      </div>
-                     <span className="text-2xl font-bold text-blue-600">{activeDriversCount} / {currentTierMax}</span>
+                     <span className="text-2xl font-bold text-indigo-600">{activeDriversCount} / {currentTierMax}</span>
                   </div>
                   <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-600 transition-all duration-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }} />
+                     <div className="h-full bg-indigo-600 transition-all duration-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }} />
                   </div>
-                  <div className="mt-4 flex items-start gap-2 text-[13px] text-slate-600 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                     <Zap className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                  <div className="mt-4 flex items-start gap-2 text-[13px] text-slate-600 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                     <Zap className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
                      <p>
                         Il vous reste <strong>{driversToNextTier} place(s)</strong> dans votre abonnement actuel à {finalBill}€. 
                         Le passage à {currentTierMax + 1} chauffeurs activera le palier supérieur à <strong>{finalNextTierBill}€ {billingPeriodStr}</strong>.

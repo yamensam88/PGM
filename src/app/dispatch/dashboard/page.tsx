@@ -716,13 +716,13 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   maintenanceAnomaliesConfigured.sort((a,b) => b.cost - a.cost);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-800 p-6 md:p-8 font-sans antialiased selection:bg-orange-100 selection:text-orange-900">
+    <div className="min-h-screen bg-slate-50/50 text-slate-800 p-6 md:p-8 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900">
       <div className="max-w-[1600px] mx-auto space-y-8 pb-12">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-x-6 gap-y-4 pb-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
-               <TrendingUp className="w-7 h-7 text-orange-500" />
+               <TrendingUp className="w-7 h-7 text-indigo-500" />
                Direction
             </h1>
             <p className="text-slate-500 mt-2 text-sm font-medium max-w-xl leading-relaxed">
@@ -730,7 +730,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
             </p>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <div className="px-4 py-1.5 rounded-full bg-orange-50 text-orange-600 text-[11px] font-bold border border-orange-100/50 uppercase tracking-widest shadow-sm">
+            <div className="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[11px] font-bold border border-indigo-100/50 uppercase tracking-widest shadow-sm">
               {allRuns.length} Tournées sur la Période
             </div>
             <DateRangePicker />
@@ -788,8 +788,8 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
               <div className="w-px bg-slate-200/50 my-1 mx-1 2xl:mx-2"></div>
               <div className="text-center flex-1">
                  <DriverMetricBox 
-                   valueClass="text-xl 2xl:text-2xl text-blue-500" 
-                   labelClass="text-blue-500/80" 
+                   valueClass="text-xl 2xl:text-2xl text-indigo-500" 
+                   labelClass="text-indigo-500/80" 
                    count={idleDriversList.length} 
                    label="Sur Banc" 
                    title="Chauffeurs Sur Banc (Non affectés)" 
@@ -870,10 +870,10 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
           <Dialog>
             <DialogTrigger className="text-left w-full">
-              <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-orange-200 transition-all duration-300 cursor-pointer group h-full">
+              <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-indigo-200 transition-all duration-300 cursor-pointer group h-full">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap flex items-center justify-between">
                    Gasoil Pompé
-                   <Fuel className="w-3 h-3 text-slate-300 group-hover:text-orange-400 transition-colors" />
+                   <Fuel className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors" />
                 </h3>
                 <div>
                   <div className="text-2xl 2xl:text-3xl font-extrabold text-[#0A1A2F] mt-1 drop-shadow-sm tracking-tight whitespace-nowrap">
@@ -886,7 +886,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
             <DialogContent className="w-[98vw] max-w-[98vw] md:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 overflow-x-hidden">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-xl">
-                   <Fuel className="w-5 h-5 text-orange-500" />
+                   <Fuel className="w-5 h-5 text-indigo-500" />
                    Détail des pleins de Gasoil
                 </DialogTitle>
                 <DialogDescription>
@@ -919,7 +919,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
                                </td>
                                <td className="px-4 py-3 text-slate-800 font-semibold">{run.driver?.first_name} {run.driver?.last_name}</td>
                                <td className="px-4 py-3 text-slate-500 font-mono text-xs">{run.vehicle?.plate_number}</td>
-                               <td className="px-4 py-3 text-right bg-orange-50/30 text-orange-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
+                               <td className="px-4 py-3 text-right bg-indigo-50/30 text-indigo-700 font-bold">{Number(run.fuel_consumed_liters).toFixed(1)} L</td>
                                <td className="px-4 py-3 text-right text-slate-600 font-medium">{Number(run.cost_fuel).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</td>
                             </tr>
                          ))
@@ -933,7 +933,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Volume de Livraison</h3>
             <div>
-              <div className={`text-2xl 2xl:text-3xl font-extrabold tracking-tight whitespace-nowrap ${deliveryRate >= 95 ? 'text-emerald-500' : 'text-orange-500'}`}>
+              <div className={`text-2xl 2xl:text-3xl font-extrabold tracking-tight whitespace-nowrap ${deliveryRate >= 95 ? 'text-emerald-500' : 'text-indigo-500'}`}>
                 {totalDelivered} <span className="text-xl text-slate-300 mx-1">/</span> <span className="text-xl 2xl:text-2xl text-slate-700">{totalPackages}</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {deliveryRate.toFixed(1)}%</p>
@@ -946,7 +946,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
           <Card className="md:col-span-2 bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl overflow-hidden">
             <CardHeader className="pb-4 border-b border-slate-100/60 bg-white/50 backdrop-blur-sm">
               <CardTitle className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-orange-500" /> Évolution Financière
+                <TrendingUp className="w-4 h-4 text-indigo-500" /> Évolution Financière
               </CardTitle>
               <CardDescription className="text-xs text-slate-500 font-medium tracking-wide mt-1">
                 Croisement du Chiffre d'Affaires et des charges externes.
@@ -1007,7 +1007,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
           <Card className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
             <CardHeader className="pb-4 border-b border-slate-100/60 bg-white/50 backdrop-blur-sm">
               <CardTitle className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                <Map className="w-4 h-4 text-orange-500" /> Rentabilité par Zone
+                <Map className="w-4 h-4 text-indigo-500" /> Rentabilité par Zone
               </CardTitle>
               <CardDescription className="text-xs text-slate-500 font-medium tracking-wide mt-1">
                 Top 3 Secteurs (Marge Nette back).
@@ -1076,7 +1076,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
         <div className="mt-8 rounded-2xl border border-slate-100 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5">
           <div className="px-6 py-5 flex justify-between items-center bg-slate-50/80 border-b border-slate-100 rounded-t-2xl">
             <h2 className="text-sm font-extrabold text-[#0A1A2F] flex items-center gap-2 tracking-tight">
-              <Map className="w-4 h-4 text-orange-500" /> Bilan par Zone & Détail des Tournées ({Object.keys(zoneSynthesisMap).length} Zones actives)
+              <Map className="w-4 h-4 text-indigo-500" /> Bilan par Zone & Détail des Tournées ({Object.keys(zoneSynthesisMap).length} Zones actives)
             </h2>
           </div>
           <div>

@@ -59,7 +59,7 @@ export default async function DispatchDriversPage() {
           </div>
           
           <Dialog>
-            <DialogTrigger className="bg-blue-600 text-slate-900 hover:bg-blue-700 font-medium shadow-sm transition-colors inline-flex h-10 items-center justify-center rounded-md px-4 py-2">
+            <DialogTrigger className="bg-indigo-600 text-slate-900 hover:bg-indigo-700 font-medium shadow-sm transition-colors inline-flex h-10 items-center justify-center rounded-md px-4 py-2">
                 + Nouveau Chauffeur
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -108,7 +108,7 @@ export default async function DispatchDriversPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {Number(driver.quality_rating) < 50 ? (
-                        <span className="text-orange-500 font-bold">{Number(driver.quality_rating).toFixed(2)}</span>
+                        <span className="text-indigo-500 font-bold">{Number(driver.quality_rating).toFixed(2)}</span>
                       ) : (
                          <span className="text-emerald-500">{Number(driver.quality_rating).toFixed(2)}</span>
                       )}

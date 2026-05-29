@@ -36,7 +36,7 @@ export default function RegisterPage() {
          <div className="max-w-md w-full mx-auto mt-12 md:mt-0">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-12 w-fit">
-               <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center">
+               <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-red-500 rounded-lg shadow-sm flex items-center justify-center">
                   <Truck className="w-4 h-4 text-white" />
                </div>
                <span className="text-xl font-extrabold tracking-tight text-white">PGM</span>
@@ -60,7 +60,7 @@ export default function RegisterPage() {
                   <div className="relative">
                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                      <input required name="companyName" type="text" placeholder="Transports Dupont" 
-                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
+                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
                   </div>
                </div>
 
@@ -70,13 +70,13 @@ export default function RegisterPage() {
                      <div className="relative">
                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                         <input required name="adminFirstName" type="text" placeholder="Jean" 
-                               className="w-full bg-zinc-900 border border-zinc-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
+                               className="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
                      </div>
                   </div>
                   <div className="space-y-2">
                      <label className="text-sm font-medium text-zinc-300">Nom</label>
                      <input required name="adminLastName" type="text" placeholder="Dupont" 
-                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white rounded-xl h-12 px-4 transition-colors placeholder:text-zinc-600 outline-none" />
+                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl h-12 px-4 transition-colors placeholder:text-zinc-600 outline-none" />
                   </div>
                </div>
 
@@ -85,7 +85,7 @@ export default function RegisterPage() {
                   <div className="relative">
                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                      <input required name="email" type="email" placeholder="jean@transports-dupont.fr" 
-                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
+                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
                   </div>
                </div>
 
@@ -94,17 +94,17 @@ export default function RegisterPage() {
                   <div className="relative">
                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                      <input required name="password" type="password" placeholder="••••••••" minLength={8}
-                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
+                            className="w-full bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl h-12 pl-10 pr-4 transition-colors placeholder:text-zinc-600 outline-none" />
                   </div>
                </div>
 
                <button type="submit" disabled={isPending} 
-                       className="w-full h-12 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 mt-4">
+                       className="w-full h-12 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 mt-4">
                   {isPending ? "Création de la base de données..." : "Démarrer l'essai"} <ArrowRight className="w-4 h-4" />
                </button>
 
                <p className="text-center text-sm text-zinc-500 mt-6">
-                 Vous avez déjà un espace B2B ? <Link href="/login" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">Connectez-vous</Link>.
+                 Vous avez déjà un espace B2B ? <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">Connectez-vous</Link>.
                </p>
             </form>
          </div>
@@ -114,7 +114,7 @@ export default function RegisterPage() {
       <div className="hidden lg:flex flex-1 relative bg-zinc-900 border-l border-white/5 overflow-hidden items-center justify-center">
          {/* Background Effects */}
          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 z-0" />
-         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-orange-500/10 blur-[100px] rounded-full" />
+         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 blur-[100px] rounded-full" />
          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 blur-[100px] rounded-full" />
          
          {/* Content overlay */}
@@ -122,7 +122,7 @@ export default function RegisterPage() {
             <ShieldCheck className="w-16 h-16 text-emerald-500 mb-8 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
             <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
                L'écosystème où chaque kilomètre parcouru génère un centime d'intelligence.
-               <span className="text-orange-500">.</span>
+               <span className="text-indigo-500">.</span>
             </h2>
             
             <div className="space-y-6 mt-12">

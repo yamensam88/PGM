@@ -83,7 +83,7 @@ export function VehicleHistory({ vehicle }: { vehicle: any }) {
                 <TableCell className="font-medium">{item.date.toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>
                   {item.type === 'Entretien' ? (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300">Entretien</Badge>
+                    <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300">Entretien</Badge>
                   ) : (
                     <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300">Sinistre</Badge>
                   )}

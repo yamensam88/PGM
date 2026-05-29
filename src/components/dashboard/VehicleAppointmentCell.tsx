@@ -31,8 +31,8 @@ export function VehicleAppointmentCell({ vehicle }: { vehicle: any }) {
       colorClass = "text-red-600 font-bold";
       badge = <Badge variant="outline" className="mt-1 bg-red-50 text-red-600 border-red-200 text-[10px] px-1 py-0 h-4">Dépassé</Badge>;
     } else if (daysDiff <= 7) {
-      colorClass = "text-orange-600 font-bold";
-      badge = <Badge variant="outline" className="mt-1 bg-orange-50 text-orange-600 border-orange-200 text-[10px] px-1 py-0 h-4">Bientôt</Badge>;
+      colorClass = "text-indigo-600 font-bold";
+      badge = <Badge variant="outline" className="mt-1 bg-indigo-50 text-indigo-600 border-indigo-200 text-[10px] px-1 py-0 h-4">Bientôt</Badge>;
     } else {
       colorClass = "text-emerald-600 font-semibold";
     }

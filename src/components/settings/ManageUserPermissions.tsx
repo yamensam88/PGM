@@ -57,7 +57,7 @@ export function ManageUserPermissions({ userId, userName, initialPermissions }: 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 relative" title="Gérer les accès" />}>
+      <DialogTrigger render={<Button variant="ghost" size="icon" className="text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 relative" title="Gérer les accès" />}>
         <Settings className="w-4 h-4" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -81,7 +81,7 @@ export function ManageUserPermissions({ userId, userName, initialPermissions }: 
                   id={mod.id} 
                   checked={permissions[mod.id] || false}
                   onChange={(e) => handleToggle(mod.id, e.target.checked)}
-                  className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
+                  className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
                 />
               </div>
            ))}
@@ -89,7 +89,7 @@ export function ManageUserPermissions({ userId, userName, initialPermissions }: 
 
         <div className="flex justify-end gap-3 mt-4">
            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-           <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 font-semibold gap-2 w-32">
+           <Button onClick={handleSave} disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700 font-semibold gap-2 w-32">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sauvegarder"}
            </Button>
         </div>

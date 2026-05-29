@@ -14,11 +14,11 @@ export function InteractiveSimulator() {
   return (
     <div className="w-full max-w-xl mx-auto bg-[#090b14] border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden mt-12 mb-8 group">
       {/* Decorative Glows */}
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-orange-600/20 blur-[60px] rounded-full pointer-events-none group-hover:bg-orange-500/30 transition-colors" />
-      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-600/10 blur-[60px] rounded-full pointer-events-none group-hover:bg-blue-500/20 transition-colors" />
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/20 blur-[60px] rounded-full pointer-events-none group-hover:bg-indigo-500/30 transition-colors" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/10 blur-[60px] rounded-full pointer-events-none group-hover:bg-indigo-500/20 transition-colors" />
       
       <div className="flex items-center justify-between mb-10 relative z-10">
-         <Badge variant="outline" className="bg-black/50 border-orange-500/30 text-orange-400 font-mono text-[10px] tracking-widest shadow-none">
+         <Badge variant="outline" className="bg-black/50 border-indigo-500/30 text-indigo-400 font-mono text-[10px] tracking-widest shadow-none">
            [ ESTIMER MON POTENTIEL ]
          </Badge>
          <div className="flex items-center gap-2 text-zinc-400 font-medium text-xs tracking-wide">
@@ -41,7 +41,7 @@ export function InteractiveSimulator() {
                step="1" 
                value={fleetSize}
                onChange={(e) => setFleetSize(parseInt(e.target.value))}
-               className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+               className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
             />
          </div>
          

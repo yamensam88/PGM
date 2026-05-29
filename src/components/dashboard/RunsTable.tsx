@@ -34,7 +34,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'planned': return <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-medium px-2.5 py-0.5 rounded-full border-0">Planifié</Badge>;
-      case 'in_progress': return <Badge variant="default" className="bg-blue-50 text-blue-600 font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">En cours</Badge>;
+      case 'in_progress': return <Badge variant="default" className="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-0.5 rounded-full border border-indigo-100">En cours</Badge>;
       case 'completed': return <Badge variant="default" className="bg-emerald-50 text-emerald-600 font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Terminé</Badge>;
       case 'failed': return <Badge variant="destructive" className="bg-red-50 text-red-600 font-semibold px-2.5 py-0.5 rounded-full border border-red-100">Échec</Badge>;
       default: return <Badge variant="outline" className="font-medium rounded-full text-slate-500">{status}</Badge>;
@@ -111,7 +111,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 {run.driver.first_name} {run.driver.last_name}
               </span>
             ) : (
-              <Link href={`/driver?driverId=${run.driver_id}`} className="text-blue-600 hover:text-blue-800 hover:underline transition-colors block" title="Ouvrir le formulaire chauffeur">
+              <Link href={`/driver?driverId=${run.driver_id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline transition-colors block" title="Ouvrir le formulaire chauffeur">
                 {run.driver.first_name} {run.driver.last_name}
               </Link>
             )
@@ -129,7 +129,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
         
         <TableCell className="text-center text-[13px] text-slate-600 font-semibold">{loaded}</TableCell>
         <TableCell className="text-center text-[13px] text-emerald-600 font-bold">{delivered}</TableCell>
-        <TableCell className="text-center text-[13px] text-orange-500 font-bold">{advised}</TableCell>
+        <TableCell className="text-center text-[13px] text-indigo-500 font-bold">{advised}</TableCell>
         <TableCell className="text-center text-[13px] text-rose-500 font-bold">{returned}</TableCell>
         
         <TableCell className="text-center">
@@ -153,7 +153,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
         <TableCell className="text-right px-4">
            <div className="flex flex-col items-end gap-0.5">
               {Number(run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((s: number, e: any) => s + Number(e.amount), 0)) > 0 && (
-                <span className="text-[11px] font-semibold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                <span className="text-[11px] font-semibold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
                   {run.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(0)}€ Maint.
                 </span>
               )}
@@ -177,7 +177,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
            <div className="flex flex-col items-end gap-0.5">
               {Number(run.fuel_consumed_liters) > 0 ? (
                  <>
-                   <span className="text-[12px] font-bold text-orange-600">{Number(run.fuel_consumed_liters).toFixed(1)} L</span>
+                   <span className="text-[12px] font-bold text-indigo-600">{Number(run.fuel_consumed_liters).toFixed(1)} L</span>
                    <span className="text-[10px] font-medium text-slate-400">{Number(run.cost_fuel).toFixed(2)} €</span>
                  </>
               ) : (
@@ -227,7 +227,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+                  className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" 
                   onClick={() => setHistoryDriver(run.driver)} 
                   title="Historique Financier du Chauffeur"
                   type="button"
@@ -235,7 +235,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                   <Clock className="h-4 w-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" onClick={() => setEditingRun(run)} title="Modifier la tournée">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" onClick={() => setEditingRun(run)} title="Modifier la tournée">
                 <Edit className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setIncidentRunId(run)} title="Déclarer Casse/Sinistre">
@@ -253,7 +253,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+                  className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" 
                   onClick={() => setHistoryDriver(run.driver)} 
                   title="Historique Financier du Chauffeur"
                   type="button"
@@ -261,7 +261,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                   <Clock className="h-4 w-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" onClick={() => setEditingRun(run)} title="Modifier la tournée">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" onClick={() => setEditingRun(run)} title="Modifier la tournée">
                 <Edit className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setIncidentRunId(run)} title="Déclarer Casse/Sinistre">
@@ -271,7 +271,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                 <Trash2 className="h-4 w-4" />
               </Button>
               <Link href={`/dispatch/runs/${run.id}`}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Détails" type="button">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" title="Détails" type="button">
                   <FileText className="h-4 w-4" />
                 </Button>
               </Link>
@@ -338,13 +338,13 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
               </TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Total</TableHead>
               <TableHead className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest text-center">Livré</TableHead>
-              <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-center">Avisé</TableHead>
+              <TableHead className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest text-center">Avisé</TableHead>
               <TableHead className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest text-center">Retour</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Écart</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Km Utiles</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center">Statut</TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">Dommages</TableHead>
-              <TableHead className="text-[11px] font-semibold text-orange-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
+              <TableHead className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest text-right px-4">Gasoil</TableHead>
               {!isExploitationMode && (
                 <>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-right px-4">CA</TableHead>
@@ -388,7 +388,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                       </TableCell>
                       <TableCell className="text-center text-[12px] text-slate-700 font-bold">{zLoaded}</TableCell>
                       <TableCell className="text-center text-[12px] text-emerald-600 font-bold">{zDelivered}</TableCell>
-                      <TableCell className="text-center text-[12px] text-orange-600 font-bold">{zAdvised}</TableCell>
+                      <TableCell className="text-center text-[12px] text-indigo-600 font-bold">{zAdvised}</TableCell>
                       <TableCell className="text-center text-[12px] text-rose-500 font-bold">{zReturned}</TableCell>
                       <TableCell className="text-center">
                         {zEcart !== 0 ? (
@@ -405,7 +405,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
                       <TableCell></TableCell>
                       <TableCell className="text-right px-4">
                         <div className="flex flex-col items-end gap-0.5">
-                          {zMaint > 0 && <span className="text-[11px] font-semibold text-orange-500">{zMaint.toFixed(0)}€ Maint.</span>}
+                          {zMaint > 0 && <span className="text-[11px] font-semibold text-indigo-500">{zMaint.toFixed(0)}€ Maint.</span>}
                           {zDamages > 0 && <span className="text-[11px] font-semibold text-red-500">{zDamages.toFixed(0)}€ Casse</span>}
                           {zPenalty > 0 && <span className="text-[11px] font-semibold text-purple-600">{zPenalty.toFixed(0)}€ Pénalité</span>}
                           {zMaint === 0 && zDamages === 0 && zPenalty === 0 && <span className="text-slate-300">-</span>}
@@ -457,7 +457,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
         <Dialog open={!!editingRun} onOpenChange={(open) => !open && setEditingRun(null)}>
           <DialogContent className="sm:max-w-[700px] bg-white border-slate-200 text-slate-800">
             <DialogHeader>
-              <DialogTitle className="text-blue-600">Modifier la tournée</DialogTitle>
+              <DialogTitle className="text-indigo-600">Modifier la tournée</DialogTitle>
               <DialogDescription className="text-slate-500">
                 Mettez à jour les valeurs d'avancement de la tournée en cours.
               </DialogDescription>

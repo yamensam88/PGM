@@ -144,7 +144,7 @@ export function EditAbsenceForm({ event, drivers, onSuccess }: EditAbsenceFormPr
           >
             Fermer
           </Button>
-          <Button type="submit" disabled={isPending} className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20">
+          <Button type="submit" disabled={isPending} className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20">
             {isPending ? "Modification..." : "Modifier l'événement"}
           </Button>
         </div>

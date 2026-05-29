@@ -104,7 +104,7 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
              name="fuel_receipt" 
              type="file" 
              accept="image/*,.pdf" 
-             className="text-slate-500 bg-white border-slate-300 file:bg-blue-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-blue-700 cursor-pointer" 
+             className="text-slate-500 bg-white border-slate-300 file:bg-indigo-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-indigo-700 cursor-pointer" 
           />
         </div>
       </div>
@@ -119,7 +119,7 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
         <Button type="button" variant="outline" className="mr-4 text-slate-700" onClick={onSuccess}>
           Annuler
         </Button>
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending}>
+        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending}>
           {isPending ? "Mise à jour..." : "Enregistrer les modifications"}
         </Button>
       </div>

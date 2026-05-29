@@ -101,7 +101,7 @@ export function CreateEmployeeForm() {
                  <p><strong className="text-slate-500">Identifiant :</strong> {successData.email}</p>
                  <p><strong className="text-slate-500">Mot de passe :</strong> {successData.password}</p>
               </div>
-              <p className="text-[11px] text-orange-400 font-medium uppercase tracking-wider">Veuillez noter ces identifiants avant de fermer, ils ne seront plus affichés.</p>
+              <p className="text-[11px] text-indigo-400 font-medium uppercase tracking-wider">Veuillez noter ces identifiants avant de fermer, ils ne seront plus affichés.</p>
            </div>
         ) : (
            <p className="text-emerald-500/80 text-[13px]">Le profil RH du salarié a été enregistré.</p>
@@ -169,10 +169,10 @@ export function CreateEmployeeForm() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2.5 bg-blue-900/10 p-5 border border-blue-900/30 rounded-xl">
-          <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-blue-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>
+        <div className="space-y-2.5 bg-indigo-900/10 p-5 border border-indigo-900/30 rounded-xl">
+          <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-indigo-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>
           <p className="text-[11px] text-slate-500">Sert au calcul du coût journalier (Lun-Sam hors jours fériés).</p>
-          <Input id="monthlyCost" name="monthlyCost" type="number" step="0.01" value={monthlyCost} onChange={(e) => setMonthlyCost(e.target.value)} required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-blue-600" placeholder="ex: 3500.00" />
+          <Input id="monthlyCost" name="monthlyCost" type="number" step="0.01" value={monthlyCost} onChange={(e) => setMonthlyCost(e.target.value)} required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-indigo-600" placeholder="ex: 3500.00" />
         </div>
 
         <div className="space-y-2.5 bg-zinc-50 p-5 border border-slate-200 rounded-xl">
@@ -216,7 +216,7 @@ export function CreateEmployeeForm() {
       {jobTitle === "Chauffeur" && (
         <div className="space-y-4 p-5 mt-4 border border-slate-200 bg-white rounded-xl">
            <h4 className="text-[13px] font-semibold text-slate-700 flex items-center gap-2">
-              <Key className="w-4 h-4 text-blue-500"/> Identifiants Application Chauffeur
+              <Key className="w-4 h-4 text-indigo-500"/> Identifiants Application Chauffeur
            </h4>
            <p className="text-[11px] text-slate-500">Définissez manuellement les accès de ce chauffeur ou laissez vide pour une génération automatique.</p>
            <div className="grid grid-cols-2 gap-4">
@@ -239,7 +239,7 @@ export function CreateEmployeeForm() {
       )}
 
       <div className="pt-2">
-        <Button disabled={isPending} type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-slate-900 font-medium shadow-sm shadow-blue-900/20">
+        <Button disabled={isPending} type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-slate-900 font-medium shadow-sm shadow-indigo-900/20">
           {isPending ? "Création en cours..." : "Enregistrer le salarié"}
         </Button>
       </div>

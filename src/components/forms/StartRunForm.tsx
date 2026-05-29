@@ -52,13 +52,13 @@ export function StartRunForm({
       <div className="bg-white dark:bg-white shadow-sm border border-zinc-200 dark:border-slate-200 rounded-xl p-5 space-y-5">
         
         <div className="space-y-2">
-          <Label htmlFor="vehicle_id" className="flex items-center gap-2"><Truck className="w-4 h-4 text-blue-500" /> Véhicule utilisé</Label>
+          <Label htmlFor="vehicle_id" className="flex items-center gap-2"><Truck className="w-4 h-4 text-indigo-500" /> Véhicule utilisé</Label>
           <select 
             id="vehicle_id" 
             name="vehicle_id" 
             required 
             defaultValue={defaultVehicleId || ""}
-            className="flex h-12 w-full items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-300 dark:bg-[#f8f9fc] dark:text-zinc-50"
+            className="flex h-12 w-full items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-300 dark:bg-[#f8f9fc] dark:text-zinc-50"
           >
              <option value="">Sélectionner un véhicule</option>
              {vehicles.map(v => <option key={v.id} value={v.id}>{v.plate_number}</option>)}
@@ -115,7 +115,7 @@ export function StartRunForm({
         </div>
       )}
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-slate-900 rounded-xl h-14 text-lg shadow-lg shadow-blue-500/20" disabled={isPending}>
+      <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-slate-900 rounded-xl h-14 text-lg shadow-lg shadow-indigo-500/20" disabled={isPending}>
         {isPending ? "Démarrage en cours..." : <><Navigation className="mr-2 w-6 h-6" /> Confirmer & Démarrer</>}
       </Button>
       

@@ -35,9 +35,9 @@ export function GlobalCalendar({ events }: GlobalCalendarProps) {
         .calendar-wrapper .fc-col-header-cell { padding: 8px 0; background-color: var(--color-slate-50); color: var(--color-slate-600); font-size: 0.875rem; text-transform: uppercase; font-weight: 700; }
         .dark .calendar-wrapper .fc-col-header-cell { background-color: var(--color-slate-800); color: var(--color-slate-300); }
         .calendar-wrapper .fc-event { border: none !important; margin: 1px 2px; }
-        .calendar-wrapper .fc-button-primary { background-color: #3b82f6 !important; border-color: #3b82f6 !important; text-transform: capitalize; font-weight: 600; }
-        .calendar-wrapper .fc-button-primary:hover { background-color: #2563eb !important; }
-        .calendar-wrapper .fc-button-active { background-color: #1d4ed8 !important; }
+        .calendar-wrapper .fc-button-primary { background-color: #6366f1 !important; border-color: #6366f1 !important; text-transform: capitalize; font-weight: 600; }
+        .calendar-wrapper .fc-button-primary:hover { background-color: #4f46e5 !important; }
+        .calendar-wrapper .fc-button-active { background-color: #4338ca !important; }
         .calendar-wrapper .fc-multimonth-title { font-weight: bold; color: var(--color-slate-700); }
         .dark .calendar-wrapper .fc-multimonth-title { color: var(--color-slate-200); }
       `}} />

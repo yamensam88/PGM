@@ -182,7 +182,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
   });
 
   const calendarEvents = drivers.flatMap(d => (d as any).hr_events?.map((e: any) => {
-     let color = "#3b82f6";
+     let color = "#6366f1";
      let title = d.first_name + " " + d.last_name;
      if (e.event_type === "vacation") { color = "#10b981"; title += " (Congés)"; }
      else if (e.event_type === "sick_leave") { color = "#f59e0b"; title += " (Maladie)"; }
@@ -208,7 +208,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-x-6 gap-y-4 pb-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-500" /> Ressources Humaines
+              <Users className="w-8 h-8 text-indigo-500" /> Ressources Humaines
             </h1>
             <p className="text-slate-500 mt-1.5 text-[15px]">
               Gérez les contrats, plannings, absences et fiches de paies de votre effectif de manière centralisée.
@@ -219,7 +219,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
             <div className="flex items-center gap-3">
                <DateRangePicker />
                <Dialog>
-                 <DialogTrigger render={<Button className="bg-blue-600 hover:bg-blue-700 text-slate-900 shadow-sm flex items-center gap-2" />}>
+                 <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-slate-900 shadow-sm flex items-center gap-2" />}>
                    <Plus className="w-4 h-4" /> Ajouter un salarié
                  </DialogTrigger>
                  <DialogContent className="sm:max-w-xl p-0 overflow-y-auto max-h-[85vh] bg-white border-slate-200 text-slate-800">
@@ -372,8 +372,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                   <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
                   <div className="text-center flex-1 px-4">
                      <DriverMetricBox 
-                       valueClass="text-2xl 2xl:text-3xl text-blue-500" 
-                       labelClass="text-blue-500/80" 
+                       valueClass="text-2xl 2xl:text-3xl text-indigo-500" 
+                       labelClass="text-indigo-500/80" 
                        count={nonAffectesChauffeurs} 
                        label="Non Affectés" 
                        title="Personnels Non Affectés" 
@@ -528,7 +528,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
                              if (isPresentToday) todayStatusBadge = <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 shadow-none font-medium text-[10px] px-2 py-0">En Tournée</Badge>;
                              else if (isCongesToday) todayStatusBadge = <Badge variant="outline" className="bg-teal-50 text-teal-600 border-teal-200 shadow-none font-medium text-[10px] px-2 py-0">En Congés</Badge>;
-                             else if (isAbsentToday) todayStatusBadge = <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 shadow-none font-medium text-[10px] px-2 py-0">Absent</Badge>;
+                             else if (isAbsentToday) todayStatusBadge = <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-indigo-200 shadow-none font-medium text-[10px] px-2 py-0">Absent</Badge>;
 
                              return (
                              <tr key={driver.id} className="hover:bg-slate-50 transition-colors">
@@ -541,7 +541,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                       <p className="font-semibold text-slate-700">{driver.first_name} {driver.last_name}</p>
                                       <p className="text-slate-500 text-[11px]">{driver.email || 'Pas email recensé'}</p>
                                       {currentLeave ? (
-                                        <Badge className="mt-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200 shadow-none text-[10px] font-bold px-1.5 py-0 leading-tight">
+                                        <Badge className="mt-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-200 shadow-none text-[10px] font-bold px-1.5 py-0 leading-tight">
                                           {currentLeave.event_type === 'vacation' ? '⛱️ En congés' : '🤒 En arrêt'} {currentLeave.end_date ? `jusqu'au ${format(new Date(currentLeave.end_date), 'dd/MM')}` : ''}
                                         </Badge>
                                       ) : nextLeave ? (
@@ -587,9 +587,9 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                     )}
                                   </EmployeeCalendarDialog>
                                 </td>
-                                <td className="px-6 py-4 font-medium text-center text-blue-400">
+                                <td className="px-6 py-4 font-medium text-center text-indigo-400">
                                   <EmployeeCalendarDialog title="Historique des Congés Pris" subtitle={`${driver.first_name} ${driver.last_name}`} dates={vacationDates} colorType="blue">
-                                    <span className="bg-blue-50 px-2 py-0.5 rounded text-[11px] font-bold">{leaveBalance > 0 ? `${leaveBalance.toFixed(2)} j` : '0 j'}</span>
+                                    <span className="bg-indigo-50 px-2 py-0.5 rounded text-[11px] font-bold">{leaveBalance > 0 ? `${leaveBalance.toFixed(2)} j` : '0 j'}</span>
                                   </EmployeeCalendarDialog>
                                 </td>
                                 <td className="px-6 py-4 text-center">
@@ -640,11 +640,11 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 </td>
                                 <td className="px-6 py-4">
                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-orange-400">
+                                      <span className="font-medium text-indigo-400">
                                          {monthlyCost.toFixed(2)} €
                                       </span>
                                       <Dialog>
-                                        <DialogTrigger render={<button className="text-slate-400 hover:text-orange-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-orange-500/30 underline-offset-2 transition-all" />}>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-indigo-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-indigo-500/30 underline-offset-2 transition-all" />}>
                                            Modifier
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-sm bg-white border-slate-200 text-slate-800">
@@ -665,7 +665,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                          {netSalary.toFixed(2)} € {hasCustomNet ? '' : '(Est.)'}
                                       </span>
                                       <Dialog>
-                                        <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-indigo-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-indigo-500/30 underline-offset-2 transition-all" />}>
                                            Modifier
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-sm bg-white border-slate-200">
@@ -729,8 +729,8 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 <td className="px-6 py-4">
                                   <Badge variant="outline" className={
                                     event.event_type === 'sick_leave' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                                    event.event_type === 'vacation' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                    event.event_type === 'sanction' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                    event.event_type === 'vacation' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                    event.event_type === 'sanction' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
                                     'bg-white text-slate-500 border-slate-300'
                                   }>
                                     {event.event_type === 'sick_leave' ? 'Maladie' : 
@@ -754,7 +754,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                       <DialogTrigger render={<button className={`text-slate-400 hover:text-${event.event_type === 'sanction' ? 'red' : 'blue'}-500 text-[11px] font-semibold underline decoration-transparent hover:decoration-${event.event_type === 'sanction' ? 'red' : 'blue'}-500/30 underline-offset-2 transition-all`} />}>Modifier</DialogTrigger>
                                       <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-800">
                                         <DialogHeader>
-                                          <DialogTitle className={event.event_type === 'sanction' ? "text-red-500" : "text-blue-500"}>Modifier {event.event_type === 'sanction' ? 'la pénalité' : "l'événement"}</DialogTitle>
+                                          <DialogTitle className={event.event_type === 'sanction' ? "text-red-500" : "text-indigo-500"}>Modifier {event.event_type === 'sanction' ? 'la pénalité' : "l'événement"}</DialogTitle>
                                           <DialogDescription className="text-slate-500">Mettez à jour les informations enregistrées.</DialogDescription>
                                         </DialogHeader>
                                         {event.event_type === 'sanction' ? (
@@ -841,11 +841,11 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                 </td>
                                 <td className="px-6 py-4">
                                    <div className="flex items-center gap-2">
-                                      <span className="font-bold text-blue-600">
+                                      <span className="font-bold text-indigo-600">
                                          {defaultBonusAmt.toFixed(2)} €
                                       </span>
                                       <Dialog>
-                                        <DialogTrigger render={<button className="text-slate-400 hover:text-blue-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-blue-500/30 underline-offset-2 transition-all" />}>
+                                        <DialogTrigger render={<button className="text-slate-400 hover:text-indigo-500 text-[11px] font-semibold ml-1 underline decoration-transparent hover:decoration-indigo-500/30 underline-offset-2 transition-all" />}>
                                            Modifier
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-sm bg-white border-slate-200 text-slate-800">
@@ -865,7 +865,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                       {getsBonus ? (
                                          <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200/50 shadow-none font-medium text-xs">Favorable</Badge>
                                       ) : (
-                                         <Badge className="bg-orange-50 text-orange-600 border border-orange-200/50 shadow-none font-medium text-xs">Défavorable</Badge>
+                                         <Badge className="bg-indigo-50 text-indigo-600 border border-indigo-200/50 shadow-none font-medium text-xs">Défavorable</Badge>
                                       )}
                                       <span className="text-[10px] text-slate-400">({presentDays}j prés. / {sickDays} abs. / {sanctions} sanct.)</span>
                                     </div>

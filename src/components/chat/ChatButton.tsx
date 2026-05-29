@@ -27,7 +27,7 @@ export function ChatButton() {
 
   return (
     <Sheet>
-      <SheetTrigger render={<button className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-500 transition-colors relative" />}>
+      <SheetTrigger render={<button className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-500 transition-colors relative" />}>
         <MessageSquare className="w-5 h-5" />
         {unread > 0 && (
            <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
@@ -150,7 +150,7 @@ function ChatPanelContent() {
                         </span>
                      </div>
                      <div className={`px-4 py-2.5 rounded-2xl max-w-[85%] text-sm ${
-                        isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border shadow-sm rounded-tl-sm'
+                        isMe ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border shadow-sm rounded-tl-sm'
                      }`}>
                         {m.content}
                      </div>
@@ -175,10 +175,10 @@ function ChatPanelContent() {
                   }
                }}
                placeholder="Tapez un message... (Shift+Entrée pour passer à la ligne)" 
-               className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow max-h-[120px] min-h-[40px] overflow-y-auto leading-relaxed"
+               className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow max-h-[120px] min-h-[40px] overflow-y-auto leading-relaxed"
                rows={1}
             />
-            <Button type="submit" size="icon" className="rounded-xl h-10 w-10 bg-blue-600 hover:bg-blue-700 shrink-0 mb-[1px]">
+            <Button type="submit" size="icon" className="rounded-xl h-10 w-10 bg-indigo-600 hover:bg-indigo-700 shrink-0 mb-[1px]">
                <Send className="w-4 h-4 text-white ml-0.5" />
             </Button>
          </form>
@@ -190,7 +190,7 @@ function ChatPanelContent() {
     <div className="flex flex-col h-full bg-slate-50">
        <SheetHeader className="p-5 pb-0 bg-white border-b border-slate-100">
          <SheetTitle className="text-xl font-bold flex items-center gap-2 mb-4 text-slate-800">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
+            <MessageSquare className="w-5 h-5 text-indigo-600" />
             Messagerie Interne
          </SheetTitle>
          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -220,23 +220,23 @@ function ChatPanelContent() {
                    <button 
                      key={u.id}
                      onClick={() => setActiveChat({ id: u.id, name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email, type: 'user' })}
-                     className={`flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left relative ${hasUnread ? 'bg-blue-50/50' : ''}`}
+                     className={`flex items-center w-full p-3 rounded-xl hover:bg-slate-50 transition-colors text-left relative ${hasUnread ? 'bg-indigo-50/50' : ''}`}
                    >
                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center shrink-0 mr-3 relative">
                         <User className="w-5 h-5 text-slate-500" />
                         {isAdmin && isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>}
-                        {isAdmin && !isOnline && isToday && <span className="absolute bottom-0 right-0 w-3 h-3 bg-orange-400 border-2 border-white rounded-full"></span>}
+                        {isAdmin && !isOnline && isToday && <span className="absolute bottom-0 right-0 w-3 h-3 bg-indigo-400 border-2 border-white rounded-full"></span>}
                      </div>
                      <div className="flex flex-col flex-1">
-                        <span className={`text-sm ${hasUnread ? 'font-bold text-blue-700' : 'font-semibold text-slate-800'}`}>
+                        <span className={`text-sm ${hasUnread ? 'font-bold text-indigo-700' : 'font-semibold text-slate-800'}`}>
                            {`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email}
                         </span>
-                        <span className={`text-[11px] capitalize ${hasUnread ? 'font-bold text-blue-600' : 'text-slate-400'}`}>
+                        <span className={`text-[11px] capitalize ${hasUnread ? 'font-bold text-indigo-600' : 'text-slate-400'}`}>
                            {hasUnread ? `${unreadMap[u.id]} nouveau(x) message(s)` : u.role}
                         </span>
                      </div>
                      {hasUnread && (
-                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full shrink-0 shadow-sm ml-2"></div>
+                        <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full shrink-0 shadow-sm ml-2"></div>
                      )}
                    </button>
                 )})}
@@ -246,12 +246,12 @@ function ChatPanelContent() {
 
           {activeTab === "general" && (
              <div className="p-4 flex flex-col items-center justify-center h-full text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-2"><MessageSquare className="w-8 h-8"/></div>
+                <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2"><MessageSquare className="w-8 h-8"/></div>
                 <div>
                    <h3 className="font-bold text-slate-800">Canal Général</h3>
                    <p className="text-sm text-slate-500 max-w-[250px] mx-auto mt-2">Discutez avec tous les membres du bureau.</p>
                 </div>
-                <Button onClick={() => setActiveChat({ id: "general", name: "Général", type: "group" })} className="bg-blue-600 hover:bg-blue-700 mt-4 rounded-xl px-8">
+                <Button onClick={() => setActiveChat({ id: "general", name: "Général", type: "group" })} className="bg-indigo-600 hover:bg-indigo-700 mt-4 rounded-xl px-8">
                    Rejoindre le chat
                 </Button>
              </div>

@@ -29,7 +29,7 @@ export function DriversTable({ drivers }: { drivers: any[] }) {
             <TableHead className="font-semibold text-zinc-600">Email / Identifiant</TableHead>
             <TableHead className="font-semibold text-zinc-600">Téléphone</TableHead>
             <TableHead className="font-semibold text-zinc-600">Statut</TableHead>
-            <TableHead className="text-right font-semibold text-orange-600">Entretien (€)</TableHead>
+            <TableHead className="text-right font-semibold text-indigo-600">Entretien (€)</TableHead>
             <TableHead className="text-right font-semibold text-red-600">Sinistres (€)</TableHead>
             <TableHead className="text-right font-semibold text-amber-600">Pénalités (€)</TableHead>
           </TableRow>
@@ -54,7 +54,7 @@ export function DriversTable({ drivers }: { drivers: any[] }) {
                      <Badge variant="outline">{driver.status}</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-right font-medium text-orange-600">
+                <TableCell className="text-right font-medium text-indigo-600">
                   {driver.financial_entries?.filter((e: any) => e.category === 'maintenance_cost').reduce((sum: number, entry: any) => sum + Number(entry.amount), 0).toFixed(2) || '0.00'}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-red-600">

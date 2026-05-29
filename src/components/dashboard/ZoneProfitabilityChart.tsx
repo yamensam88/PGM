@@ -84,7 +84,7 @@ export function ZoneProfitabilityChart({ runs, extraCosts = [] }: ZoneProfitabil
         <div className="bg-white/90 backdrop-blur-md border border-slate-100 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 ring-slate-900/5">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{payload[0].payload.zone}</p>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isPositive ? 'bg-orange-500' : 'bg-red-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${isPositive ? 'bg-indigo-500' : 'bg-red-500'}`} />
             <p className={`text-sm font-extrabold ${isPositive ? 'text-slate-800' : 'text-red-500'}`}>
               {value > 0 ? '+' : ''}{value.toLocaleString('fr-FR')} €
             </p>
@@ -106,8 +106,8 @@ export function ZoneProfitabilityChart({ runs, extraCosts = [] }: ZoneProfitabil
         >
           <defs>
             <linearGradient id="colorPosZone" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#f97316" stopOpacity={0.6} />
-              <stop offset="100%" stopColor="#f97316" stopOpacity={1} />
+              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={1} />
             </linearGradient>
             <linearGradient id="colorNegZone" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#ef4444" stopOpacity={0.6} />

@@ -98,7 +98,7 @@ function ResetPasswordForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-blue-500 px-3 text-base rounded-lg"
+            className="h-12 border-zinc-300 focus-visible:ring-1 focus-visible:ring-indigo-500 px-3 text-base rounded-lg"
           />
         </div>
         <p className="text-xs text-slate-400 mt-1">6 caractères minimum</p>
@@ -117,7 +117,7 @@ function ResetPasswordForm() {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full flex justify-center items-center h-12 border border-transparent rounded-lg shadow-sm text-[15px] font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+          className="w-full flex justify-center items-center h-12 border border-transparent rounded-lg shadow-sm text-[15px] font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
         >
           {loading ? "Sauvegarde..." : "Réinitialiser mon mot de passe"}
         </button>
