@@ -11,6 +11,8 @@ import { countWorkingDays } from "@/lib/calendar";
 import { computeRunRevenue } from "@/lib/finance";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
+import { MarginWaterfall } from "@/components/dashboard/MarginWaterfall";
+import { StrategicRecommendation, type Reco } from "@/components/dashboard/StrategicRecommendation";
 import { ZoneProfitabilityChart } from "@/components/dashboard/ZoneProfitabilityChart";
 import { DriverProfitabilityChart } from "@/components/dashboard/DriverProfitabilityChart";
 
@@ -339,6 +341,45 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
   const totalMargin = totalRunsMargin - periodAdminFixedCosts - totalIdleDriverCost - idleVehicleFixedCost - totalDamageCost - totalMaintenanceCost - totalBonusCost - totalPenaltyCost;
   const totalCosts = totalFleetCostActive + totalFuelCost + totalDriverCostActive + periodAdminFixedCosts + totalIdleDriverCost + idleVehicleFixedCost + totalDamageCost + totalMaintenanceCost + totalBonusCost + totalPenaltyCost;
+
+  // --- Decomposition de marge (Waterfall) + recommandation chiffree (donnees reelles) ---
+  const fmtEurZero = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  const marginWaterfallItems = [
+    { label: "Carburant", amount: totalFuelCost },
+    { label: "Chauffeurs (roulants)", amount: totalDriverCostActive },
+    { label: "Vehicules (roulants)", amount: totalFleetCostActive },
+    { label: "Chauffeurs a l'arret", amount: totalIdleDriverCost },
+    { label: "Vehicules a l'arret", amount: idleVehicleFixedCost },
+    { label: "Structure / admin", amount: periodAdminFixedCosts },
+    { label: "Entretien", amount: totalMaintenanceCost },
+    { label: "Casse", amount: totalDamageCost },
+    { label: "Primes", amount: totalBonusCost },
+    { label: "Penalites", amount: totalPenaltyCost },
+  ];
+  const marginPctNow = totalRevenue > 0 ? (totalMargin / totalRevenue) * 100 : 0;
+  const TARGET_MARGIN_PCT = 10;
+  let strategicReco: Reco | null = null;
+  if (totalRevenue > 0 && marginPctNow < TARGET_MARGIN_PCT) {
+    const targetNet = (TARGET_MARGIN_PCT / 100) * totalRevenue;
+    const gap = targetNet - totalMargin;
+    const priceUpPct = (gap / totalRevenue) * 100;
+    const sortedCosts = [...marginWaterfallItems].filter((i) => i.amount > 0).sort((a, b) => b.amount - a.amount);
+    const biggest = sortedCosts[0];
+    strategicReco = {
+      action: `Augmenter vos tarifs de ${priceUpPct.toFixed(1)}%`,
+      lever: "Prix de vente",
+      impactEuro: gap,
+      periodLabel: "sur la periode",
+      beforeLabel: "Marge nette",
+      beforeValue: fmtEurZero(totalMargin),
+      afterValue: fmtEurZero(targetNet),
+      beforePct: marginPctNow,
+      afterPct: TARGET_MARGIN_PCT,
+      delay: "Au prochain contrat",
+      risk: `Risque modere - Plus gros poste de cout : ${biggest ? biggest.label : "n/a"}`,
+      rationale: `Votre marge nette est de ${marginPctNow.toFixed(1)}% sur la periode, sous le seuil sain de ${TARGET_MARGIN_PCT}%. Une hausse tarifaire de ${priceUpPct.toFixed(1)}% (couts constants) ramenerait la marge a ${TARGET_MARGIN_PCT}%, soit +${fmtEurZero(gap)}. Alternative : agir sur le poste le plus lourd, ${biggest ? biggest.label : "le poste principal"}.`,
+    };
+  }
 
   const completedRuns = allRuns.filter(r => r.status === 'completed');
   const validRuns = allRuns.filter(r => r.status !== 'cancelled');
@@ -939,6 +980,12 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
               <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Taux de réussite : {deliveryRate.toFixed(1)}%</p>
             </div>
           </Card>
+        </div>
+
+        {/* Decomposition de marge + recommandation chiffree */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+          <MarginWaterfall revenue={totalRevenue} items={marginWaterfallItems} net={totalMargin} />
+          <StrategicRecommendation reco={strategicReco} />
         </div>
 
         {/* Charts Row 1 */}
