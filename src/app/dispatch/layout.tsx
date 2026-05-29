@@ -24,6 +24,8 @@ export default async function DispatchLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isBillingPage = pathname.includes('/settings/billing');
+  // Essai : seules la Direction et l'Exploitation (et la facturation, pour souscrire) sont accessibles.
+  const trialPageAllowed = pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage;
 
   let isSuperAdmin = false;
   let remainingTrialDays = 0;
@@ -77,7 +79,7 @@ export default async function DispatchLayout({
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-[#f8f9fc]">
-      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />
+      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />
       <div className="flex flex-col flex-1 w-full md:pl-64 transition-all duration-300">
         <OnboardingTour />
 
@@ -105,7 +107,7 @@ export default async function DispatchLayout({
            </div>
          )}
  
-         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />} />
+         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (
@@ -133,6 +135,19 @@ export default async function DispatchLayout({
                <div className="w-full h-px bg-slate-100 my-4"></div>
                <Link href="/dispatch/settings/billing" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
                   Débloquer mon espace avec l'abonnement <ArrowRight className="w-5 h-5" />
+               </Link>
+            </div>
+          ) : isTrialing && !trialPageAllowed ? (
+            <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-indigo-100 rounded-2xl shadow-sm p-8 max-w-2xl mx-auto mt-12 relative z-10">
+               <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2 mx-auto"><Lock className="w-10 h-10" /></div>
+               <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">Disponible apres souscription</h2>
+                  <p className="text-slate-500 max-w-md mx-auto text-[15px] mt-3 leading-relaxed">
+                    Pendant votre periode d&apos;essai, vous avez acces a la Direction et a l&apos;Exploitation &amp; Flotte. Les autres modules se debloquent en choisissant une offre.
+                  </p>
+               </div>
+               <Link href="/dispatch/settings/billing" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
+                  Voir les offres <ArrowRight className="w-5 h-5" />
                </Link>
             </div>
           ) : (

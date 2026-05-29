@@ -45,17 +45,17 @@ const allowedPaths: Record<string, string[]> = {
   finance: ['/dispatch/dashboard', '/dispatch/retroactive'],
 };
 
-export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [] }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[] }) {
+export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean }) {
   return (
     <Suspense fallback={<div className="w-64 bg-white border-r border-slate-100/60 h-screen fixed hidden md:block"></div>}>
       <div className="flex flex-col w-64 bg-white border-r border-slate-100/60 text-slate-600 h-screen fixed top-0 left-0 hidden md:flex z-50 shadow-[4px_0_24px_rgba(0,0,0,0.01)]">
-        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} />
+        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />
       </div>
     </Suspense>
   );
 }
 
-export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [] }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[] }) {
+export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -65,7 +65,7 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
       <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
         <Suspense fallback={<div className="w-full h-full bg-white"></div>}>
            <div className="flex flex-col w-full bg-white text-slate-600 h-full">
-             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} onNavItemClick={() => setOpen(false)} />
+             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} onNavItemClick={() => setOpen(false)} />
            </div>
         </Suspense>
       </SheetContent>
@@ -75,7 +75,7 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
 
 const featureByHref: Record<string, string> = { "/dispatch/hr": "hr" };
 
-function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], onNavItemClick?: () => void }) {
+function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], isTrialing = false, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, onNavItemClick?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -124,6 +124,11 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           }
 
           const Icon = item.icon;
+
+          // Essai : on n'affiche que la Direction et l'Exploitation & Flotte.
+          if (isTrialing && item.href !== "/dispatch/dashboard" && item.href !== "/dispatch/runs") {
+             return null;
+          }
 
           if (item.name === "Super Admin" && !isSuperAdmin) {
              return null;
