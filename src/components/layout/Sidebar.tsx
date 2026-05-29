@@ -15,7 +15,8 @@ import {
   History,
   CreditCard,
   Menu,
-  Map
+  Map,
+  Lock,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const navItems = [
   { name: "Exploitation & Flotte", href: "/dispatch/runs", icon: Route },
   { name: "RH", href: "/dispatch/hr", icon: Users },
   { name: "Simulateur / Reprise", href: "/dispatch/retroactive", icon: History },
+  { name: "Cockpit Direction", href: "/dispatch/direction", icon: Lock },
   { name: "Paramètres", href: "/dispatch/settings", icon: Settings },
   { name: "Abonnement", href: "/dispatch/settings/billing", icon: CreditCard },
   { name: "Super Admin", href: "/super-admin", icon: ShieldAlert },
@@ -36,7 +38,7 @@ const navItems = [
 
 const allowedPaths: Record<string, string[]> = {
   admin: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/retroactive', '/dispatch/settings', '/dispatch/settings/billing', '/driver'],
-  owner: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/retroactive', '/dispatch/settings', '/dispatch/settings/billing', '/super-admin', '/driver'],
+  owner: ['/dispatch/dashboard', '/dispatch/runs', '/dispatch/hr', '/dispatch/retroactive', '/dispatch/direction', '/dispatch/settings', '/dispatch/settings/billing', '/super-admin', '/driver'],
   dispatcher: ['/dispatch/runs', '/driver'],
   manager: ['/dispatch/runs', '/driver'],
   hr: ['/dispatch/hr'],
@@ -116,6 +118,10 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, onNavIte
           const Icon = item.icon;
 
           if (item.name === "Super Admin" && !isSuperAdmin) {
+             return null;
+          }
+
+          if (item.name === "Cockpit Direction" && userRole !== "owner") {
              return null;
           }
 

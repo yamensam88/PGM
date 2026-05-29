@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireDirection, requireRole } from "@/lib/authz";
+import { requireDirection, requireRole, requireOwner } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -3658,4 +3658,28 @@ export async function updateUserPermissions(userId: string, permissions: any) {
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
-  
+
+export async function updateRealRate(formData: FormData) {
+  try {
+    const session = await requireOwner();
+    const orgId = session.user.organization_id;
+    const clientId = formData.get("client_id") as string;
+    if (!clientId) throw new Error("Client manquant.");
+    const prices = {
+      base_daily_flat: Number(formData.get("base_daily_flat") || 0),
+      unit_price_stop: Number(formData.get("unit_price_stop") || 0),
+      unit_price_package: Number(formData.get("unit_price_package") || 0),
+      bonus_relay_point: Number(formData.get("bonus_relay_point") || 0),
+    };
+    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+    const settings: any = (org?.settings_json as any) || {};
+    const realRates = settings.real_rates || {};
+    realRates[clientId] = prices;
+    await prisma.organization.update({ where: { id: orgId }, data: { settings_json: { ...settings, real_rates: realRates } } });
+    revalidatePath("/dispatch/direction");
+    return { success: true };
+  } catch (error: any) {
+    console.error("updateRealRate error:", error);
+    return { success: false, error: error.message };
+  }
+}

@@ -61,3 +61,12 @@ export async function requireDirection(): Promise<AuthedSession> {
   }
   return session;
 }
+
+/** Action reservee strictement au proprietaire (owner) — pas meme les admins. */
+export async function requireOwner(): Promise<AuthedSession> {
+  const session = await requireSession();
+  if (session.user.role !== "owner") {
+    throw new Error("Acces refuse : reserve au proprietaire (Direction).");
+  }
+  return session;
+}
