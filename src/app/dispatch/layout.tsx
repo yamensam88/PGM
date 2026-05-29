@@ -25,7 +25,7 @@ export default async function DispatchLayout({
   const pathname = headersList.get('x-pathname') || '';
   const isBillingPage = pathname.includes('/settings/billing');
   // Essai : seules la Direction et l'Exploitation (et la facturation, pour souscrire) sont accessibles.
-  const trialPageAllowed = pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage;
+  const trialPageAllowed = !pathname || pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage;
 
   let isSuperAdmin = false;
   let remainingTrialDays = 0;

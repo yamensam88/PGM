@@ -56,7 +56,9 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith('/dispatch') || pathname.startsWith('/driver')) {
         // Admin and owner bypass
         if (role === 'admin' || role === 'owner') {
-            return NextResponse.next();
+            const h = new Headers(request.headers);
+            h.set('x-pathname', pathname);
+            return NextResponse.next({ request: { headers: h } });
         }
 
         const permissions = (token as any).permissions || {};
