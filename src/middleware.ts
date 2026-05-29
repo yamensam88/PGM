@@ -8,17 +8,17 @@ const DEFAULT_PATHS: Record<string, string> = {
   dispatcher: '/dispatch/runs',
   manager: '/dispatch/runs',
   hr: '/dispatch/hr',
-  finance: '/dispatch/analytics',
+  finance: '/dispatch/dashboard',
   driver: '/driver',
 };
 
 const ALLOWED_PREFIXES: Record<string, string[]> = {
   admin: ['/dispatch', '/driver'],
   owner: ['/dispatch', '/driver'],
-  dispatcher: ['/dispatch/runs', '/dispatch/settings', '/driver'], // Let them see settings if they want, but sidebar blocks it anyway. Let's just restrict strictly.
+  dispatcher: ['/dispatch/runs', '/driver'],
   manager: ['/dispatch/runs', '/driver'],
   hr: ['/dispatch/hr'],
-  finance: ['/dispatch/analytics'],
+  finance: ['/dispatch/dashboard', '/dispatch/retroactive'],
   driver: ['/driver'],
 };
 

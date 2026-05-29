@@ -1359,7 +1359,7 @@ export async function createRun(formData: FormData) {
             });
             const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
             km_diff = Math.max(0, km_end - km_start);
-            const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
+            const variable_fleet_cost = vehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
             let penalty_cost = 0;
             if (vehicle?.ownership_type === 'rented' && vehicle?.monthly_km_limit && vehicle.monthly_km_limit > 0) {
@@ -1967,9 +1967,9 @@ export async function saveUnifiedDelivery(formData: FormData) {
       const price_parcel = Number(rateCardToUse?.unit_price_package || 0);
       const bonus_relay = Number(rateCardToUse?.bonus_relay_point || 0);
       
-      // Projection de revenu basée sur la livraison complète estimée
-      const direct_delivered = loaded;
-      const relay_delivered = relay;
+      // CA facturé sur les colis LIVRÉS (relais d'abord), cohérent avec createRun / finance.ts
+      const relay_delivered = Math.min(delivered, relay);
+      const direct_delivered = Math.max(0, delivered - relay_delivered);
       const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
       // Driver & Fleet Avoid Double Counting
@@ -1996,7 +1996,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
 
         const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
         km_diff = Math.max(0, kmEnd - kmStart);
-        const variable_fleet_cost = km_diff * Number(vehicle?.internal_cost_per_km || 0);
+        const variable_fleet_cost = vehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
         let penalty_cost = 0;
         if (vehicle?.ownership_type === 'rented' && vehicle?.monthly_km_limit && vehicle.monthly_km_limit > 0) {
@@ -2709,7 +2709,7 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
           { end_date: { gte: startDate } },
           { end_date: null }
         ],
-        status: 'active'
+        status: { in: ['active', 'granted'] }
       },
       include: { driver: true }
     });
@@ -2722,6 +2722,11 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
     let totalBonusCost = 0;
 
     hrEvents.forEach(evt => {
+      // Les primes sont des montants ponctuels (stockés dans notes), pas des jours d'absence.
+      if (evt.event_type === 'bonus') {
+        totalBonusCost += Number(evt.notes || 0);
+        return;
+      }
       const evtStart = evt.start_date < startDate ? startDate : evt.start_date;
       const evtEnd = evt.end_date ? (evt.end_date > endDate ? endDate : evt.end_date) : endDate;
       const diffTime = evtEnd.getTime() - evtStart.getTime();
@@ -2733,7 +2738,6 @@ export async function getDriverFinancialHistory(driverId: string, filterStr?: st
       if (evt.event_type === 'absence') unjustifiedAbsenceDays += days;
       if (evt.event_type === 'sick_leave') sickLeaveDays += days;
       if (evt.event_type === 'vacation') vacationDays += days;
-      if (evt.event_type === 'bonus') totalBonusCost += Number((evt as any).amount || 0);
 
       // If it's sick_leave or vacation, we assume the company still bears the daily cost of the driver
       if (evt.event_type === 'sick_leave' || evt.event_type === 'vacation') {
@@ -3188,7 +3192,7 @@ export async function updateRun(formData: FormData) {
           where: { vehicle_id: activeVehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
        });
        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 25.33;
-       const variable_fleet_cost = km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
+       const variable_fleet_cost = activeVehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
 
        let penalty_cost = 0;
        if (activeVehicle?.ownership_type === 'rented' && activeVehicle?.monthly_km_limit && activeVehicle.monthly_km_limit > 0) {
@@ -3612,3 +3616,4 @@ export async function updateUserPermissions(userId: string, permissions: any) {
     return { success: false, error: error.message || "Erreur serveur" };
   }
 }
+  
