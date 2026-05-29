@@ -9,7 +9,12 @@ export const metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#030712] text-zinc-50 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#030712] text-zinc-50 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+      {/* Premium background : grille fine + halo indigo (façon Linear/Vercel) */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.35] [background-image:linear-gradient(to_right,rgba(99,102,241,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.07)_1px,transparent_1px)] [background-size:60px_60px] [mask-image:radial-gradient(ellipse_at_top,black_25%,transparent_72%)]" />
+      <div className="pointer-events-none fixed -top-40 left-1/2 z-0 h-[620px] w-[1100px] -translate-x-1/2 rounded-full bg-indigo-600/15 blur-[170px]" />
+      <div className="pointer-events-none fixed bottom-0 right-0 z-0 h-[500px] w-[500px] translate-x-1/3 translate-y-1/3 rounded-full bg-indigo-500/10 blur-[150px]" />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030712]/80 backdrop-blur-md">
          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -33,7 +38,7 @@ export default function LandingPage() {
          </div>
       </nav>
 
-      <main className="pt-32 pb-16">
+      <main className="relative z-10 pt-32 pb-16">
          {/* Hero Section */}
          <section className="relative max-w-7xl mx-auto px-6 pt-12 pb-24 text-center">
             {/* Soft background glow */}
@@ -56,9 +61,18 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-               <Link href="/register" className="h-14 px-8 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.2)]">
-                  Démarrer maintenant <ArrowRight className="w-5 h-5" />
+               <Link href="/register" className="group h-14 px-8 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.2)]">
+                  Démarrer maintenant <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
                </Link>
+               <Link href="/login" className="h-14 px-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-lg flex items-center gap-2 transition-all backdrop-blur-sm">
+                  Accéder à mon espace
+               </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-zinc-500">
+               <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Sans carte bancaire</span>
+               <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Mise en route en 10 minutes</span>
+               <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Conçu par un transporteur</span>
             </div>
          </section>
 
@@ -398,7 +412,7 @@ export default function LandingPage() {
                      Sur 10 800 km/mois, une hausse de tarif de 3% génère 432 € de marge supplémentaire. Votre profit mensuel double de 439 € à 871 €.
                    </p>
                  </div>
-                 
+
                  <div className="text-[10px] font-mono text-zinc-600">
                    Risque faible • Applicable immédiatement
                  </div>
@@ -407,11 +421,38 @@ export default function LandingPage() {
            </div>
          </section>
 
+         {/* Closer CTA — derniere conversion avant le depart */}
+         <section className="max-w-6xl mx-auto px-6 mb-24">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-zinc-900/80 to-[#030712] px-6 py-20 md:px-16 md:py-28 text-center">
+               <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[700px] rounded-full bg-indigo-600/20 blur-[130px]" />
+               <div className="pointer-events-none absolute inset-0 opacity-[0.25] [background-image:linear-gradient(to_right,rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.08)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
+
+               <div className="relative z-10">
+                  <Badge className="mb-8 bg-white/5 text-indigo-400 border-indigo-500/20 px-4 py-1.5 font-mono tracking-widest text-[10px] uppercase" variant="outline">
+                     Reprenez la main
+                  </Badge>
+                  <h2 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white leading-[1.05] mb-6">
+                     Chaque mois sans PGM,<br />
+                     <span className="text-indigo-400">c&apos;est de la marge qui part en silence.</span>
+                  </h2>
+                  <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+                     Configurez votre flotte ce soir, et des demain matin vous saurez exactement ce que chaque tournee vous rapporte — ou vous coute.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                     <Link href="/register" className="group h-14 px-10 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-lg flex items-center gap-2 transition-all shadow-[0_0_50px_-10px_rgba(99,102,241,0.5)]">
+                        Demarrer mon essai gratuit <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
+                     </Link>
+                  </div>
+                  <p className="mt-6 text-xs text-zinc-600 font-mono tracking-wide">Sans engagement • Sans carte bancaire • Vos donnees restent les votres</p>
+               </div>
+            </div>
+         </section>
+
       </main>
 
-      <footer className="border-t border-white/5 py-12 text-center text-zinc-500 text-sm space-y-2">
-         <p>© {new Date().getFullYear()} PGM Logiciel SaaS B2B. Propulsé par l'innovation de l'I.A.</p>
-         <p className="text-xs text-zinc-600 font-medium tracking-wide">Développé et créé par <span className="text-zinc-400">SR</span></p>
+      <footer className="relative z-10 border-t border-white/5 py-12 text-center text-zinc-500 text-sm space-y-2">
+         <p>© {new Date().getFullYear()} PGM Logiciel SaaS B2B. Propulse par l&apos;innovation de l&apos;I.A.</p>
+         <p className="text-xs text-zinc-600 font-medium tracking-wide">Developpe et cree par <span className="text-zinc-400">SR</span></p>
       </footer>
     </div>
   );
