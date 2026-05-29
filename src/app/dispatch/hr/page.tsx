@@ -24,7 +24,6 @@ import { BonusActions } from "@/components/hr/BonusActions";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 import { EmployeeCalendarDialog } from "@/components/hr/EmployeeCalendarDialog";
-import { orgCan } from "@/lib/plans";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +34,6 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
     redirect("/login");
   }
   const orgId = session.user.organization_id;
-
-  const orgPlan = await prisma.organization.findUnique({ where: { id: orgId }, select: { subscription_plan: true, subscription_status: true } });
-  if (!orgCan(orgPlan, "hr")) {
-    redirect("/dispatch/dashboard?upgrade=hr");
-  }
 
   const searchParams = await props.searchParams;
   const filter = searchParams.filter;

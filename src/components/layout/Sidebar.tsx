@@ -73,7 +73,11 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
   );
 }
 
-const featureByHref: Record<string, string> = { "/dispatch/hr": "hr" };
+const featureByHref: Record<string, string> = {
+  "/dispatch/hr": "hr",
+  "/dispatch/retroactive": "simulator",
+  "/dispatch/direction": "margin_diagnostic",
+};
 
 function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], isTrialing = false, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, onNavItemClick?: () => void }) {
   const pathname = usePathname();
@@ -117,39 +121,53 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
               isAllowed = userPermissions[item.href];
           }
 
-          // Verrouillage par offre : certaines entrees exigent une fonctionnalite incluse dans le palier
-          const reqFeat = featureByHref[item.href];
-          if (reqFeat && !planFeatures.includes(reqFeat)) {
-              isAllowed = false;
-          }
-
           const Icon = item.icon;
+          const reqFeat = featureByHref[item.href];
 
-          // Essai : on n'affiche que la Direction et l'Exploitation & Flotte.
-          if (isTrialing && item.href !== "/dispatch/dashboard" && item.href !== "/dispatch/runs") {
-             return null;
-          }
-
+          // Masquages stricts : jamais exposes.
           if (item.name === "Super Admin" && !isSuperAdmin) {
              return null;
           }
-
           if (item.name === "Cockpit Direction" && userRole !== "owner") {
              return null;
           }
-
-          // Portails CP / GF : interfaces internes PGM (acces direct aux sites de nos clients).
-          // Jamais exposees aux entreprises abonnees ; visibles uniquement pour le compte maitre.
+          // Portails CP / GF : interfaces internes PGM (acces direct aux sites de nos clients) — compte maitre uniquement.
           if ((item.name === "Portail CP" || item.name === "Portail GF") && !isSuperAdmin) {
              return null;
           }
 
-          if (!isAllowed) {
+          // Verrouillage : essai (tout sauf Direction / Exploitation / Abonnement) ou palier (fonctionnalite absente).
+          const trialLocked = isTrialing && item.href !== "/dispatch/dashboard" && item.href !== "/dispatch/runs" && item.href !== "/dispatch/settings/billing";
+          const planLocked = !!reqFeat && !planFeatures.includes(reqFeat);
+          const locked = trialLocked || planLocked;
+
+          // Refus par role (hors offre) -> entree grisee, non cliquable.
+          if (!isAllowed && !locked) {
              return (
                <span key={item.name} className="flex items-center px-4 py-3 text-[13px] font-medium rounded-xl text-zinc-600 opacity-50 cursor-not-allowed">
                  <Icon className="flex-shrink-0 w-4 h-4 mr-3 text-zinc-600" />
                  {item.name}
                </span>
+             );
+          }
+
+          // Verrouillage d'offre : VISIBLE avec cadenas. Clic -> ecran "Disponible apres souscription" (sauf liens externes).
+          if (locked) {
+             if (item.external || !item.href.startsWith("/dispatch")) {
+                return (
+                  <span key={item.name} className="flex items-center justify-between px-4 py-3 text-[13px] font-medium rounded-xl text-zinc-400 opacity-60 cursor-not-allowed">
+                    <span className="flex items-center"><Icon className="flex-shrink-0 w-4 h-4 mr-3 text-zinc-400" />{item.name}</span>
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                  </span>
+                );
+             }
+             return (
+               <Link key={item.name} href={item.href} id={`tour-nav-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`} className="block group" onClick={onNavItemClick}>
+                 <span className="flex items-center justify-between px-4 py-3 text-[13px] font-medium rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
+                   <span className="flex items-center"><Icon className="flex-shrink-0 w-4 h-4 mr-3 text-slate-300 group-hover:text-slate-400" />{item.name}</span>
+                   <Lock className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400" />
+                 </span>
+               </Link>
              );
           }
 

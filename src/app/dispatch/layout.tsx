@@ -6,7 +6,7 @@ import OnboardingTour from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { allowedFeatures } from "@/lib/plans";
+import { allowedFeatures, orgCan } from "@/lib/plans";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Lock, AlertCircle, ArrowRight, Ban } from "lucide-react";
@@ -24,8 +24,6 @@ export default async function DispatchLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isBillingPage = pathname.includes('/settings/billing');
-  // Essai : seules la Direction et l'Exploitation (et la facturation, pour souscrire) sont accessibles.
-  const trialPageAllowed = !pathname || pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage;
 
   let isSuperAdmin = false;
   let remainingTrialDays = 0;
@@ -34,10 +32,24 @@ export default async function DispatchLayout({
   let isSuspended = false;
   let renewalDaysRemaining: number | null = null;
   let planFeatures: string[] = [];
+  let pageBlocked = false;
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
     planFeatures = allowedFeatures(org);
+
+    // Acces a la page courante : verrouillage par palier + restriction d'essai (Direction / Exploitation / facturation).
+    const featureForPath =
+      pathname.startsWith('/dispatch/hr') ? 'hr'
+      : pathname.startsWith('/dispatch/retroactive') ? 'simulator'
+      : pathname.startsWith('/dispatch/direction') ? 'margin_diagnostic'
+      : pathname.startsWith('/dispatch/dashboard') ? 'dashboard'
+      : pathname.startsWith('/dispatch/runs') ? 'runs'
+      : null;
+    const blockedByPlan = featureForPath ? !orgCan(org, featureForPath as any) : false;
+    const trialingNow = org?.subscription_status === 'trialing';
+    const blockedByTrial = trialingNow && !(pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage);
+    pageBlocked = !!pathname && (blockedByPlan || blockedByTrial);
     
     if (userRole === "owner") {
       const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
@@ -137,7 +149,7 @@ export default async function DispatchLayout({
                   Débloquer mon espace avec l'abonnement <ArrowRight className="w-5 h-5" />
                </Link>
             </div>
-          ) : isTrialing && !trialPageAllowed ? (
+          ) : pageBlocked ? (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-indigo-100 rounded-2xl shadow-sm p-8 max-w-2xl mx-auto mt-12 relative z-10">
                <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2 mx-auto"><Lock className="w-10 h-10" /></div>
                <div>
