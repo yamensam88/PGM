@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, ShieldAlert, Zap, Route, Users, LayoutDashboard, CheckCircle2, TrendingUp, AlertTriangle, Lightbulb, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PricingSection } from "@/components/marketing/PricingSection";
+import { FaqSection } from "@/components/marketing/FaqSection";
 
 export const metadata = {
   title: "PGM | Le SaaS d'Exploitation Transport & Livraison",
@@ -420,6 +422,10 @@ export default function LandingPage() {
              </div>
            </div>
          </section>
+
+         <PricingSection />
+
+         <FaqSection />
 
          {/* Closer CTA — derniere conversion avant le depart */}
          <section className="max-w-6xl mx-auto px-6 mb-24">
