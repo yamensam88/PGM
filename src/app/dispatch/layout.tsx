@@ -6,7 +6,7 @@ import OnboardingTour from "@/components/OnboardingTour";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { allowedFeatures, orgCan } from "@/lib/plans";
+import { allowedFeatures } from "@/lib/plans";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Lock, AlertCircle, ArrowRight, Ban } from "lucide-react";
@@ -32,24 +32,10 @@ export default async function DispatchLayout({
   let isSuspended = false;
   let renewalDaysRemaining: number | null = null;
   let planFeatures: string[] = [];
-  let pageBlocked = false;
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
     planFeatures = allowedFeatures(org);
-
-    // Acces a la page courante : verrouillage par palier + restriction d'essai (Direction / Exploitation / facturation).
-    const featureForPath =
-      pathname.startsWith('/dispatch/hr') ? 'hr'
-      : pathname.startsWith('/dispatch/retroactive') ? 'simulator'
-      : pathname.startsWith('/dispatch/direction') ? 'margin_diagnostic'
-      : pathname.startsWith('/dispatch/dashboard') ? 'dashboard'
-      : pathname.startsWith('/dispatch/runs') ? 'runs'
-      : null;
-    const blockedByPlan = featureForPath ? !orgCan(org, featureForPath as any) : false;
-    const trialingNow = org?.subscription_status === 'trialing';
-    const blockedByTrial = trialingNow && !(pathname.startsWith('/dispatch/dashboard') || pathname.startsWith('/dispatch/runs') || isBillingPage);
-    pageBlocked = !!pathname && (blockedByPlan || blockedByTrial);
     
     if (userRole === "owner") {
       const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
@@ -147,19 +133,6 @@ export default async function DispatchLayout({
                <div className="w-full h-px bg-slate-100 my-4"></div>
                <Link href="/dispatch/settings/billing" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
                   Débloquer mon espace avec l'abonnement <ArrowRight className="w-5 h-5" />
-               </Link>
-            </div>
-          ) : pageBlocked ? (
-            <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-indigo-100 rounded-2xl shadow-sm p-8 max-w-2xl mx-auto mt-12 relative z-10">
-               <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2 mx-auto"><Lock className="w-10 h-10" /></div>
-               <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">Disponible apres souscription</h2>
-                  <p className="text-slate-500 max-w-md mx-auto text-[15px] mt-3 leading-relaxed">
-                    Pendant votre periode d&apos;essai, vous avez acces a la Direction et a l&apos;Exploitation &amp; Flotte. Les autres modules se debloquent en choisissant une offre.
-                  </p>
-               </div>
-               <Link href="/dispatch/settings/billing" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-md inline-flex justify-center items-center gap-2 mt-4 text-[15px]">
-                  Voir les offres <ArrowRight className="w-5 h-5" />
                </Link>
             </div>
           ) : (
