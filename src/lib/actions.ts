@@ -3683,3 +3683,21 @@ export async function updateRealRate(formData: FormData) {
     return { success: false, error: error.message };
   }
 }
+
+export async function updateRealCosts(formData: FormData) {
+  try {
+    const session = await requireOwner();
+    const orgId = session.user.organization_id;
+    const fields = ["cost_rent","cost_office_salaries","cost_admin_vehicles","cost_software","cost_insurances","cost_fees","cost_others","fuel_price_per_km","fuel_price_per_liter"];
+    const realCosts: any = {};
+    for (const f of fields) realCosts[f] = Number(formData.get(f) || 0);
+    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+    const settings: any = (org?.settings_json as any) || {};
+    await prisma.organization.update({ where: { id: orgId }, data: { settings_json: { ...settings, real_costs: realCosts } } });
+    revalidatePath("/dispatch/direction");
+    return { success: true };
+  } catch (error: any) {
+    console.error("updateRealCosts error:", error);
+    return { success: false, error: error.message };
+  }
+}

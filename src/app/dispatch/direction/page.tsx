@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DispatchDashboard } from "@/app/dispatch/dashboard/page";
 import { DirectionRealPrices } from "@/components/finances/DirectionRealPrices";
+import { DirectionRealCosts } from "@/components/finances/DirectionRealCosts";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,7 +21,9 @@ export default async function DirectionCockpitPage(props: {
     prisma.client.findMany({ where: { organization_id: orgId }, include: { rate_cards: true }, orderBy: { name: "asc" } }),
     prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } }),
   ]);
-  const realRates: Record<string, any> = ((org?.settings_json as any) || {}).real_rates || {};
+  const allSettings: any = (org?.settings_json as any) || {};
+  const realRates: Record<string, any> = allSettings.real_rates || {};
+  const realCosts: any = allSettings.real_costs || null;
 
   return (
     <div>
@@ -35,6 +38,9 @@ export default async function DirectionCockpitPage(props: {
         </summary>
         <div className="mt-3 mb-4">
           <DirectionRealPrices clients={JSON.parse(JSON.stringify(clients))} realRates={realRates} />
+          <div className="mt-4">
+            <DirectionRealCosts settings={allSettings} realCosts={realCosts} />
+          </div>
         </div>
       </details>
 

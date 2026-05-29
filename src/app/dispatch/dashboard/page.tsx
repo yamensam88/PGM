@@ -43,7 +43,8 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   // 1. Fetch organization settings for global fuel price and fixed costs
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
   const orgSettings = org?.settings_json as { fuel_price_per_liter?: number; monthly_total_fixed_costs?: number } | null;
-  const currentFuelPrice = orgSettings?.fuel_price_per_liter || 1.80;
+  const realCosts: any = ((org?.settings_json as any) && (org?.settings_json as any).real_costs) || null;
+  const currentFuelPrice = (priceMode === "real" && realCosts && realCosts.fuel_price_per_liter != null) ? Number(realCosts.fuel_price_per_liter) : (orgSettings?.fuel_price_per_liter || 1.80);
   const realRates: Record<string, any> = ((org?.settings_json as any) && (org?.settings_json as any).real_rates) || {};
 
   // Determine today's date in Paris to align with what the user considers 'Today'
@@ -316,7 +317,9 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
      return sum + (explicitMonthly / 25.33);
   }, 0) * dateDiffWorkingDays;
 
-  const monthlyFixedCostAdmin = orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0;
+  const monthlyFixedCostAdmin = (priceMode === "real" && realCosts)
+    ? (Number(realCosts.cost_rent||0)+Number(realCosts.cost_office_salaries||0)+Number(realCosts.cost_admin_vehicles||0)+Number(realCosts.cost_software||0)+Number(realCosts.cost_insurances||0)+Number(realCosts.cost_fees||0)+Number(realCosts.cost_others||0))
+    : (orgSettings?.monthly_total_fixed_costs ? Number(orgSettings.monthly_total_fixed_costs) : 0);
   const periodAdminFixedCosts = (monthlyFixedCostAdmin / 25.33) * dateDiffWorkingDays;
 
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
