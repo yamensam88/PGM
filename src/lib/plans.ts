@@ -22,7 +22,8 @@ export type Feature =
   | "recommendations" // Recommandations stratégiques chiffrées
   | "hr" // Module RH (congés, absences, calendrier)
   | "multi_user" // Multi-utilisateurs & gestion des rôles
-  | "support_priority"; // Support prioritaire
+  | "support_priority" // Support prioritaire
+  | "tracking"; // Suivi temps reel des livraisons (portails clients)
 
 const MATRIX: Record<Plan, Feature[]> = {
   starter: ["dashboard", "runs", "simulator"],
@@ -35,6 +36,7 @@ const MATRIX: Record<Plan, Feature[]> = {
     "recommendations",
     "hr",
     "multi_user",
+    "tracking",
   ],
   business: [
     "dashboard",
@@ -46,6 +48,7 @@ const MATRIX: Record<Plan, Feature[]> = {
     "hr",
     "multi_user",
     "support_priority",
+    "tracking",
   ],
 };
 

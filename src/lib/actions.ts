@@ -3702,3 +3702,16 @@ export async function updateRealCosts(formData: FormData) {
     return { success: false, error: error.message };
   }
 }
+
+
+// === Suivi Livraisons : marquer une alerte portail comme résolue ===
+export async function resolvePortalAlert(id: string) {
+  const session = await requireDirection();
+  const orgId = session.user.organization_id;
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+  const settings: any = (org?.settings_json as any) || {};
+  const list: any[] = Array.isArray(settings.portal_alerts) ? settings.portal_alerts : [];
+  settings.portal_alerts = list.map((a: any) => (a.id === id ? { ...a, status: "resolved" } : a));
+  await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
+  revalidatePath("/dispatch/tracking");
+}
