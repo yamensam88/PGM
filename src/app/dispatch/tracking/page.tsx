@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { isSectionBlocked } from "@/lib/access";
 import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
-import { resolvePortalAlert } from "@/lib/actions";
+import { resolvePortalAlert, clearPortalAlerts } from "@/lib/actions";
 import { AlertTriangle, PackageX, Radio, CheckCircle2, Clock } from "lucide-react";
+import { AutoRefresh } from "@/components/tracking/AutoRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,16 @@ export default async function TrackingPage() {
         <p className="text-sm text-slate-500 mt-2">
           Alertes en temps réel des portails Colis Privé &amp; GoFo : colis avisé, non livré, échec ou non attribué.
         </p>
+        <div className="mt-2 flex items-center justify-between gap-4 flex-wrap">
+          <AutoRefresh seconds={60} />
+          {alerts.length > 0 && (
+            <form action={clearPortalAlerts}>
+              <button type="submit" className="text-xs font-semibold text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-300 bg-white rounded-lg px-3 py-1.5 transition-colors">
+                Vider les alertes
+              </button>
+            </form>
+          )}
+        </div>
       </header>
 
       <div className="grid grid-cols-3 gap-4 mb-6">

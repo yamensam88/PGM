@@ -3715,3 +3715,16 @@ export async function resolvePortalAlert(id: string) {
   await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
   revalidatePath("/dispatch/tracking");
 }
+
+/** Vide entièrement le fil d'alertes Suivi Livraisons (réservé à la société maître). */
+export async function clearPortalAlerts() {
+  const session = await requireDirection();
+  const orgId = session.user.organization_id;
+  const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: "asc" }, select: { id: true } });
+  if (masterOrg?.id !== orgId) return;
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+  const settings: any = (org?.settings_json as any) || {};
+  settings.portal_alerts = [];
+  await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
+  revalidatePath("/dispatch/tracking");
+}
