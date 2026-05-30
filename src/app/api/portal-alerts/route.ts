@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { sendDeliveryAlertEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,18 @@ export async function POST(req: Request) {
 
     settings.portal_alerts = [alert, ...list].slice(0, MAX_ALERTS);
     await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
+
+    // Email sur alerte critique (best-effort, ne bloque jamais la reponse).
+    if (alert.severity === "high") {
+      try {
+        const owner = await prisma.user.findFirst({
+          where: { organization_id: orgId, role: { in: ["owner", "admin"] } },
+          select: { email: true },
+        });
+        const to = process.env.ALERT_EMAIL || owner?.email;
+        if (to) await sendDeliveryAlertEmail(to, alert);
+      } catch (e) { /* email non bloquant */ }
+    }
 
     return NextResponse.json({ ok: true, id: alert.id });
   } catch (e: any) {

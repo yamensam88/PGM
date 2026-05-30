@@ -98,3 +98,27 @@ export async function sendInvoiceEmail(to: string, ownerName: string, amount: nu
     console.error("Erreur sendInvoiceEmail:", error);
   }
 }
+
+export async function sendDeliveryAlertEmail(to: string, alert: { portal?: string; title: string; message?: string }) {
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    await resend.emails.send({
+      from: fromEmail,
+      to,
+      subject: `[PGM] Alerte livraison \u2014 ${alert.title}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+           <h2 style="color: #e11d48;">\u26a0\ufe0f Alerte livraison \u2014 ${alert.portal || "Portail"}</h2>
+           <p style="font-size:16px;font-weight:bold;color:#0f172a;">${alert.title}</p>
+           <p style="color:#475569;">${alert.message || ""}</p>
+           <div style="margin: 28px 0;">
+             <a href="${appUrl}/dispatch/tracking" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Voir le suivi des livraisons</a>
+           </div>
+           <p style="font-size:12px;color:#94a3b8;">Alerte automatique de l\u2019agent de suivi PGM.</p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error("Erreur sendDeliveryAlertEmail:", error);
+  }
+}
