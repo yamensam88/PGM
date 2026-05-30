@@ -133,8 +133,9 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           if (item.name === "Cockpit Direction" && userRole !== "owner") {
              return null;
           }
-          // Portails CP / GF : interfaces internes PGM (acces direct aux sites de nos clients) — compte maitre uniquement.
-          if ((item.name === "Portail CP" || item.name === "Portail GF") && !isSuperAdmin) {
+          // Portails CP / GF : interfaces internes a NOTRE societe (compte maitre). Visibles par toute l'equipe ;
+          // l'acces individuel se gere via Parametres > Utilisateurs > Acces & Permissions.
+          if ((item.name === "Portail CP" || item.name === "Portail GF") && !isMasterOrg) {
              return null;
           }
           // Suivi Livraisons : interface INTERNE, reservee a notre societe (compte maitre). Jamais visible chez les abonnes.
