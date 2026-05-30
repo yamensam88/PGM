@@ -47,17 +47,17 @@ const allowedPaths: Record<string, string[]> = {
   finance: ['/dispatch/dashboard', '/dispatch/retroactive'],
 };
 
-export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean }) {
+export function Sidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false, isMasterOrg = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, isMasterOrg?: boolean }) {
   return (
     <Suspense fallback={<div className="w-64 bg-white border-r border-slate-100/60 h-screen fixed hidden md:block"></div>}>
       <div className="flex flex-col w-64 bg-white border-r border-slate-100/60 text-slate-600 h-screen fixed top-0 left-0 hidden md:flex z-50 shadow-[4px_0_24px_rgba(0,0,0,0.01)]">
-        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />
+        <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} isMasterOrg={isMasterOrg} />
       </div>
     </Suspense>
   );
 }
 
-export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean }) {
+export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, userPermissions = {}, planFeatures = [], isTrialing = false, isMasterOrg = false }: { userRole?: string, isSuperAdmin?: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, isMasterOrg?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -67,7 +67,7 @@ export function MobileSidebar({ userRole = 'dispatcher', isSuperAdmin = false, u
       <SheetContent side="left" className="p-0 w-64 bg-white border-r-0">
         <Suspense fallback={<div className="w-full h-full bg-white"></div>}>
            <div className="flex flex-col w-full bg-white text-slate-600 h-full">
-             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} onNavItemClick={() => setOpen(false)} />
+             <SidebarContent userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} isMasterOrg={isMasterOrg} onNavItemClick={() => setOpen(false)} />
            </div>
         </Suspense>
       </SheetContent>
@@ -79,10 +79,9 @@ const featureByHref: Record<string, string> = {
   "/dispatch/hr": "hr",
   "/dispatch/retroactive": "simulator",
   "/dispatch/direction": "margin_diagnostic",
-  "/dispatch/tracking": "tracking",
 };
 
-function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], isTrialing = false, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, onNavItemClick?: () => void }) {
+function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeatures = [], isTrialing = false, isMasterOrg = false, onNavItemClick }: { userRole: string, isSuperAdmin: boolean, userPermissions?: any, planFeatures?: string[], isTrialing?: boolean, isMasterOrg?: boolean, onNavItemClick?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -136,6 +135,10 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           }
           // Portails CP / GF : interfaces internes PGM (acces direct aux sites de nos clients) — compte maitre uniquement.
           if ((item.name === "Portail CP" || item.name === "Portail GF") && !isSuperAdmin) {
+             return null;
+          }
+          // Suivi Livraisons : interface INTERNE, reservee a notre societe (compte maitre). Jamais visible chez les abonnes.
+          if (item.name === "Suivi Livraisons" && !isMasterOrg) {
              return null;
           }
 

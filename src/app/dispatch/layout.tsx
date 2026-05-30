@@ -32,16 +32,16 @@ export default async function DispatchLayout({
   let isSuspended = false;
   let renewalDaysRemaining: number | null = null;
   let planFeatures: string[] = [];
+  let isMasterOrg = false;
 
   if (orgId) {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
     planFeatures = allowedFeatures(org);
     
-    if (userRole === "owner") {
-      const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
-      if (masterOrg?.id === orgId) {
-        isSuperAdmin = true;
-      }
+    const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' }, select: { id: true } });
+    isMasterOrg = masterOrg?.id === orgId;
+    if (userRole === "owner" && isMasterOrg) {
+      isSuperAdmin = true;
     }
 
     if (org?.subscription_status === 'suspended') {
@@ -77,7 +77,7 @@ export default async function DispatchLayout({
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-[#f8f9fc]">
-      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />
+      <Sidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} isMasterOrg={isMasterOrg} />
       <div className="flex flex-col flex-1 w-full md:pl-64 transition-all duration-300">
         <OnboardingTour />
 
@@ -105,7 +105,7 @@ export default async function DispatchLayout({
            </div>
          )}
  
-         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} />} />
+         <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} isMasterOrg={isMasterOrg} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
           {isSuspended ? (

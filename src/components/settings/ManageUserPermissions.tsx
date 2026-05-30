@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck, Map, Briefcase } from "lucide-react";
+import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck, Map, Briefcase, Radio } from "lucide-react";
 import { updateUserPermissions } from "@/lib/actions";
 
 type PermissionItem = {
@@ -18,6 +18,7 @@ const permissionModules: PermissionItem[] = [
   { id: "/dispatch/runs", label: "Exploitation & Flotte", icon: Route },
   { id: "/dispatch/hr", label: "Ressources Humaines", icon: Users },
   { id: "/dispatch/retroactive", label: "Simulateur / Reprise", icon: History },
+  { id: "/dispatch/tracking", label: "Suivi Livraisons (interne)", icon: Radio },
   { id: "/dispatch/settings", label: "Paramètres Globaux", icon: Settings },
   { id: "/dispatch/settings/billing", label: "Abonnement", icon: CreditCard },
   { id: "/driver", label: "Interface Chauffeur", icon: Truck },

@@ -19,8 +19,9 @@ export default async function TrackingPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.organization_id) redirect("/login");
 
-  if (await isSectionBlocked("tracking")) {
-    return <LockedFeatureScreen title="Suivi Livraisons — offre Pro" message="Le suivi temps réel des portails (Colis Privé, GoFo) avec alertes avisé / non livré est inclus à partir de l'offre Pro." />;
+  const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: "asc" }, select: { id: true } });
+  if (masterOrg?.id !== session.user.organization_id) {
+    return <LockedFeatureScreen title="Interface réservée" message="Le Suivi Livraisons est une interface interne, réservée à votre société." />;
   }
 
   const org = await prisma.organization.findUnique({
