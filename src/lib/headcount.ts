@@ -44,7 +44,7 @@ export function computeChauffeurHeadcount(params: {
 }): Headcount {
   const { drivers, runDriverIds, startDate, endDate } = params;
   const overlaps = (e: { start_date: any; end_date?: any | null }) =>
-    new Date(e.start_date) <= endDate && (!e.end_date || new Date(e.end_date) >= startDate);
+    new Date(e.start_date) <= endDate && (e.end_date ? new Date(e.end_date) : new Date(e.start_date)) >= startDate;
 
   const active = drivers.filter((d) => d.status === "active" && isOperationalDriver(d));
   const activeIds = new Set(active.map((d) => d.id));

@@ -439,7 +439,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              const currentLeaves = ((driver as any).hr_events || []).filter((e: any) => 
                                ['vacation', 'sick_leave'].includes(e.event_type) && 
                                new Date(e.start_date).getTime() <= tonightObj.getTime() &&
-                               (!e.end_date || new Date(e.end_date).getTime() >= todayObj.getTime())
+                               ((e.end_date ? new Date(e.end_date).getTime() : new Date(e.start_date).getTime()) >= todayObj.getTime())
                              );
                              const currentLeave = currentLeaves.length > 0 ? currentLeaves[0] : null;
 
@@ -448,19 +448,19 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              const isPresentToday = todayRunsDriverIds.has(driver.id) || ((driver as any).hr_events || []).some((e: any) => 
                                 e.status === 'active' && e.event_type === 'presence' && 
                                 new Date(e.start_date).getTime() <= tonightObj.getTime() &&
-                                (!e.end_date || new Date(e.end_date).getTime() >= todayObj.getTime())
+                                ((e.end_date ? new Date(e.end_date).getTime() : new Date(e.start_date).getTime()) >= todayObj.getTime())
                              );
                              
                              const isCongesToday = !isPresentToday && ((driver as any).hr_events || []).some((e: any) => 
                                 e.status === 'active' && e.event_type === 'vacation' && 
                                 new Date(e.start_date).getTime() <= tonightObj.getTime() &&
-                                (!e.end_date || new Date(e.end_date).getTime() >= todayObj.getTime())
+                                ((e.end_date ? new Date(e.end_date).getTime() : new Date(e.start_date).getTime()) >= todayObj.getTime())
                              );
                              
                              const isAbsentToday = !isPresentToday && !isCongesToday && ((driver as any).hr_events || []).some((e: any) => 
                                 e.status === 'active' && ['absence', 'sick_leave'].includes(e.event_type) && 
                                 new Date(e.start_date).getTime() <= tonightObj.getTime() &&
-                                (!e.end_date || new Date(e.end_date).getTime() >= todayObj.getTime())
+                                ((e.end_date ? new Date(e.end_date).getTime() : new Date(e.start_date).getTime()) >= todayObj.getTime())
                              );
 
                              if (isPresentToday) todayStatusBadge = <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 shadow-none font-medium text-[10px] px-2 py-0">En Tournée</Badge>;
