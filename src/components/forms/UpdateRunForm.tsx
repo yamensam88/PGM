@@ -12,14 +12,19 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Champs qui pilotent le calcul des colis livres (= charges - avises direct - retournes)
+  const [loaded, setLoaded] = useState<string>(String(initialData.packages_loaded ?? 0));
+  const [advisedDirect, setAdvisedDirect] = useState<string>(String(initialData.packages_advised_direct ?? 0));
+  const [returned, setReturned] = useState<string>(String(initialData.packages_returned ?? 0));
+
+  const delivered = Math.max(0, (Number(loaded) || 0) - (Number(advisedDirect) || 0) - (Number(returned) || 0));
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (isPending) return;
-
     const formData = new FormData(e.currentTarget);
     formData.append("runId", initialData.id);
-    
     startTransition(async () => {
        try {
          const result = await updateRun(formData);
@@ -40,9 +45,9 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2 col-span-2 md:col-span-1">
           <Label htmlFor="status">Statut de la tournée</Label>
-          <select 
-            id="status" 
-            name="status" 
+          <select
+            id="status"
+            name="status"
             defaultValue={initialData.status}
             className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2"
           >
@@ -57,19 +62,20 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
       <div className="grid grid-cols-2 gap-4 bg-zinc-50/5 p-4 rounded-xl border border-zinc-200/10 shadow-sm">
         <div className="space-y-2">
           <Label htmlFor="packages_loaded">Colis Chargés (Total)</Label>
-          <Input id="packages_loaded" name="packages_loaded" type="number" min="0" defaultValue={initialData.packages_loaded || 0} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="packages_delivered">Colis Livrés</Label>
-          <Input id="packages_delivered" name="packages_delivered" type="number" min="0" defaultValue={initialData.packages_delivered || 0} />
+          <Input id="packages_loaded" name="packages_loaded" type="number" min="0" value={loaded} onChange={(e) => setLoaded(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="packages_advised_direct">Avisés Direct</Label>
-          <Input id="packages_advised_direct" name="packages_advised_direct" type="number" min="0" defaultValue={initialData.packages_advised_direct || 0} />
+          <Input id="packages_advised_direct" name="packages_advised_direct" type="number" min="0" value={advisedDirect} onChange={(e) => setAdvisedDirect(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="packages_advised_relay">Avisés Relais</Label>
-          <Input id="packages_advised_relay" name="packages_advised_relay" type="number" min="0" defaultValue={initialData.packages_advised_relay || 0} />
+          <Label htmlFor="packages_returned">Colis Retournés</Label>
+          <Input id="packages_returned" name="packages_returned" type="number" min="0" value={returned} onChange={(e) => setReturned(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="packages_delivered">Colis Livrés (calculé)</Label>
+          <Input id="packages_delivered" name="packages_delivered" type="number" readOnly value={delivered} className="bg-slate-100 text-slate-600 cursor-not-allowed font-semibold" />
+          <p className="text-[11px] text-slate-400">= Chargés − Avisés direct − Retournés. Facturé 1,50 €/colis.</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="packages_relay">Colis Relais</Label>
@@ -77,13 +83,13 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
           <p className="text-[11px] text-slate-400">Facturés au tarif relais (0,30 €/colis).</p>
         </div>
         <div className="space-y-2">
+          <Label htmlFor="packages_advised_relay">Avisés Relais</Label>
+          <Input id="packages_advised_relay" name="packages_advised_relay" type="number" min="0" defaultValue={initialData.packages_advised_relay || 0} />
+        </div>
+        <div className="space-y-2 col-span-2">
           <Label htmlFor="colis_collected">Colis Collectés</Label>
           <Input id="colis_collected" name="colis_collected" type="number" min="0" defaultValue={initialData.stops_completed || 0} />
           <p className="text-[11px] text-slate-400">Colis ramassés, facturés au tarif collecte (0,30 €/colis).</p>
-        </div>
-        <div className="space-y-2 col-span-2">
-          <Label htmlFor="packages_returned">Colis Retournés</Label>
-          <Input id="packages_returned" name="packages_returned" type="number" min="0" defaultValue={initialData.packages_returned || 0} />
         </div>
       </div>
 
@@ -109,13 +115,7 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
         </div>
         <div className="space-y-2 col-span-2">
           <Label htmlFor="fuel_receipt" className="text-slate-600">Justificatif Carburant (Optionnel)</Label>
-          <Input 
-             id="fuel_receipt" 
-             name="fuel_receipt" 
-             type="file" 
-             accept="image/*,.pdf" 
-             className="text-slate-500 bg-white border-slate-300 file:bg-indigo-600 file:text-slate-900 file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-indigo-700 cursor-pointer" 
-          />
+          <Input id="fuel_receipt" name="fuel_receipt" type="file" accept="image/*,.pdf" className="text-slate-500 bg-white border-slate-300 file:bg-indigo-600 file:text-white file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 hover:file:bg-indigo-700 cursor-pointer" />
         </div>
       </div>
 
