@@ -1072,7 +1072,9 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 px-6 pb-6">
-              <DecisionReport data={decisionReport} />
+              <div className="h-[300px] w-full">
+                <AnalyticsChart runs={chartRunsData} filter={filter || (fromParam && toParam ? 'custom' : 'daily')} />
+              </div>
             </CardContent>
           </Card>
 
@@ -1177,14 +1179,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 px-6 pb-6">
-              <div className="text-[13px] leading-relaxed text-slate-700 whitespace-pre-wrap font-medium space-y-4">
-                {`**RAPPORT ANALYTIQUE IA**\nDate de génération : ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}\n\n**Résumé Global de la Période** :\n- Nombre total de tournées : ${aiReport.summary.runs} actives\n- Volume Colis : ${aiReport.summary.volume.total} chargés | ${aiReport.summary.volume.delivered} livrés | ${aiReport.summary.volume.advised} avisés | ${aiReport.summary.volume.returned} retournés\n- Kilomètres parcourus : ${aiReport.summary.km} km au total\n- Frais réels globaux : ${aiReport.summary.costs.toFixed(2)}€\n\n**Top Problèmes & Anomalies Détectées :**\n${aiReport.anomalies.map(a => `- ${a.label} : ${a.value}`).join('\n')}\n\n**Analyse des Acteurs (Marge Nette pondérée) :**\n- Acteurs ultra-performants (Top) : ${aiReport.actors.top}\n- Impact négatif sur rentabilité (Flop) : ${aiReport.actors.flop}\n- Postes de dépense élevés (Véhicules) : ${aiReport.actors.vehicles}\n\n**Recommandations Concrètes (Actionnable) :**\n${aiReport.recommendations.map((r, i) => `- ${i===0? 'Alerte Rentabilité' : 'Points de vigilance'} : ${r}`).join('\n')}`}
-              </div>
-              <div className="mt-8 flex justify-end">
-                <Button variant="outline" size="sm" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 gap-2 rounded-xl px-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                   <FileText className="w-4 h-4" /> Exporter le Bilan (PDF)
-                </Button>
-              </div>
+              <DecisionReport data={decisionReport} />
             </CardContent>
           </Card>
         </div>
