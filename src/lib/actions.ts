@@ -2640,7 +2640,7 @@ export async function regularizeUnassignedDriver(formData: FormData) {
     });
     if (overlap) return { success: false, error: "Un statut existe déjà pour ce chauffeur ce jour-là." };
 
-    await prisma.hrEvent.create({
+    const created = await prisma.hrEvent.create({
       data: {
         organization_id: orgId,
         driver_id,
@@ -2650,12 +2650,13 @@ export async function regularizeUnassignedDriver(formData: FormData) {
         status: "active",
         notes: "Régularisé via le garde-fou (salarié non affecté)",
       },
+      select: { id: true },
     });
 
     revalidatePath("/dispatch/dashboard");
     revalidatePath("/dispatch/runs");
     revalidatePath("/dispatch/hr");
-    return { success: true };
+    return { success: true, eventId: created.id };
   } catch (error: any) {
     console.error("Erreur regularizeUnassignedDriver:", error);
     return { success: false, error: error.message || "Erreur lors de la régularisation." };
