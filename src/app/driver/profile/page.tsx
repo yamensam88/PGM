@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { calculateLeaveBalance } from "@/lib/leave";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -34,8 +35,7 @@ export default async function DriverProfilePage() {
 
   if (!targetDriver) return null;
 
-  const vacationsTaken = targetDriver.hr_events.filter(e => e.event_type === 'vacation').length;
-  const leaveBalance = Math.max(0, 25 - (vacationsTaken * 5)); // Roughly 25 days / yr 
+  const leaveBalance = calculateLeaveBalance(targetDriver);
   const monthlyBonus = Number(targetDriver.base_bonus_amount || 0);
 
   return (
