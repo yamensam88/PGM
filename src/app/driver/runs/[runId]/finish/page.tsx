@@ -1,6 +1,8 @@
 import { FinishRunForm } from "@/components/forms/FinishRunForm";
 import prisma from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function FinishRunPage({
   params,
@@ -9,8 +11,13 @@ export default async function FinishRunPage({
 }) {
   const { runId } = await params;
 
-  const run = await prisma.dailyRun.findUnique({
-    where: { id: runId },
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.organization_id) {
+    redirect("/login");
+  }
+
+  const run = await prisma.dailyRun.findFirst({
+    where: { id: runId, organization_id: session.user.organization_id },
     include: {
       vehicle: true,
       driver: true,

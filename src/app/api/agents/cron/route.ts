@@ -4,7 +4,14 @@ import { analyzeDailyAnomalies } from '@/lib/agents/technicalAgent';
 
 export async function POST(req: Request) {
   try {
-    // Dans un cas réel, ajoutez une vérification de token ou secret Vercel Cron ici.
+    // SÉCURITÉ : authentification obligatoire (Bearer CRON_SECRET ou en-tête x-pgm-secret).
+    const authHeader = req.headers.get('authorization');
+    const pgmSecret = req.headers.get('x-pgm-secret');
+    const okBearer = !!process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    const okPgm = !!process.env.PGM_WEBHOOK_SECRET && pgmSecret === process.env.PGM_WEBHOOK_SECRET;
+    if (!okBearer && !okPgm) {
+      return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+    }
     const body = await req.json().catch(() => ({}));
     const orgId = body.organization_id;
 

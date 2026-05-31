@@ -3,6 +3,7 @@
 
 import prisma from "@/lib/prisma";
 import { driverCostFor } from "@/lib/finance";
+import { randomBytes } from "crypto";
 import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -260,7 +261,8 @@ export async function createEmployee(formData: FormData) {
        if (customPassword && customPassword.trim() !== "") {
           createdPassword = customPassword.trim();
        } else {
-          createdPassword = "TransferOS2026!";
+          // Mot de passe temporaire ALÉATOIRE (à changer à la 1re connexion) — plus de secret partagé en dur.
+          createdPassword = "Pgm-" + randomBytes(6).toString("hex") + "!";
        }
 
        const hashedPassword = await bcrypt.hash(createdPassword, 10);
@@ -456,6 +458,10 @@ export async function createAdminUser(formData: FormData) {
 
     if (!firstName || !lastName || !role || !email || !password) {
       throw new Error("Veuillez remplir les champs obligatoires.");
+    }
+    const ALLOWED_ROLES = ["admin", "dispatcher", "hr", "finance"];
+    if (!ALLOWED_ROLES.includes(role)) {
+      throw new Error("Rôle non autorisé.");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -1351,14 +1357,15 @@ export async function createRun(formData: FormData) {
       let km_diff = 0;
 
       if (isCompleted) {
-        const driver = await prisma.driver.findUnique({ where: { id: driver_id } });
-        const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicle_id } });
+        const driver = await prisma.driver.findFirst({ where: { id: driver_id, organization_id: orgId } });
+        const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicle_id, organization_id: orgId } });
+        if (!driver || !vehicle) throw new Error("Chauffeur ou véhicule introuvable dans votre société.");
         
         let rateCard;
         if (rate_card_id) {
-           rateCard = await prisma.rateCard.findUnique({ where: { id: rate_card_id } });
+           rateCard = await prisma.rateCard.findFirst({ where: { id: rate_card_id, organization_id: orgId } });
         } else {
-           const client = await prisma.client.findUnique({ where: { id: client_id }, include: { rate_cards: true } });
+           const client = await prisma.client.findFirst({ where: { id: client_id, organization_id: orgId }, include: { rate_cards: true } });
            rateCard = client?.rate_cards?.[0];
         }
 
@@ -1983,8 +1990,9 @@ export async function saveUnifiedDelivery(formData: FormData) {
       const notes = `Détails saisis via UnifiedApp: ${loaded}C/${delivered}L/${returned}R - Relais:${relay} - Collectes:${collected}`;
       const routeNumber = formData.get("route_number") as string | null;
 
-      const driver = await prisma.driver.findUnique({ where: { id: driverId } });
-      const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+      const driver = await prisma.driver.findFirst({ where: { id: driverId, organization_id: orgId } });
+      const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, organization_id: orgId } });
+      if (!driver || !vehicle) throw new Error("Chauffeur ou véhicule introuvable dans votre société.");
       
       const existingRun = await prisma.dailyRun.findUnique({ where: { id } });
       // SECURITY CHECK: Verify Ownership of Run Entity to prevent Cross-Tenant IDOR bleeding
@@ -2355,6 +2363,9 @@ export async function recordDriverPenalty(formData: FormData) {
       throw new Error("Veuillez remplir les informations de pénalité correctement.");
     }
 
+    const ownedP = await prisma.driver.findFirst({ where: { id: driver_id, organization_id: orgId }, select: { id: true } });
+    if (!ownedP) throw new Error("Chauffeur introuvable dans votre société.");
+
     const penaltyDate = new Date(date_input);
 
     await prisma.$transaction(async (tx) => {
@@ -2530,6 +2541,9 @@ export async function recordDriverAbsence(formData: FormData) {
     if (newEnd < newStart) {
       throw new Error("La date de fin ne peut pas être antérieure à la date de début.");
     }
+
+    const ownedA = await prisma.driver.findFirst({ where: { id: driver_id, organization_id: orgId }, select: { id: true } });
+    if (!ownedA) throw new Error("Chauffeur introuvable dans votre société.");
 
     // Checking for collisions
     const overlap = await prisma.hrEvent.findFirst({
@@ -3222,8 +3236,9 @@ export async function updateRun(formData: FormData) {
        const activeDriverId = formDriverId || run.driver_id;
        const activeVehicleId = formVehicleId || run.vehicle_id;
 
-       const activeDriver = formDriverId && formDriverId !== run.driver_id ? await prisma.driver.findUnique({ where: { id: formDriverId } }) : run.driver;
-       const activeVehicle = formVehicleId && formVehicleId !== run.vehicle_id ? await prisma.vehicle.findUnique({ where: { id: formVehicleId } }) : run.vehicle;
+       const activeDriver = formDriverId && formDriverId !== run.driver_id ? await prisma.driver.findFirst({ where: { id: formDriverId, organization_id: orgId } }) : run.driver;
+       const activeVehicle = formVehicleId && formVehicleId !== run.vehicle_id ? await prisma.vehicle.findFirst({ where: { id: formVehicleId, organization_id: orgId } }) : run.vehicle;
+       if ((formDriverId && !activeDriver) || (formVehicleId && !activeVehicle)) throw new Error("Chauffeur ou véhicule introuvable dans votre société.");
 
        const direct_delivered = Math.max(0, final_packages_loaded - final_packages_advised_direct - final_packages_returned);
        const relay_delivered = Math.max(0, final_packages_relay - final_packages_advised_relay);

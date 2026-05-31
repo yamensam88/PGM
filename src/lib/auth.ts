@@ -92,5 +92,6 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback_secret_for_development", // In a real app, ALWAYS set this in .env
+  // SÉCURITÉ : aucun secret de repli. NextAuth refuse de signer les sessions en prod si NEXTAUTH_SECRET est absent.
+  secret: process.env.NEXTAUTH_SECRET,
 };
