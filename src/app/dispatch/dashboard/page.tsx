@@ -119,7 +119,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     const displayedRevenue = run.revenue_calculated ? Number(run.revenue_calculated) : 0;
     const realRate = realRates[run.client_id];
     const revenue = priceMode === "real" && realRate
-      ? computeRunRevenue({ rate_card: realRate, packages_delivered: run.packages_delivered, packages_relay: run.packages_relay, stops_completed: run.stops_completed })
+      ? computeRunRevenue({ rate_card: realRate, packages_delivered: run.packages_delivered, packages_relay: run.packages_relay, packages_advised_relay: run.packages_advised_relay, stops_completed: run.stops_completed })
       : displayedRevenue;
     const fleetCost = run.cost_vehicle ? Number(run.cost_vehicle) : 0;
     const driverCost = run.cost_driver ? Number(run.cost_driver) : 0;

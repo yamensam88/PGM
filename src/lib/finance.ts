@@ -57,9 +57,12 @@ export function computeRunRevenue(run: any): number {
   const priceStop = num(rc?.unit_price_stop);
   const priceParcel = num(rc?.unit_price_package);
   const bonusRelay = num(rc?.bonus_relay_point);
-  const stops = num(run?.stops_completed);
-  const { directDelivered, relayDelivered } = computeDeliveredPackages(run);
-  return baseFlat + priceStop * stops + priceParcel * directDelivered + bonusRelay * relayDelivered;
+  // CA aligné sur la clôture (updateRun) : livrés DIRECTS = packages_delivered (déjà net),
+  // relais livrés = packages_relay − packages_advised_relay, collectés = stops_completed.
+  const collected = num(run?.stops_completed);
+  const directDelivered = Math.max(0, num(run?.packages_delivered));
+  const relayDelivered = Math.max(0, num(run?.packages_relay) - num(run?.packages_advised_relay));
+  return baseFlat + priceStop * collected + priceParcel * directDelivered + bonusRelay * relayDelivered;
 }
 
 /**

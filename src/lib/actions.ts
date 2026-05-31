@@ -1007,7 +1007,7 @@ export async function finishRun(formData: FormData) {
           packages_advised_direct: advised_parcels_direct,
           packages_advised_relay: advised_parcels_relay,
           packages_returned: packages_returned,
-          packages_delivered: Math.max(0, (run.packages_loaded || 0) + (run.packages_relay || 0) - advised_parcels - packages_returned),
+          packages_delivered: direct_delivered, // livrés DIRECTS (hors relais) — convention unifiée
           notes: return_notes || null,
           status: "completed",
           return_time: new Date(),
@@ -1350,6 +1350,8 @@ export async function createRun(formData: FormData) {
       const isCompleted = isGlobalCompleted || packages_delivered > 0;
 
       let revenue_calculated = 0;
+      let stored_direct = 0;
+      let stored_relay_delivered = 0;
       let cost_driver = 0;
       let cost_vehicle = 0;
       let cost_fuel = 0;
@@ -1377,6 +1379,8 @@ export async function createRun(formData: FormData) {
         // On the form, we only receive the total delivered, we allocate relay packages delivery first
         const relay_delivered = Math.min(packages_delivered, packages_relay);
         const direct_delivered = Math.max(0, packages_delivered - relay_delivered);
+        stored_direct = direct_delivered;
+        stored_relay_delivered = relay_delivered;
 
         revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
@@ -1391,7 +1395,7 @@ export async function createRun(formData: FormData) {
             const priorDriverRuns = await prisma.dailyRun.count({
               where: { driver_id: driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
             });
-            cost_driver = driverCostFor(driver, packages_delivered, priorDriverRuns === 0);
+            cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
 
             const priorVehicleRuns = await prisma.dailyRun.count({
               where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
@@ -1450,9 +1454,9 @@ export async function createRun(formData: FormData) {
           
           packages_loaded: direct_parcels,
           stops_planned: colis_collected,
-          packages_delivered: isCompleted ? packages_delivered : null,
+          packages_delivered: isCompleted ? stored_direct : null,
           packages_returned: isCompleted ? packages_returned : null,
-          packages_relay: isCompleted ? packages_relay : null,
+          packages_relay: isCompleted ? stored_relay_delivered : null,
           stops_completed: isCompleted ? colis_collected : null,
           km_start: (isCompleted && isFirstIteration) ? km_start : null,
           km_end: (isCompleted && isFirstIteration) ? km_end : null,
@@ -2032,7 +2036,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
         const priorDriverRuns = await prisma.dailyRun.count({
           where: { driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
-        cost_driver = driverCostFor(driver, delivered, priorDriverRuns === 0);
+        cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
 
         const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
@@ -2097,8 +2101,8 @@ export async function saveUnifiedDelivery(formData: FormData) {
         fuel_consumed_liters: isFirstIteration ? fuelLiters : 0,
         packages_loaded: loaded,
         packages_returned: returned,
-        packages_delivered: delivered,
-        packages_relay: relay,
+        packages_delivered: direct_delivered,
+        packages_relay: relay_delivered,
         stops_completed: collected,
         notes: notes,
         return_time: new Date(),
