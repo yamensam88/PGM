@@ -277,7 +277,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     zoneSynthesisMap[zName].runs.push(r);
     zoneSynthesisMap[zName].runs_count += 1;
     const runLoaded = Number(r.packages_loaded || 0);
-    const runDelivered = Number(r.packages_delivered || 0);
+    const runDelivered = Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0));
     const runAdvised = Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0);
     const runReturned = Number(r.packages_returned || 0);
     const runRelay = Number(r.packages_relay || 0);
@@ -396,7 +396,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
            const totalLoaded = validRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
            const totalAdvised = validRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
            const totalReturned = validRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
-           const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
+           const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0)), 0);
 
            const txLivraison = totalLoaded > 0 ? ((totalDelivered / totalLoaded) * 100).toFixed(1) : "0.0";
            const txAvisage = totalLoaded > 0 ? (((totalAdvised + totalReturned) / totalLoaded) * 100).toFixed(1) : "0.0";
@@ -410,7 +410,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
            completedRuns.forEach(r => {
              if (!r.zone?.name) return;
              const z = r.zone.name;
-             const liv = Number(r.packages_delivered || 0);
+             const liv = Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0));
              if(!zonesStats[z]) zonesStats[z] = { totalDelivered: 0, count: 0 };
              zonesStats[z].totalDelivered += liv;
              zonesStats[z].count += 1;

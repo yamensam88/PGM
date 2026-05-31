@@ -78,7 +78,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
   });
 
   const totalLoaded = filteredData.reduce((sum, run) => sum + (run.packages_loaded || 0) + (run.packages_relay || 0), 0);
-  const totalDelivered = filteredData.reduce((sum, run) => sum + (run.packages_delivered || 0), 0);
+  const totalDelivered = filteredData.reduce((sum, run) => sum + (run.packages_delivered || 0) + Math.max(0, (run.packages_relay || 0) - ((run as any).packages_advised_relay || 0)), 0);
   const totalAdvised = filteredData.reduce((sum, run) => sum + ((run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0), 0);
   const totalReturned = filteredData.reduce((sum, run) => sum + (run.packages_returned || 0), 0);
   const totalEcart = totalLoaded - (totalDelivered + totalAdvised + totalReturned);
@@ -96,7 +96,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
 
   const renderRunRow = (run: DailyRunWithRelations) => {
     const loaded = (run.packages_loaded || 0) + (run.packages_relay || 0);
-    const delivered = run.packages_delivered || 0;
+    const delivered = (run.packages_delivered || 0) + Math.max(0, (run.packages_relay || 0) - ((run as any).packages_advised_relay || 0));
     const advised = (run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0;
     const returned = run.packages_returned || 0;
     const ecart = loaded - (delivered + advised + returned);
@@ -360,7 +360,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
             {groupByZone && groupedData ? (
               Object.entries(groupedData as Record<string, DailyRunWithRelations[]>).map(([zoneName, zoneRuns]) => {
                 const zLoaded = zoneRuns.reduce((s, r) => s + (r.packages_loaded || 0) + (r.packages_relay || 0), 0);
-                const zDelivered = zoneRuns.reduce((s, r) => s + (r.packages_delivered || 0), 0);
+                const zDelivered = zoneRuns.reduce((s, r) => s + (r.packages_delivered || 0) + Math.max(0, (r.packages_relay || 0) - ((r as any).packages_advised_relay || 0)), 0);
                 const zAdvised = zoneRuns.reduce((s, r) => s + ((r.packages_advised_direct || 0) + (r.packages_advised_relay || 0) || r.packages_advised || 0), 0);
                 const zReturned = zoneRuns.reduce((s, r) => s + (r.packages_returned || 0), 0);
                 const zEcart = zLoaded - (zDelivered + zAdvised + zReturned);

@@ -38,7 +38,7 @@ export function PackagesChart({ runs }: PackagesChartProps) {
       const relay = Number((run as any).packages_relay || 0);
       
       const realLoaded = loaded + relay;
-      const delivered = Number((run as any).packages_delivered || 0);
+      const delivered = Number((run as any).packages_delivered || 0) + Math.max(0, Number((run as any).packages_relay || 0) - Number((run as any).packages_advised_relay || 0));
 
       dataByDate[dateStr].Chargés += realLoaded;
       dataByDate[dateStr].Livrés += delivered;

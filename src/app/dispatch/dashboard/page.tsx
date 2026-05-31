@@ -9,6 +9,7 @@ import { TrendingUp, FileText, AlertTriangle, Lightbulb, Zap, Route, PieChart as
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { countWorkingDays } from "@/lib/calendar";
 import { computeRunRevenue } from "@/lib/finance";
+import { computeChauffeurHeadcount } from "@/lib/headcount";
 import { orgCan } from "@/lib/plans";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
@@ -315,7 +316,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   });
   idleVehicleFixedCost = Math.max(0, idleVehicleFixedCost);
 
-  const allActiveEmployees = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
+  const allActiveEmployees = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' }, include: { hr_events: { where: { start_date: { lte: endDate }, OR: [{ end_date: { gte: startDate } }, { end_date: null }] } } } });
   // Seuls les chauffeurs operationnels alimentent la masse salariale "tournees".
   // Les salaries de bureau sont deja comptes dans les charges fixes admin (cost_office_salaries)
   // -> on les exclut ici pour eviter un double comptage.
@@ -396,43 +397,34 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
   const totalPackages = validRuns.reduce((sum, r) => sum + Number(r.packages_loaded || 0) + Number(r.packages_relay || 0), 0);
   const totalAdvised = validRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
-  const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
+  const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0)), 0);
   const totalReturned = validRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
   const totalKm = allRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end))), 0);
 
   const failureRate = totalPackages > 0 ? ((totalAdvised + totalReturned) / totalPackages) * 100 : 0;
   const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
 
-  // 6. Headcount Logic (Effectifs)
-  const totalActiveDrivers = activeDriversData.length;
-  // Présents: Unique ACTIVE drivers who have ANY run (planned, in_progress, completed) OR a manual 'presence' HR event during this period
-  const activeDriverIds = new Set(activeDriversData.map(d => d.id));
-  const runsDriversId = allRuns.filter(r => activeDriverIds.has(r.driver_id)).map(r => r.driver_id);
-  const manuallyPresentDriversId = hrEvents.filter(e => e.event_type === 'presence' && activeDriverIds.has(e.driver_id)).map(e => e.driver_id);
-  const presentDriversSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
-  const presentDrivers = presentDriversSet.size;
-
-  // Congés: Unique ACTIVE drivers with a vacation HR event
-  // Congés: Unique ACTIVE drivers with a vacation HR event
-  const congesDriversSet = new Set(
-    hrEvents.filter(e => e.event_type === 'vacation' && activeDriverIds.has(e.driver_id) && !presentDriversSet.has(e.driver_id))
-    .map(e => e.driver_id)
-  );
-  const congesDrivers = congesDriversSet.size;
-
-  // Absents: Unique ACTIVE drivers with an HR event that is an absence type, UNLESS they are actually present on the field
-  const absenceEventTypes = ['absence', 'sick_leave'];
-  const absentsDriversSet = new Set(
-    hrEvents.filter(e => absenceEventTypes.includes(e.event_type) && activeDriverIds.has(e.driver_id) && !presentDriversSet.has(e.driver_id))
-    .map(e => e.driver_id)
-  );
-  const absentDrivers = absentsDriversSet.size;
+  // 6. Headcount Logic (Effectifs) — source de vérité UNIQUE partagée RH / Exploitation / Direction
+  const headcount = computeChauffeurHeadcount({
+    drivers: allActiveEmployees as any,
+    runDriverIds: validRuns.map(r => r.driver_id),
+    startDate,
+    endDate,
+  });
+  const totalActiveDrivers = headcount.actifs;
+  const activeDriverIds = new Set(headcount.activeList.map((d: any) => d.id));
+  const presentDriversSet = headcount.presentsSet;
+  const presentDrivers = headcount.presents;
+  const congesDriversSet = headcount.congesSet;
+  const congesDrivers = headcount.conges;
+  const absentsDriversSet = headcount.absentsSet;
+  const absentDrivers = headcount.absents;
 
   const actifsChauffeursList = activeDriversData;
   const presentsChauffeursList = activeDriversData.filter(d => presentDriversSet.has(d.id));
   const absentsChauffeursList = activeDriversData.filter(d => absentsDriversSet.has(d.id));
   const congesChauffeursList = activeDriversData.filter(d => congesDriversSet.has(d.id));
-  const idleDriversList = activeDriversData.filter(d => !presentDriversSet.has(d.id) && !absentsDriversSet.has(d.id) && !congesDriversSet.has(d.id));
+  const idleDriversList = activeDriversData.filter(d => headcount.nonAffectesSet.has(d.id));
 
   const driversAtRisk = new Set(
     completedRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50 && activeDriverIds.has(r.driver_id)).map(r => r.driver_id)
@@ -604,7 +596,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     synthesisMap[did].runs.push(r);
     synthesisMap[did].runs_count += 1;
     synthesisMap[did].packages_loaded += Number(r.packages_loaded || 0);
-    synthesisMap[did].packages_delivered += Number(r.packages_delivered || 0);
+    synthesisMap[did].packages_delivered += Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0));
     synthesisMap[did].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
     synthesisMap[did].packages_returned += Number(r.packages_returned || 0);
     synthesisMap[did].packages_relay += Number(r.packages_relay || 0);
@@ -660,7 +652,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     zoneSynthesisMap[zid].runs.push(r);
     zoneSynthesisMap[zid].runs_count += 1;
     zoneSynthesisMap[zid].packages_loaded += Number(r.packages_loaded || 0);
-    zoneSynthesisMap[zid].packages_delivered += Number(r.packages_delivered || 0);
+    zoneSynthesisMap[zid].packages_delivered += Number(r.packages_delivered || 0) + Math.max(0, Number(r.packages_relay || 0) - Number(r.packages_advised_relay || 0));
     zoneSynthesisMap[zid].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
     zoneSynthesisMap[zid].packages_returned += Number(r.packages_returned || 0);
     zoneSynthesisMap[zid].packages_relay += Number(r.packages_relay || 0);
