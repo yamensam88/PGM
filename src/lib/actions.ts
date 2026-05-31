@@ -2527,7 +2527,7 @@ export async function deleteDriverPenalty(eventId: string) {
  */
 export async function recordDriverAbsence(formData: FormData) {
   try {
-    await requireRole(["hr"]);
+    await requireRole(["hr", "dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2667,7 +2667,7 @@ export async function regularizeUnassignedDriver(formData: FormData) {
  */
 export async function updateDriverAbsence(formData: FormData) {
   try {
-    await requireRole(["hr"]);
+    await requireRole(["hr", "dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -2738,7 +2738,7 @@ export async function updateDriverAbsence(formData: FormData) {
  */
 export async function deleteDriverAbsence(eventId: string) {
   try {
-    await requireRole(["hr"]);
+    await requireRole(["hr", "dispatcher", "manager"]);
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;

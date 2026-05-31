@@ -25,6 +25,7 @@ import { DriversTable } from "@/components/dashboard/DriversTable";
 import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
+import { DeclaredStatusManager } from "@/components/dashboard/DeclaredStatusManager";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 import { computeChauffeurHeadcount } from "@/lib/headcount";
 import { countWorkingDays } from "@/lib/calendar";
@@ -173,7 +174,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     include: {
       hr_events: {
         where: { event_type: { in: ["vacation", "sick_leave", "presence", "absence"] } },
-        select: { id: true, start_date: true, end_date: true, event_type: true }
+        select: { id: true, start_date: true, end_date: true, event_type: true, notes: true }
       },
       financial_entries: {
         where: { category: { in: ["maintenance_cost", "damage_cost", "penalty"] }, entry_date: { gte: startDate, lte: endDate } },
@@ -253,6 +254,12 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const absentsChauffeursList = rawDrivers.filter(d => absentsChauffeursSet.has(d.id));
   const congesChauffeursList = rawDrivers.filter(d => congesChauffeursSet.has(d.id));
   const idleChauffeursList = rawDrivers.filter(d => hc.nonAffectesSet.has(d.id));
+
+  // Statuts déclarés (congé/maladie/absence/présence) chevauchant la période -> modifiables/annulables.
+  const _overlapsPeriod = (e: any) => new Date(e.start_date) <= endDate && (e.end_date ? new Date(e.end_date) : new Date(e.start_date)) >= startDate;
+  const declaredStatuses = rawDrivers.flatMap(d => (d.hr_events || [])
+    .filter((e: any) => ['vacation','sick_leave','absence','presence'].includes(e.event_type) && _overlapsPeriod(e))
+    .map((e: any) => ({ id: e.id, driver_id: d.id, driverName: `${d.first_name} ${d.last_name}`, event_type: e.event_type, start_date: e.start_date, end_date: e.end_date, notes: e.notes ?? "" })));
 
   // Garde-fou : salariés non affectés SANS statut, en vue d'une seule journée OUVRÉE.
   const guardSingleDayExpl = startDate.getFullYear() === endDate.getFullYear() && startDate.getMonth() === endDate.getMonth() && startDate.getDate() === endDate.getDate();
@@ -665,6 +672,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
           </div>
 
           <TabsContent value="planning" className="space-y-6 mt-0">
+             <DeclaredStatusManager events={JSON.parse(JSON.stringify(declaredStatuses))} drivers={JSON.parse(JSON.stringify(drivers))} />
              <GlobalCalendar events={calendarEvents} />
           </TabsContent>
 
