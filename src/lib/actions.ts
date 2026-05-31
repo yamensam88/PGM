@@ -414,6 +414,7 @@ export async function updateEmployee(formData: FormData) {
              pay_mode: payMode,
              cost_per_package: costPerPackage,
              daily_base_cost: (payMode === "daily" && dailyCostEdit !== null) ? dailyCostEdit : undefined,
+             hourly_cost: (payMode === "daily" && dailyCostEdit !== null) ? dailyCostEdit * 25.33 : undefined,
              hire_date: hireDate,
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
              paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,
@@ -805,7 +806,6 @@ export async function toggleMonthlyBonus(formData: FormData) {
  * Uses Prisma Transactions to ensure atomicity.
  */
 export async function finishRun(formData: FormData) {
-  console.log("▶ [finishRun] Réception du formData:", Object.fromEntries(formData));
   
   try {
     const session = await getServerSession(authOptions);
@@ -1661,7 +1661,7 @@ export async function addMaintenanceLog(formData: FormData) {
     const date_input = formData.get("date") as string;
     const document_file = formData.get("document") as File | null;
 
-    if (!vehicle_id || !maintenance_type || isNaN(cost) || !date_input) {
+    if (!vehicle_id || !maintenance_type || isNaN(cost) || cost < 0 || !date_input) {
       throw new Error("Veuillez remplir les champs obligatoires correctement.");
     }
 
@@ -1753,7 +1753,7 @@ export async function reportVehicleDamage(formData: FormData) {
     const date_input = formData.get("date") as string;
     const document_file = formData.get("document") as File | null;
 
-    if (!vehicle_id || !driver_id || isNaN(cost) || !date_input) {
+    if (!vehicle_id || !driver_id || isNaN(cost) || cost < 0 || !date_input) {
       throw new Error("Veuillez remplir les champs obligatoires correctement.");
     }
 

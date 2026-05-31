@@ -181,7 +181,7 @@ export default async function RunDetailsPage({
                             ) : null}
                         </div>
                         <div className="pb-6">
-                            <Badge variant="outline" className="border-indigo-500 text-indigo-600 mb-1">Incident Callisé</Badge>
+                            <Badge variant="outline" className="border-indigo-500 text-indigo-600 mb-1">Incident signalé</Badge>
                             <p className="font-medium">{incident.incident_type}</p>
                             <p className="text-sm text-slate-500">{new Date(incident.created_at || '').toLocaleString("fr-FR")}</p>
                             {incident.description && <p className="text-sm mt-2 p-3 bg-zinc-50 dark:bg-slate-50 rounded-md border border-zinc-100 dark:border-slate-200">{incident.description}</p>}

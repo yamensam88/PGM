@@ -18,7 +18,6 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Tentative de connexion avec:", email);
     setLoading(true);
     setError("");
 
