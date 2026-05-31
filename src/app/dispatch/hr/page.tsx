@@ -25,6 +25,7 @@ import { EditBonusForm } from "@/components/forms/EditBonusForm";
 import { BonusActions } from "@/components/hr/BonusActions";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
+import { computeChauffeurHeadcount } from "@/lib/headcount";
 import { EmployeeCalendarDialog } from "@/components/hr/EmployeeCalendarDialog";
 
 export const dynamic = 'force-dynamic';
@@ -243,94 +244,24 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
 
         {/* KPIs Section (Premium Dark View) */}
         {(() => {
-          const periodHrEvents = drivers.flatMap(d => d.hr_events).filter(e => 
-            new Date(e.start_date).getTime() <= endDate.getTime() && 
-            (!e.end_date || new Date(e.end_date).getTime() >= startDate.getTime())
-          );
-
-          const absenceTypes = ['absence', 'sick_leave', 'vacation'];
-          const sickLeaves = periodHrEvents.filter(e => e.event_type === 'sick_leave');
-          const unjustifiedAbsences = periodHrEvents.filter(e => e.event_type === 'absence');
-          const totalPaidLeaveBalance = activeDriversOnly.reduce((sum, d) => sum + calculateDynamicLeaveBalance(d), 0);
-          const totalAbsences = periodHrEvents.filter(e => absenceTypes.includes(e.event_type));
-          const sanctions = periodHrEvents.filter(e => ['sanction', 'warning'].includes(e.event_type));
-          
-          const todayStart = new Date(today);
-          const todayEnd = new Date(today);
-          todayEnd.setHours(23, 59, 59, 999);
-
-          const currentlyAbsent = drivers.filter(d => {
-            if (d.status !== 'active') return false;
-            
-            // Check if they have an absence event overlapping TODAY strictly
-            const hasAbsence = (d as any).hr_events?.some((e: any) => 
-               e.status === 'active' && 
-               ['absence', 'sick_leave', 'vacation'].includes(e.event_type) &&
-               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
-            );
-            
-            if (!hasAbsence) return false;
-            
-            // MATH OVERLAP PARITY: If they are absent, BUT they have a daily run TODAY OR a manual presence TODAY, they are ACTUALLY PRESENT
-            const hasRun = todayRunsDriverIds.has(d.id);
-            const hasManualPresence = (d as any).hr_events?.some((e: any) => 
-               e.status === 'active' && 
-               e.event_type === 'presence' &&
-               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
-            );
-            
-            // If they are physically present today, they are excluded from the Absent count
-            return !(hasRun || hasManualPresence);
-          }).length;
-          
-          const realAvailability = totalDrivers > 0 ? (((totalDrivers - currentlyAbsent) / totalDrivers) * 100).toFixed(1) : "0.0";
-
-          const actifsChauffeurs = activeDrivers;
-          
-          const manuallyPresentDriversId = drivers.filter(d => d.status === 'active' &&
-             (d as any).hr_events?.some((e: any) => 
-               e.status === 'active' &&
-               e.event_type === 'presence' && 
-               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
-             )
-          ).map(d => d.id);
-          const presentsChauffeursSet = new Set([...Array.from(todayRunsDriverIds), ...manuallyPresentDriversId]);
-          const presentsChauffeurs = presentsChauffeursSet.size;
-
-          const congesChauffeursSet = new Set(drivers.filter(d => 
-            d.status === 'active' && 
-            !presentsChauffeursSet.has(d.id) &&
-            (d as any).hr_events?.some((e: any) => 
-               e.status === 'active' &&
-               e.event_type === 'vacation' && 
-               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
-            )
-          ).map(d => d.id));
-          const congesChauffeurs = congesChauffeursSet.size;
-
-          const absentsChauffeursSet = new Set(drivers.filter(d => 
-            d.status === 'active' && 
-            !presentsChauffeursSet.has(d.id) &&
-            !congesChauffeursSet.has(d.id) &&
-            (d as any).hr_events?.some((e: any) => 
-               e.status === 'active' &&
-               ['absence', 'sick_leave'].includes(e.event_type) && 
-               new Date(e.start_date).getTime() <= todayEnd.getTime() &&
-               (!e.end_date || new Date(e.end_date).getTime() >= todayStart.getTime())
-            )
-          ).map(d => d.id));
-          const absentsChauffeurs = absentsChauffeursSet.size;
-          
-          const nonAffectesChauffeurs = Math.max(0, actifsChauffeurs - presentsChauffeurs - absentsChauffeurs - congesChauffeurs);
+          // Effectif chauffeur — source de verite UNIQUE (lib/headcount), sur la PERIODE selectionnee.
+          // (Identique a l'Exploitation : meme perimetre, meme logique, meme periode.)
+          const runDriverIds = periodRunsCalendar.map((r: any) => r.driver_id).filter(Boolean) as string[];
+          const hc = computeChauffeurHeadcount({ drivers: drivers as any, runDriverIds, startDate, endDate });
+          const actifsChauffeurs = hc.actifs;
+          const presentsChauffeurs = hc.presents;
+          const absentsChauffeurs = hc.absents;
+          const congesChauffeurs = hc.conges;
+          const nonAffectesChauffeurs = hc.nonAffectes;
+          const presentsChauffeursSet = hc.presentsSet;
+          const absentsChauffeursSet = hc.absentsSet;
+          const congesChauffeursSet = hc.congesSet;
+          const nonAffectesSet = hc.nonAffectesSet;
 
           return (
             <div>
               <div className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 w-full lg:w-fit flex flex-col justify-between">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs de Personnels · aujourd'hui</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs chauffeurs · période</h3>
                 <div className="flex justify-between items-center pb-2">
                   <div className="text-center flex-1 px-4">
                      <DriverMetricBox 
@@ -339,7 +270,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                        count={actifsChauffeurs} 
                        label={actifsChauffeurs > 1 ? 'Actifs' : 'Actif'} 
                        title="Effectif Actif" 
-                       drivers={drivers.filter(d => d.status === 'active')} 
+                       drivers={hc.activeList as any} 
                      />
                   </div>
                   <div className="w-px h-12 bg-slate-200/50 my-1 mx-2"></div>
@@ -383,7 +314,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                        count={nonAffectesChauffeurs} 
                        label="Non Affectés" 
                        title="Personnels Non Affectés" 
-                       drivers={drivers.filter(d => d.status === 'active' && !presentsChauffeursSet.has(d.id) && !absentsChauffeursSet.has(d.id) && !congesChauffeursSet.has(d.id))} 
+                       drivers={drivers.filter(d => nonAffectesSet.has(d.id))} 
                      />
                   </div>
                 </div>

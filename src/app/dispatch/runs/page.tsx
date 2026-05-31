@@ -26,6 +26,7 @@ import { ZoneSynthesisTable } from "@/components/dashboard/ZoneSynthesisTable";
 import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
+import { computeChauffeurHeadcount } from "@/lib/headcount";
 import { VehicleMetricBox } from "@/components/dashboard/VehicleMetricBox";
 
 export const dynamic = 'force-dynamic';
@@ -166,7 +167,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const inactifsVehicules = inactifsVehiculesList.length;
 
   const rawDrivers = await prisma.driver.findMany({
-    where: { organization_id: session.user.organization_id, job_title: "Chauffeur" } as any,
+    where: { organization_id: session.user.organization_id, OR: [{ job_title: "Chauffeur" }, { job_title: null }] } as any,
     include: {
       hr_events: {
         where: { event_type: { in: ["vacation", "sick_leave", "presence", "absence"] } },
@@ -206,8 +207,6 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     financial_entries: d.financial_entries.map(e => ({ ...e, amount: Number(e.amount) }))
   }));
 
-  const actifsChauffeurs = rawDrivers.filter(d => d.status === 'active').length;
-  const activeDriverIds = new Set(rawDrivers.filter(d => d.status === 'active').map(d => d.id));
 
   const calendarEvents = rawDrivers.flatMap(d => (d.hr_events || []).map((e: any) => {
      let color = "#6366f1";
@@ -230,53 +229,22 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
      };
   }));
   
-  const manuallyPresentDriversId = rawDrivers.filter(d => {
-    return d.status === 'active' && d.hr_events.some((e: any) => 
-       e.event_type === 'presence' && 
-       new Date(e.start_date) <= endDate &&
-       (!e.end_date || new Date(e.end_date) >= startDate)
-    );
-  }).map(d => d.id);
-  
-  const runsDriversId = runs.filter(r => activeDriverIds.has(r.driver_id)).map(r => r.driver_id).filter(Boolean);
-  const presentsChauffeursSet = new Set([...runsDriversId, ...manuallyPresentDriversId]);
-  const presentsChauffeurs = presentsChauffeursSet.size;
-  
-  const congesChauffeursSet = new Set(rawDrivers.filter(d => 
-    d.status === 'active' && 
-    !presentsChauffeursSet.has(d.id) &&
-    d.hr_events.some((e: any) => 
-       e.event_type === 'vacation' && 
-       new Date(e.start_date) <= endDate &&
-       (!e.end_date || new Date(e.end_date) >= startDate)
-    )
-  ).map(d => d.id));
-  const congesChauffeurs = congesChauffeursSet.size;
-
-  const absenceEventTypes = ['absence', 'sick_leave'];
-  const absentsChauffeursSet = new Set(rawDrivers.filter(d => 
-    d.status === 'active' && 
-    !presentsChauffeursSet.has(d.id) &&
-    !congesChauffeursSet.has(d.id) &&
-    d.hr_events.some((e: any) => 
-       absenceEventTypes.includes(e.event_type) && 
-       new Date(e.start_date) <= endDate &&
-       (!e.end_date || new Date(e.end_date) >= startDate)
-    )
-  ).map(d => d.id));
-  const absentsChauffeurs = absentsChauffeursSet.size;
-  const idleChauffeursList = rawDrivers.filter(d => 
-    d.status === 'active' && 
-    !presentsChauffeursSet.has(d.id) && 
-    !absentsChauffeursSet.has(d.id) && 
-    !congesChauffeursSet.has(d.id)
-  );
-  const idleChauffeurs = idleChauffeursList.length;
-
-  const actifsChauffeursList = rawDrivers.filter(d => d.status === 'active');
+  // Effectif chauffeur — source de verite UNIQUE (lib/headcount), calculee sur la PERIODE selectionnee.
+  const runDriverIds = runs.filter(r => (r as any).status !== 'cancelled').map(r => r.driver_id).filter(Boolean) as string[];
+  const hc = computeChauffeurHeadcount({ drivers: rawDrivers as any, runDriverIds, startDate, endDate });
+  const actifsChauffeurs = hc.actifs;
+  const presentsChauffeursSet = hc.presentsSet;
+  const presentsChauffeurs = hc.presents;
+  const congesChauffeursSet = hc.congesSet;
+  const congesChauffeurs = hc.conges;
+  const absentsChauffeursSet = hc.absentsSet;
+  const absentsChauffeurs = hc.absents;
+  const idleChauffeurs = hc.nonAffectes;
+  const actifsChauffeursList = hc.activeList as any[];
   const presentsChauffeursList = rawDrivers.filter(d => presentsChauffeursSet.has(d.id));
   const absentsChauffeursList = rawDrivers.filter(d => absentsChauffeursSet.has(d.id));
   const congesChauffeursList = rawDrivers.filter(d => congesChauffeursSet.has(d.id));
+  const idleChauffeursList = rawDrivers.filter(d => hc.nonAffectesSet.has(d.id));
 
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
