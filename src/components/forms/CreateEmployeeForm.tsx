@@ -168,6 +168,20 @@ export function CreateEmployeeForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="workerType" className="text-[13px] font-medium text-slate-600">Statut du chauffeur <span className="text-red-500">*</span></Label>
+        <Select name="workerType" defaultValue="salarie" required>
+           <SelectTrigger className="w-full bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-zinc-600">
+              <SelectValue placeholder="Statut" />
+           </SelectTrigger>
+           <SelectContent className="bg-white border-slate-200 text-slate-700">
+              <SelectItem value="salarie" className="focus:bg-white focus:text-slate-900">Salarié</SelectItem>
+              <SelectItem value="independant" className="focus:bg-white focus:text-slate-900">Indépendant (auto-entrepreneur)</SelectItem>
+           </SelectContent>
+        </Select>
+        <p className="text-[11px] text-slate-400">Un indépendant facture ses prestations : coût uniquement quand il roule, sans charges ni coût à l&apos;arrêt.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2.5 bg-indigo-900/10 p-5 border border-indigo-900/30 rounded-xl">
           <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-indigo-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>

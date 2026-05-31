@@ -499,6 +499,9 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                     {(driver as any).job_title || 'Chauffeur'}
                                   </Badge>
                                   <p className="text-[10px] uppercase text-slate-500 font-semibold tracking-wider">{driver.employment_type}</p>
+                                  {(driver as any).worker_type === 'independant' && (
+                                    <Badge className="bg-amber-50 text-amber-700 border border-amber-200 shadow-none text-[10px] font-bold">Indépendant</Badge>
+                                  )}
                                 </td>
                                 <td className="px-6 py-4 font-medium text-center text-slate-600">
                                    <EmployeeCalendarDialog title="Jours de Présence (Mois Actuel)" subtitle={`${driver.first_name} ${driver.last_name}`} dates={presentDates} colorType="emerald">

@@ -206,6 +206,7 @@ export async function createEmployee(formData: FormData) {
     const phone = formData.get("phone") as string;
     const jobTitle = formData.get("jobTitle") as string;
     const employmentType = formData.get("employmentType") as string;
+    const workerType = (formData.get("workerType") as string) || "salarie";
     const hireDateStr = formData.get("hireDate") as string;
     const dailyCostStr = formData.get("dailyCost") as string;
     const monthlyCostStr = formData.get("monthlyCost") as string;
@@ -282,6 +283,7 @@ export async function createEmployee(formData: FormData) {
         last_name: lastName,
         job_title: jobTitle,
         employment_type: employmentType,
+        worker_type: workerType,
         hire_date: hireDate,
         email: createdEmail,
         phone: phone || null,
@@ -330,6 +332,7 @@ export async function updateEmployee(formData: FormData) {
     const email = formData.get("email") as string; // Optional custom email update for Driver profile
     const jobTitle = formData.get("jobTitle") as string;
     const employmentType = formData.get("employmentType") as string;
+    const workerType = (formData.get("workerType") as string) || "salarie";
     const hireDateStr = formData.get("hireDate") as string;
     
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
@@ -397,6 +400,7 @@ export async function updateEmployee(formData: FormData) {
              phone: phone || null,
              job_title: jobTitle,
              employment_type: employmentType,
+             worker_type: workerType,
              hire_date: hireDate,
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
              paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,

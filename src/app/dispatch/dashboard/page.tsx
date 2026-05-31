@@ -320,7 +320,11 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   // Les salaries de bureau sont deja comptes dans les charges fixes admin (cost_office_salaries)
   // -> on les exclut ici pour eviter un double comptage.
   const operationalDrivers = allActiveEmployees.filter(d => d.job_title === 'Chauffeur' || !d.job_title);
-  const globalDriverFixedParams = operationalDrivers.reduce((sum, d) => {
+  // Seuls les SALARIES generent une masse salariale fixe (et donc un cout a l'arret).
+  // Un independant (auto-entrepreneur) facture ses prestations : cout UNIQUEMENT quand il roule
+  // (deja compte dans cost_driver de la tournee), zero cout fixe / a l'arret.
+  const salariedDrivers = operationalDrivers.filter(d => (d as any).worker_type !== 'independant');
+  const globalDriverFixedParams = salariedDrivers.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
      return sum + (explicitMonthly / 25.33);
   }, 0) * dateDiffWorkingDays;
@@ -337,7 +341,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
   let activeDriverCostInParams = 0;
   completedRunsBefore.forEach((r: any) => {
-     if (operationalDrivers.some(d => d.id === r.driver_id)) {
+     if (salariedDrivers.some(d => d.id === r.driver_id)) {
         activeDriverCostInParams += Number(r.cost_driver || 0);
      }
   });

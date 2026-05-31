@@ -96,6 +96,19 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="workerType" className="text-[13px] font-medium text-slate-600">Statut du chauffeur *</Label>
+        <Select name="workerType" defaultValue={(employee as any).worker_type || "salarie"} required>
+           <SelectTrigger className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600">
+              <SelectValue placeholder="Statut" />
+           </SelectTrigger>
+           <SelectContent className="bg-white border-slate-200 text-slate-700">
+              <SelectItem value="salarie">Salarié</SelectItem>
+              <SelectItem value="independant">Indépendant (auto-entrepreneur)</SelectItem>
+           </SelectContent>
+        </Select>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
          <div className="space-y-2">
             <Label htmlFor="hireDate" className="text-[13px] font-medium text-slate-600">Date d'entrée *</Label>
