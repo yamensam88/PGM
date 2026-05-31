@@ -77,7 +77,11 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
   const dateDiffMs = endDate.getTime() - startDate.getTime();
   const dateDiffDays = Math.max(1, Math.ceil(dateDiffMs / (1000 * 60 * 60 * 24)));
-  const dateDiffWorkingDays = Math.max(1, countWorkingDays(startDate, endDate));
+  // Vrai nombre de jours ouvrés (peut valoir 0 : période ne couvrant qu'un dimanche/férié).
+  // On NE force PAS un minimum de 1, sinon une journée chômée porterait une journée entière de
+  // charges fixes (CA 0 -> marge négative artificielle). Les divisions ci-dessous sont protégées.
+  const dateDiffWorkingDays = countWorkingDays(startDate, endDate);
+  const safeWorkingDays = Math.max(1, dateDiffWorkingDays);
 
   // 3. Fetch Runs for the period
   const rawRuns = await prisma.dailyRun.findMany({
@@ -456,10 +460,10 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     dailyData[dStr].cost += (r.cost_vehicle + r.cost_driver + r.cost_fuel);
   });
 
-  const dailyAdmin = periodAdminFixedCosts / dateDiffWorkingDays;
-  const dailyIdleDriver = totalIdleDriverCost / dateDiffWorkingDays;
-  const dailyIdleVehicle = idleVehicleFixedCost / dateDiffWorkingDays;
-  const dailyBonus = totalBonusCost / dateDiffWorkingDays;
+  const dailyAdmin = periodAdminFixedCosts / safeWorkingDays;
+  const dailyIdleDriver = totalIdleDriverCost / safeWorkingDays;
+  const dailyIdleVehicle = idleVehicleFixedCost / safeWorkingDays;
+  const dailyBonus = totalBonusCost / safeWorkingDays;
   const globalDailyCost = dailyAdmin + dailyIdleDriver + dailyIdleVehicle + dailyBonus;
 
   Object.keys(dailyData).forEach(dStr => {
