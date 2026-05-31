@@ -921,7 +921,7 @@ export async function finishRun(formData: FormData) {
 
        const km_already_driven = previousRunsThisMonth.reduce((sum, r) => sum + (r.km_total || Math.max(0, (Number(r.km_end) || 0) - (Number(r.km_start) || 0))), 0);
        const limit = Number(run.vehicle.monthly_km_limit || 4000);
-       const penalty_cost = Number(run.vehicle.extra_km_cost || 0.28);
+       const penalty_cost = Number(run.vehicle.extra_km_cost || 0.18);
 
        if (km_already_driven + km_diff <= limit) {
           variable_fleet_cost = 0;

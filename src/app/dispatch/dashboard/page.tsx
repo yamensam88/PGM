@@ -147,8 +147,8 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
 
     return {
       ...run,
-      km_start: run.km_start ? Number(run.km_start) : null,
-      km_end: run.km_end ? Number(run.km_end) : null,
+      km_start: run.km_start != null ? Number(run.km_start) : null,
+      km_end: run.km_end != null ? Number(run.km_end) : null,
       revenue_calculated: revenue,
       cost_driver: driverCost,
       cost_vehicle: fleetCost,
@@ -398,7 +398,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   const totalAdvised = validRuns.reduce((sum, r) => sum + (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0)), 0);
   const totalDelivered = validRuns.reduce((sum, r) => sum + Number(r.packages_delivered || 0), 0);
   const totalReturned = validRuns.reduce((sum, r) => sum + Number(r.packages_returned || 0), 0);
-  const totalKm = allRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+  const totalKm = allRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end))), 0);
 
   const failureRate = totalPackages > 0 ? ((totalAdvised + totalReturned) / totalPackages) * 100 : 0;
   const deliveryRate = totalPackages > 0 ? ((totalDelivered / totalPackages) * 100) : 0;
@@ -568,7 +568,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
       },
       recommendations: [
         flopDrivers.length > 0 ? `La performance globale de ${flopDrivers[0].name} pèse sur la marge nette (${flopDrivers[0].margin.toFixed(2)}€). Un accompagnement terrain est recommandé.` : null,
-        `L'augmentation des KM supplémentaires coûte en moyenne 12% des profits. Il est préconisé d'affiner le clustering des zones complexes.`
+        `Optimisez le clustering des zones complexes pour limiter les kilomètres supplémentaires non rentables.`
       ].filter(Boolean) as string[]
     };
   };
@@ -608,7 +608,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     synthesisMap[did].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
     synthesisMap[did].packages_returned += Number(r.packages_returned || 0);
     synthesisMap[did].packages_relay += Number(r.packages_relay || 0);
-    synthesisMap[did].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
+    synthesisMap[did].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end)));
     synthesisMap[did].margin_net += r.margin_net;
     
     // Sum up financial entries attached to runs
@@ -664,7 +664,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
     zoneSynthesisMap[zid].packages_advised += (Number(r.packages_advised_direct || 0) + Number(r.packages_advised_relay || 0) || Number(r.packages_advised || 0));
     zoneSynthesisMap[zid].packages_returned += Number(r.packages_returned || 0);
     zoneSynthesisMap[zid].packages_relay += Number(r.packages_relay || 0);
-    zoneSynthesisMap[zid].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
+    zoneSynthesisMap[zid].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end)));
     zoneSynthesisMap[zid].margin_net += r.margin_net;
     
     // Sum up financial entries attached to runs
@@ -689,7 +689,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   completedRuns.forEach(r => {
     if (r.driver_id && r.driver && r.vehicle) {
       const fuel = r.fuel_consumed_liters || 0;
-      const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
+      const km = Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end) ?? 0));
       if (km > 0 && fuel > 0) {
          if (!fuelStatsMap[r.driver_id]) {
             fuelStatsMap[r.driver_id] = { driverName: `${r.driver.first_name} ${r.driver.last_name}`, totalKm: 0, totalFuel: 0 };
@@ -742,7 +742,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
         const driversForVehicle: Record<string, {name: string, km: number}> = {};
         completedRuns.forEach(r => {
            if (r.vehicle_id === cost.vehicle_id && r.driver_id && r.driver) {
-              const km = Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end) || 0));
+              const km = Math.max(0, (r.km_end || 0) - (r.km_start ?? Number(r.km_end) ?? 0));
               if (!driversForVehicle[r.driver_id]) driversForVehicle[r.driver_id] = {name: `${r.driver.first_name} ${r.driver.last_name}`, km: 0};
               driversForVehicle[r.driver_id].km += km;
            }

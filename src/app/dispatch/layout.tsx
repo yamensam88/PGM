@@ -108,7 +108,7 @@ export default async function DispatchLayout({
          <Header mobileMenu={<MobileSidebar userRole={userRole} isSuperAdmin={isSuperAdmin} userPermissions={userPermissions} planFeatures={planFeatures} isTrialing={isTrialing} isMasterOrg={isMasterOrg} />} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 pb-20 relative">
-          {isSuspended ? (
+          {isSuspended && !isBillingPage ? (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-6 bg-white border border-red-200 rounded-2xl shadow-xl p-8 max-w-2xl mx-auto mt-12 relative z-10">
                <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-2 mx-auto"><Ban className="w-12 h-12" /></div>
                <div>
