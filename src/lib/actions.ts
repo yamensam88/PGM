@@ -2598,6 +2598,71 @@ export async function recordDriverAbsence(formData: FormData) {
 }
 
 /**
+ * Garde-fou : régularise en UN clic le statut d'une journée pour un chauffeur SALARIÉ non affecté.
+ * Statuts autorisés : 'vacation' (congé), 'sick_leave' (maladie), 'absence' (absence injustifiée = non payée).
+ * Accessible Direction / RH / Exploitation. Refuse les indépendants (ils ne coûtent que lorsqu'ils roulent).
+ */
+export async function regularizeUnassignedDriver(formData: FormData) {
+  try {
+    const session = await requireRole(["hr", "dispatcher", "manager"]);
+    const orgId = session.user.organization_id;
+
+    const driver_id = formData.get("driver_id") as string;
+    const event_type = formData.get("event_type") as string;
+    const day = formData.get("day") as string; // YYYY-MM-DD
+
+    if (!driver_id || !day || !["vacation", "sick_leave", "absence"].includes(event_type)) {
+      return { success: false, error: "Paramètres invalides." };
+    }
+
+    const driver = await prisma.driver.findFirst({
+      where: { id: driver_id, organization_id: orgId },
+      select: { id: true, worker_type: true },
+    });
+    if (!driver) return { success: false, error: "Chauffeur introuvable dans votre société." };
+    if ((driver as any).worker_type === "independant") {
+      return { success: false, error: "Inutile pour un indépendant : il ne coûte que les jours où il roule." };
+    }
+
+    const dayStart = new Date(`${day}T00:00:00`);
+    const dayEnd = new Date(`${day}T23:59:59`);
+
+    // Collision : un statut RH couvre-t-il déjà ce jour ?
+    const overlap = await prisma.hrEvent.findFirst({
+      where: {
+        driver_id,
+        organization_id: orgId,
+        event_type: { in: ["sick_leave", "vacation", "absence", "presence"] },
+        status: "active",
+        start_date: { lte: dayEnd },
+        OR: [{ end_date: { gte: dayStart } }, { end_date: null }],
+      },
+    });
+    if (overlap) return { success: false, error: "Un statut existe déjà pour ce chauffeur ce jour-là." };
+
+    await prisma.hrEvent.create({
+      data: {
+        organization_id: orgId,
+        driver_id,
+        event_type,
+        start_date: dayStart,
+        end_date: dayStart, // statut d'UNE seule journée
+        status: "active",
+        notes: "Régularisé via le garde-fou (salarié non affecté)",
+      },
+    });
+
+    revalidatePath("/dispatch/dashboard");
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/hr");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur regularizeUnassignedDriver:", error);
+    return { success: false, error: error.message || "Erreur lors de la régularisation." };
+  }
+}
+
+/**
  * Server Action: Mettre à jour une absence existante (RH)
  */
 export async function updateDriverAbsence(formData: FormData) {

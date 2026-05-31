@@ -27,6 +27,8 @@ import { CreateVehicleModal } from "@/components/dashboard/CreateVehicleModal";
 import { GlobalCalendar } from "@/components/dashboard/GlobalCalendar";
 import { DriverMetricBox } from "@/components/dashboard/DriverMetricBox";
 import { computeChauffeurHeadcount } from "@/lib/headcount";
+import { countWorkingDays } from "@/lib/calendar";
+import { UnassignedSalariedGuard } from "@/components/dashboard/UnassignedSalariedGuard";
 import { VehicleMetricBox } from "@/components/dashboard/VehicleMetricBox";
 
 export const dynamic = 'force-dynamic';
@@ -252,6 +254,17 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   const congesChauffeursList = rawDrivers.filter(d => congesChauffeursSet.has(d.id));
   const idleChauffeursList = rawDrivers.filter(d => hc.nonAffectesSet.has(d.id));
 
+  // Garde-fou : salariés non affectés SANS statut, en vue d'une seule journée OUVRÉE.
+  const guardSingleDayExpl = startDate.getFullYear() === endDate.getFullYear() && startDate.getMonth() === endDate.getMonth() && startDate.getDate() === endDate.getDate();
+  const guardIsWorkingDayExpl = countWorkingDays(startDate, startDate) > 0;
+  const unassignedSalariedNoStatusExpl = (guardSingleDayExpl && guardIsWorkingDayExpl)
+    ? (hc.activeList as any[])
+        .filter(d => d.worker_type !== 'independant' && hc.nonAffectesSet.has(d.id))
+        .map(d => ({ id: d.id, first_name: d.first_name, last_name: d.last_name }))
+    : [];
+  const guardDayISOExpl = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+  const guardDayLabelExpl = startDate.toLocaleDateString('fr-FR');
+
   const zoneSynthesisMap: Record<string, any> = {};
   runs.forEach(r => {
     if (!r.zone?.name) return;
@@ -425,6 +438,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
 
            return (
              <>
+               <UnassignedSalariedGuard drivers={unassignedSalariedNoStatusExpl} dateISO={guardDayISOExpl} dateLabel={guardDayLabelExpl} />
                {/* Effectifs & KPIs Top Bar */}
                <div className="flex flex-wrap gap-4 mb-8">
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-800 p-4 flex-1 min-w-[340px]">

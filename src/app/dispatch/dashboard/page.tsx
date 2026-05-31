@@ -10,6 +10,7 @@ import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { countWorkingDays } from "@/lib/calendar";
 import { computeRunRevenue } from "@/lib/finance";
 import { computeChauffeurHeadcount } from "@/lib/headcount";
+import { UnassignedSalariedGuard } from "@/components/dashboard/UnassignedSalariedGuard";
 import { orgCan } from "@/lib/plans";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
@@ -430,6 +431,17 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   const congesChauffeursList = activeDriversData.filter(d => congesDriversSet.has(d.id));
   const idleDriversList = activeDriversData.filter(d => headcount.nonAffectesSet.has(d.id));
 
+  // Garde-fou : salariés non affectés SANS statut, uniquement en vue d'une seule journée OUVRÉE.
+  const guardSingleDay = startDate.getFullYear() === endDate.getFullYear() && startDate.getMonth() === endDate.getMonth() && startDate.getDate() === endDate.getDate();
+  const guardIsWorkingDay = countWorkingDays(startDate, startDate) > 0;
+  const unassignedSalariedNoStatus = (guardSingleDay && guardIsWorkingDay)
+    ? (headcount.activeList as any[])
+        .filter(d => d.worker_type !== 'independant' && headcount.nonAffectesSet.has(d.id))
+        .map(d => ({ id: d.id, first_name: d.first_name, last_name: d.last_name }))
+    : [];
+  const guardDayISO = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+  const guardDayLabel = startDate.toLocaleDateString('fr-FR');
+
   const driversAtRisk = new Set(
     completedRuns.filter(r => r.penalty_risk_score !== null && r.penalty_risk_score > 50 && activeDriverIds.has(r.driver_id)).map(r => r.driver_id)
   ).size;
@@ -783,6 +795,8 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
             <DateRangePicker />
           </div>
         </div>
+
+        <UnassignedSalariedGuard drivers={unassignedSalariedNoStatus} dateISO={guardDayISO} dateLabel={guardDayLabel} />
 
         {/* Effectifs Top Bar (Shared with Exploitation) */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
