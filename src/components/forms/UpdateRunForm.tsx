@@ -71,6 +71,16 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
           <Label htmlFor="packages_advised_relay">Avisés Relais</Label>
           <Input id="packages_advised_relay" name="packages_advised_relay" type="number" min="0" defaultValue={initialData.packages_advised_relay || 0} />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="packages_relay">Colis Relais</Label>
+          <Input id="packages_relay" name="packages_relay" type="number" min="0" defaultValue={initialData.packages_relay || 0} />
+          <p className="text-[11px] text-slate-400">Facturés au tarif relais (0,30 €/colis).</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="colis_collected">Colis Collectés</Label>
+          <Input id="colis_collected" name="colis_collected" type="number" min="0" defaultValue={initialData.stops_completed || 0} />
+          <p className="text-[11px] text-slate-400">Colis ramassés, facturés au tarif collecte (0,30 €/colis).</p>
+        </div>
         <div className="space-y-2 col-span-2">
           <Label htmlFor="packages_returned">Colis Retournés</Label>
           <Input id="packages_returned" name="packages_returned" type="number" min="0" defaultValue={initialData.packages_returned || 0} />

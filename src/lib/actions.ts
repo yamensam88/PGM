@@ -3200,6 +3200,7 @@ export async function updateRun(formData: FormData) {
     const final_packages_advised_direct = formData.has("packages_advised_direct") ? Number(formData.get("packages_advised_direct")) : Number(run.packages_advised_direct || 0);
     const final_packages_advised_relay = formData.has("packages_advised_relay") ? Number(formData.get("packages_advised_relay")) : Number(run.packages_advised_relay || 0);
     const final_advised_total = final_packages_advised_direct + final_packages_advised_relay;
+    const final_collected = formData.has("colis_collected") ? Number(formData.get("colis_collected")) : Number(run.stops_completed || 0);
     
     const final_km_start = formData.has("km_start") ? Number(formData.get("km_start")) : Number(run.km_start || 0);
     const final_km_end = formData.has("km_end") ? Number(formData.get("km_end")) : Number(run.km_end || 0);
@@ -3212,6 +3213,8 @@ export async function updateRun(formData: FormData) {
        packages_loaded: final_packages_loaded,
        packages_delivered: final_packages_delivered,
        packages_returned: final_packages_returned,
+       packages_relay: final_packages_relay,
+       stops_completed: final_collected,
        packages_advised_direct: final_packages_advised_direct,
        packages_advised_relay: final_packages_advised_relay,
        packages_advised: final_advised_total,
@@ -3242,9 +3245,8 @@ export async function updateRun(formData: FormData) {
 
        const direct_delivered = Math.max(0, final_packages_loaded - final_packages_advised_direct - final_packages_returned);
        const relay_delivered = Math.max(0, final_packages_relay - final_packages_advised_relay);
-       const stops_completed = Number(run.stops_completed || 0); 
 
-       const revenue_calculated = base_flat + (price_stop * stops_completed) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
+       const revenue_calculated = base_flat + (price_stop * final_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
 
        const startOfDay = new Date(run.date);
        startOfDay.setUTCHours(0, 0, 0, 0);
