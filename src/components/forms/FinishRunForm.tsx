@@ -75,8 +75,9 @@ export function FinishRunForm({ runId, initialKmStart }: FinishRunFormProps) {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="stops_done">Stops Réalisés</Label>
+          <Label htmlFor="stops_done">Colis collectés</Label>
           <Input id="stops_done" name="stops_done" type="number" min="0" required defaultValue="0" />
+          <p className="text-[11px] text-slate-400">Colis ramassés sur la tournée (facturés au tarif « collecte »).</p>
         </div>
 
         <div className="space-y-2">
