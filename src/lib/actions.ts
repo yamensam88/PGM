@@ -3,6 +3,7 @@
 
 import prisma from "@/lib/prisma";
 import { driverCostFor } from "@/lib/finance";
+import { countWorkingDays } from "@/lib/calendar";
 import { randomBytes } from "crypto";
 import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
@@ -890,14 +891,15 @@ export async function finishRun(formData: FormData) {
     const priorDriverRuns = await prisma.dailyRun.count({
       where: { driver_id: run.driver_id, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
     });
-    const cost_driver = driverCostFor(run.driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
+    const isWorkingDayRun = countWorkingDays(new Date(run.date), new Date(run.date)) > 0;
+    const cost_driver = driverCostFor(run.driver, direct_delivered + relay_delivered, priorDriverRuns === 0, isWorkingDayRun);
     console.log(`▶ [finishRun] Calcul cost_driver (Prorata): ${cost_driver}€`);
 
     // Cost Fleet: default_run_cost + fuel_amount + ( (km_end - km_start) * cost_per_km )
     const priorVehicleRuns = await prisma.dailyRun.count({
       where: { vehicle_id: run.vehicle_id, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
     });
-    const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(run.vehicle.fixed_monthly_cost || 0) + Number(run.vehicle.rental_monthly_cost || 0) + Number(run.vehicle.insurance_monthly_cost || 0)) / 25.33; // Lissé sur jours ouvrés
+    const base_fleet_cost = (priorVehicleRuns > 0 || !isWorkingDayRun) ? 0 : (Number(run.vehicle.fixed_monthly_cost || 0) + Number(run.vehicle.rental_monthly_cost || 0) + Number(run.vehicle.insurance_monthly_cost || 0)) / 25.33; // Lissé sur jours ouvrés (dim/fériés exclus)
     
     const km_diff = Math.max(0, km_end - (final_km_start !== null ? final_km_start : km_end)); // fallback to 0 if km_start missing
     
@@ -1395,12 +1397,13 @@ export async function createRun(formData: FormData) {
             const priorDriverRuns = await prisma.dailyRun.count({
               where: { driver_id: driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
             });
-            cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
+            const isWorkingDayRun = countWorkingDays(utcDate, utcDate) > 0;
+            cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0, isWorkingDayRun);
 
             const priorVehicleRuns = await prisma.dailyRun.count({
               where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
             });
-            const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
+            const base_fleet_cost = (priorVehicleRuns > 0 || !isWorkingDayRun) ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
             km_diff = Math.max(0, km_end - km_start);
             const variable_fleet_cost = vehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
@@ -2036,13 +2039,14 @@ export async function saveUnifiedDelivery(formData: FormData) {
         const priorDriverRuns = await prisma.dailyRun.count({
           where: { driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
-        cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
+        const isWorkingDayRun = countWorkingDays(new Date(), new Date()) > 0;
+        cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0, isWorkingDayRun);
 
         const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
 
-        const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
+        const base_fleet_cost = (priorVehicleRuns > 0 || !isWorkingDayRun) ? 0 : (Number(vehicle?.fixed_monthly_cost || 0) + Number(vehicle?.rental_monthly_cost || 0) + Number(vehicle?.insurance_monthly_cost || 0)) / 25.33;
         km_diff = Math.max(0, kmEnd - kmStart);
         const variable_fleet_cost = vehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(vehicle?.internal_cost_per_km || 0);
 
@@ -3260,12 +3264,13 @@ export async function updateRun(formData: FormData) {
        const priorDriverRuns = await prisma.dailyRun.count({
           where: { driver_id: activeDriverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
        });
-       const cost_driver = driverCostFor(activeDriver, direct_delivered + relay_delivered, priorDriverRuns === 0);
+       const isWorkingDayRun = countWorkingDays(new Date(run.date), new Date(run.date)) > 0;
+       const cost_driver = driverCostFor(activeDriver, direct_delivered + relay_delivered, priorDriverRuns === 0, isWorkingDayRun);
 
        const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: activeVehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
        });
-       const base_fleet_cost = priorVehicleRuns > 0 ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 25.33;
+       const base_fleet_cost = (priorVehicleRuns > 0 || !isWorkingDayRun) ? 0 : (Number(activeVehicle?.fixed_monthly_cost || 0) + Number(activeVehicle?.rental_monthly_cost || 0) + Number(activeVehicle?.insurance_monthly_cost || 0)) / 25.33;
        const variable_fleet_cost = activeVehicle?.ownership_type === 'rented' ? 0 : km_diff * Number(activeVehicle?.internal_cost_per_km || 0);
 
        let penalty_cost = 0;

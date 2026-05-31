@@ -18,6 +18,8 @@
  * (createRun / finishRun / updateRun / saveUnifiedDelivery) et par le retroactif.
  */
 
+import { countWorkingDays } from "@/lib/calendar";
+
 export const WORKING_DAYS_PER_MONTH = 25.33;
 export const DEFAULT_MONTHLY_KM_LIMIT = 4000;
 export const DEFAULT_EXTRA_KM_COST = 0.18;
@@ -71,24 +73,30 @@ export function computeRunRevenue(run: any): number {
  *    facture a chaque tournee (pas de logique "une fois par jour"), aucun cout a l'arret.
  *  - sinon "daily" (forfait journalier) : charge fixe imputee UNE SEULE FOIS par jour.
  */
-export function driverCostFor(driver: any, deliveredPackages: number, isFirstDriverRunOfDay: boolean): number {
+export function driverCostFor(driver: any, deliveredPackages: number, isFirstDriverRunOfDay: boolean, isWorkingDay: boolean = true): number {
   if (!driver) return 0;
   if (driver.pay_mode === "per_package") {
     return num(driver.cost_per_package) * Math.max(0, num(deliveredPackages));
   }
-  return isFirstDriverRunOfDay ? num(driver.daily_base_cost) : 0;
+  if (!isFirstDriverRunOfDay) return 0;
+  // Forfait journalier. Le salaire d'un SALARIÉ est déjà lissé sur les jours ouvrés (÷ 25,33) :
+  // on n'ajoute donc AUCUNE part fixe un dimanche / jour férié. Un INDÉPENDANT au forfait est
+  // lui réellement payé chaque jour où il roule (dimanche/férié inclus).
+  if (!isWorkingDay && driver.worker_type !== "independant") return 0;
+  return num(driver.daily_base_cost);
 }
 
-export function computeDriverCost(run: any, isFirstDriverRunOfDay: boolean): number {
-  return driverCostFor(run?.driver, num(run?.packages_delivered), isFirstDriverRunOfDay);
+export function computeDriverCost(run: any, isFirstDriverRunOfDay: boolean, isWorkingDay: boolean = true): number {
+  return driverCostFor(run?.driver, num(run?.packages_delivered), isFirstDriverRunOfDay, isWorkingDay);
 }
 
 export function computeVehicleCost(
   run: any,
-  opts: { isFirstVehicleRunOfDay: boolean; kmBeforeThisRun: number }
+  opts: { isFirstVehicleRunOfDay: boolean; kmBeforeThisRun: number; isWorkingDay?: boolean }
 ): number {
   const v = run?.vehicle ?? {};
-  const fixed = opts.isFirstVehicleRunOfDay
+  // Part fixe (mensualités lissées) : déjà répartie sur les jours ouvrés -> pas de part fixe le dim/férié.
+  const fixed = (opts.isFirstVehicleRunOfDay && opts.isWorkingDay !== false)
     ? (num(v.fixed_monthly_cost) + num(v.rental_monthly_cost) + num(v.insurance_monthly_cost)) /
       WORKING_DAYS_PER_MONTH
     : 0;
@@ -126,11 +134,14 @@ export interface RunFinancials {
 }
 
 export function computeRunFinancials(run: any, ctx: RunFinancialContext): RunFinancials {
+  const d = run?.date ? new Date(run.date) : null;
+  const isWorkingDay = d ? countWorkingDays(d, d) > 0 : true;
   const revenue = computeRunRevenue(run);
-  const costDriver = computeDriverCost(run, ctx.isFirstDriverRunOfDay);
+  const costDriver = computeDriverCost(run, ctx.isFirstDriverRunOfDay, isWorkingDay);
   const costVehicle = computeVehicleCost(run, {
     isFirstVehicleRunOfDay: ctx.isFirstVehicleRunOfDay,
     kmBeforeThisRun: ctx.vehicleKmBeforeThisRun,
+    isWorkingDay,
   });
   const costFuel = num(run?.cost_fuel);
   const marginNet = revenue - costDriver - costVehicle - costFuel;
