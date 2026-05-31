@@ -3858,3 +3858,22 @@ export async function updateOrganizationProfile(formData: FormData) {
     return { success: false, error: e?.message || "Erreur serveur." };
   }
 }
+
+/**
+ * Synthèse exécutive IA (Direction) à la demande, par-dessus le moteur décisionnel.
+ * Repli propre si la clé GEMINI_API_KEY n'est pas configurée.
+ */
+export async function generateDecisionNarrative(payload: string) {
+  try {
+    await requireRole(["owner", "admin", "manager"]);
+    let data: any = {};
+    try { data = JSON.parse(payload || "{}"); } catch { data = {}; }
+    const { generateExecutiveSummary } = await import("@/lib/agents/technicalAgent");
+    const text = await generateExecutiveSummary(data);
+    if (text === "__NO_KEY__") return { success: false, error: "Synthèse IA non configurée : ajoute la clé GEMINI_API_KEY côté serveur (Vercel)." };
+    if (text === "__ERROR__") return { success: false, error: "La génération de la synthèse IA a échoué. Réessaie." };
+    return { success: true, text };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Erreur lors de la génération." };
+  }
+}
