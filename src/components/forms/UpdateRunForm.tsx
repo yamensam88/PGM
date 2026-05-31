@@ -12,17 +12,25 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Champs qui pilotent le calcul des colis livres (= charges - avises direct - retournes)
+  // Saisies qui déterminent le calcul de référence des colis livrés.
   const [loaded, setLoaded] = useState<string>(String(initialData.packages_loaded ?? 0));
   const [advisedDirect, setAdvisedDirect] = useState<string>(String(initialData.packages_advised_direct ?? 0));
   const [returned, setReturned] = useState<string>(String(initialData.packages_returned ?? 0));
+  // Colis livrés saisis par l'exploitant (comptage terrain), à réconcilier avec le calcul.
+  const [deliveredInput, setDeliveredInput] = useState<string>(String(initialData.packages_delivered ?? 0));
 
-  const delivered = Math.max(0, (Number(loaded) || 0) - (Number(advisedDirect) || 0) - (Number(returned) || 0));
+  const calculated = Math.max(0, (Number(loaded) || 0) - (Number(advisedDirect) || 0) - (Number(returned) || 0));
+  const deliveredNum = Number(deliveredInput) || 0;
+  const mismatch = deliveredNum !== calculated;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (isPending) return;
+    if (mismatch) {
+      setError(`Écart sur les colis livrés : vous avez saisi ${deliveredNum}, mais le calcul (Chargés − Avisés direct − Retournés) donne ${calculated}. Corrigez les chiffres avant d'enregistrer.`);
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     formData.append("runId", initialData.id);
     startTransition(async () => {
@@ -73,9 +81,13 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
           <Input id="packages_returned" name="packages_returned" type="number" min="0" value={returned} onChange={(e) => setReturned(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="packages_delivered">Colis Livrés (calculé)</Label>
-          <Input id="packages_delivered" name="packages_delivered" type="number" readOnly value={delivered} className="bg-slate-100 text-slate-600 cursor-not-allowed font-semibold" />
-          <p className="text-[11px] text-slate-400">= Chargés − Avisés direct − Retournés. Facturé 1,50 €/colis.</p>
+          <Label htmlFor="packages_delivered">Colis Livrés (saisi)</Label>
+          <Input id="packages_delivered" name="packages_delivered" type="number" min="0" value={deliveredInput} onChange={(e) => setDeliveredInput(e.target.value)} className={mismatch ? "border-red-500 ring-1 ring-red-400 text-red-700 font-semibold" : ""} />
+          <p className={`text-[11px] ${mismatch ? "text-red-600 font-semibold" : "text-slate-400"}`}>
+            {mismatch
+              ? `⚠ Écart : le calcul (Chargés − Avisés − Retournés) donne ${calculated}. Corrigez avant d'enregistrer.`
+              : `OK · = Chargés − Avisés direct − Retournés (${calculated}). Facturé 1,50 €/colis.`}
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="packages_relay">Colis Relais</Label>
@@ -119,6 +131,12 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
         </div>
       </div>
 
+      {mismatch && (
+        <div className="p-3 bg-red-50 text-sm text-red-700 border-l-4 border-red-500 rounded-r">
+          <strong>Écart à corriger.</strong> Colis livrés saisis : <strong>{deliveredNum}</strong> · Calcul (Chargés − Avisés − Retournés) : <strong>{calculated}</strong>. Ajustez les colis livrés, ou les chargés / avisés / retournés, pour que les deux coïncident.
+        </div>
+      )}
+
       {error && (
         <div className="p-3 bg-red-50 text-sm text-red-600 border-l-4 border-red-500">
           {error}
@@ -129,7 +147,7 @@ export function UpdateRunForm({ initialData, onSuccess }: { initialData: any; on
         <Button type="button" variant="outline" className="mr-4 text-slate-700" onClick={onSuccess}>
           Annuler
         </Button>
-        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending}>
+        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending || mismatch}>
           {isPending ? "Mise à jour..." : "Enregistrer les modifications"}
         </Button>
       </div>
