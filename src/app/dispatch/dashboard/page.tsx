@@ -11,6 +11,7 @@ import { countWorkingDays } from "@/lib/calendar";
 import { computeRunRevenue } from "@/lib/finance";
 import { computeChauffeurHeadcount } from "@/lib/headcount";
 import { UnassignedSalariedGuard } from "@/components/dashboard/UnassignedSalariedGuard";
+import { DecisionReport } from "@/components/dashboard/DecisionReport";
 import { orgCan } from "@/lib/plans";
 import { PackagesChart } from "@/components/dashboard/PackagesChart";
 import { CostBreakdownChart } from "@/components/dashboard/CostBreakdownChart";
@@ -774,6 +775,55 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   });
   maintenanceAnomaliesConfigured.sort((a,b) => b.cost - a.cost);
 
+  // ====== Rapport décisionnel (moteur analytique déterministe, sur données réelles) ======
+  const _costItems = [...marginWaterfallItems].filter((i: any) => i.amount > 0).sort((a: any, b: any) => b.amount - a.amount);
+  const _costSum = _costItems.reduce((acc: number, i: any) => acc + i.amount, 0) || 1;
+  const drTopCosts = _costItems.slice(0, 3).map((i: any) => ({ label: i.label, amount: i.amount, pct: (i.amount / _costSum) * 100 }));
+
+  const drStatus: "no_data" | "deficit" | "fragile" | "sain" =
+    totalRevenue <= 0 ? "no_data" : totalMargin < 0 ? "deficit" : marginPctNow < TARGET_MARGIN_PCT ? "fragile" : "sain";
+
+  const _perRun = sortedDrivers.filter((d: any) => d.runs > 0).map((d: any) => ({ name: d.name, perRun: d.margin / d.runs, runs: d.runs }));
+  const drBest = _perRun.length ? [..._perRun].sort((a, b) => b.perRun - a.perRun)[0] : null;
+  const drWorst = _perRun.length ? [..._perRun].sort((a, b) => a.perRun - b.perRun)[0] : null;
+
+  const _zonesNet = (zoneSynthesisData as any[]).map((z) => ({ name: z.zone?.name || "—", net: (z.margin_net || 0) - (z.maintenance_cost || 0) - (z.damage_cost || 0) - (z.penalty_cost || 0), runs: z.runs_count || 0 }));
+  const drWorstZone = _zonesNet.length ? [..._zonesNet].sort((a, b) => a.net - b.net)[0] : null;
+
+  const drIdleTotal = totalIdleDriverCost + idleVehicleFixedCost;
+  const _avgMarginPerRun = completedRuns.length ? totalRunsMargin / completedRuns.length : 0;
+  const drRunsToAbsorb = drIdleTotal > 0 && _avgMarginPerRun > 0 ? Math.ceil(drIdleTotal / _avgMarginPerRun) : null;
+
+  const _revPerDelivered = totalDelivered > 0 ? totalRevenue / totalDelivered : 0;
+  const drLostParcels = totalAdvised + totalReturned;
+  const drEstLost = drLostParcels * _revPerDelivered;
+
+  const _actions: { title: string; detail: string; impactEuro: number }[] = [];
+  if (strategicReco) _actions.push({ title: strategicReco.action, detail: `Pour atteindre ${TARGET_MARGIN_PCT}% de marge nette sur la période.`, impactEuro: strategicReco.impactEuro });
+  if (drTopCosts[0]) _actions.push({ title: `Réduire le poste « ${drTopCosts[0].label} »`, detail: `${drTopCosts[0].pct.toFixed(0)}% de vos coûts (${fmtEurZero(drTopCosts[0].amount)}). −10% ≈ ${fmtEurZero(drTopCosts[0].amount * 0.1)} de marge.`, impactEuro: drTopCosts[0].amount * 0.1 });
+  if (drIdleTotal > 0) _actions.push({ title: `Réduire l'inactivité (chauffeurs / véhicules à l'arrêt)`, detail: `${fmtEurZero(drIdleTotal)} sur la période${drRunsToAbsorb ? ` ≈ ${drRunsToAbsorb} tournée(s) à couvrir` : ""}.`, impactEuro: drIdleTotal });
+  if (drEstLost > 0 && failureRate > 0) _actions.push({ title: `Réduire le taux d'échec (${failureRate.toFixed(1)}%)`, detail: `≈ ${fmtEurZero(drEstLost)} de CA potentiellement non facturé (avisés + retours).`, impactEuro: drEstLost });
+  if (drWorst && drWorst.perRun < 0) _actions.push({ title: `Accompagner ${drWorst.name}`, detail: `Marge moyenne négative (${fmtEurZero(drWorst.perRun)}/tournée sur ${drWorst.runs}).`, impactEuro: Math.abs(drWorst.perRun * drWorst.runs) });
+  const drActions = _actions.sort((a, b) => b.impactEuro - a.impactEuro).slice(0, 4);
+
+  const decisionReport = {
+    generatedAt: `${new Date().toLocaleDateString("fr-FR")} ${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
+    revenue: totalRevenue,
+    margin: totalMargin,
+    marginPct: marginPctNow,
+    targetPct: TARGET_MARGIN_PCT,
+    status: drStatus,
+    runs: completedRuns.length,
+    km: totalKm,
+    topCosts: drTopCosts,
+    best: drBest,
+    worst: drWorst,
+    worstZone: drWorstZone,
+    idle: { total: drIdleTotal, runsToAbsorb: drRunsToAbsorb },
+    quality: { failureRate, lostParcels: drLostParcels, estLost: drEstLost },
+    actions: drActions,
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-800 p-6 md:p-8 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900">
       <div className="max-w-[1600px] mx-auto space-y-8 pb-12">
@@ -1022,9 +1072,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 px-6 pb-6">
-              <div className="h-[300px] w-full">
-                <AnalyticsChart runs={chartRunsData} filter={filter || (fromParam && toParam ? 'custom' : 'daily')} />
-              </div>
+              <DecisionReport data={decisionReport} />
             </CardContent>
           </Card>
 
