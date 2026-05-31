@@ -316,7 +316,11 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   idleVehicleFixedCost = Math.max(0, idleVehicleFixedCost);
 
   const allActiveEmployees = await prisma.driver.findMany({ where: { organization_id: orgId, status: 'active' } });
-  const globalDriverFixedParams = allActiveEmployees.reduce((sum, d) => {
+  // Seuls les chauffeurs operationnels alimentent la masse salariale "tournees".
+  // Les salaries de bureau sont deja comptes dans les charges fixes admin (cost_office_salaries)
+  // -> on les exclut ici pour eviter un double comptage.
+  const operationalDrivers = allActiveEmployees.filter(d => d.job_title === 'Chauffeur' || !d.job_title);
+  const globalDriverFixedParams = operationalDrivers.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
      return sum + (explicitMonthly / 25.33);
   }, 0) * dateDiffWorkingDays;
@@ -329,11 +333,11 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   const totalUnpaidSavings = driverAbsenceCosts.filter(a => a.is_unpaid).reduce((sum, a) => sum + a.amount, 0);
 
   // Operational Headcount filter: Only genuine Chauffeurs
-  const activeDriversData = allActiveEmployees.filter(d => d.job_title === 'Chauffeur' || !d.job_title);
+  const activeDriversData = operationalDrivers;
 
   let activeDriverCostInParams = 0;
   completedRunsBefore.forEach((r: any) => {
-     if (allActiveEmployees.some(d => d.id === r.driver_id)) {
+     if (operationalDrivers.some(d => d.id === r.driver_id)) {
         activeDriverCostInParams += Number(r.cost_driver || 0);
      }
   });

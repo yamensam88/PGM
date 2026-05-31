@@ -330,7 +330,7 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
           return (
             <div>
               <div className="bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] ring-1 ring-slate-900/5 rounded-2xl p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 w-full lg:w-fit flex flex-col justify-between">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs de Personnels</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 whitespace-nowrap">Effectifs de Personnels · aujourd'hui</h3>
                 <div className="flex justify-between items-center pb-2">
                   <div className="text-center flex-1 px-4">
                      <DriverMetricBox 
@@ -637,7 +637,9 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                              // Use DB value if exists, else fallback to 75% estimation
                              const hasCustomNet = driver.monthly_net_salary !== null && driver.monthly_net_salary !== undefined;
                              const netSalary = hasCustomNet ? Number(driver.monthly_net_salary) : (monthlyCost * 0.75);
-                             const isMedicalDue = Math.random() > 0.8;
+                             const medExp = (driver as any).medical_visit_expiration ? new Date((driver as any).medical_visit_expiration) : null;
+                             const medicalKnown = !!medExp;
+                             const isMedicalDue = medExp ? medExp.getTime() < Date.now() : false;
 
                              return (
                              <tr key={driver.id} className="hover:bg-white/[0.02] transition-colors">
@@ -685,10 +687,12 @@ export default async function HumanResourcesPage(props: { searchParams: Promise<
                                    </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    {isMedicalDue ? (
-                                        <span className="text-[11px] font-semibold text-red-400 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">À programmer urgemment</span>
+                                    {!medicalKnown ? (
+                                        <span className="text-[11px] text-slate-400 font-medium bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">Non renseignée</span>
+                                    ) : isMedicalDue ? (
+                                        <span className="text-[11px] font-semibold text-red-500 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">À programmer (expirée le {format(medExp!, 'dd/MM/yyyy')})</span>
                                     ) : (
-                                        <span className="text-[11px] text-slate-500 font-medium">À jour (Valide &gt; 1 an)</span>
+                                        <span className="text-[11px] text-emerald-600 font-medium">À jour (jusqu'au {format(medExp!, 'dd/MM/yyyy')})</span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4 flex justify-end">
