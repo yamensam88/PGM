@@ -3758,3 +3758,26 @@ export async function clearPortalAlerts() {
   await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
   revalidatePath("/dispatch/tracking");
 }
+
+
+/** Met à jour le profil de l'organisation (nom, SIRET, adresse). Réservé à la Direction, isolé par société. */
+export async function updateOrganizationProfile(formData: FormData) {
+  try {
+    await requireDirection();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.organization_id) throw new Error("Non autorisé.");
+    const orgId = session.user.organization_id;
+    const name = ((formData.get("companyName") as string) || "").trim();
+    const taxId = ((formData.get("siret") as string) || "").trim() || null;
+    const address = ((formData.get("address") as string) || "").trim() || null;
+    if (!name) throw new Error("Le nom de l'entreprise est requis.");
+    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+    const settings: any = (org?.settings_json as any) || {};
+    settings.address = address;
+    await prisma.organization.update({ where: { id: orgId }, data: { name, tax_id: taxId, settings_json: settings } });
+    revalidatePath("/dispatch/settings");
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e?.message || "Erreur serveur." };
+  }
+}

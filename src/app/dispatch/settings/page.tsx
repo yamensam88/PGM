@@ -16,6 +16,7 @@ import { ClientRateCardsManager } from "@/components/settings/ClientRateCardsMan
 import { DeleteUserButton } from "@/components/settings/DeleteUserButton";
 import { ChangeUserPasswordButton } from "@/components/settings/ChangeUserPasswordButton";
 import { ManageUserPermissions } from "@/components/settings/ManageUserPermissions";
+import { OrganizationProfileForm } from "@/components/settings/OrganizationProfileForm";
 import prisma from "@/lib/prisma";
 import { isSectionBlocked } from "@/lib/access";
 import { LockedFeatureScreen } from "@/components/plans/LockedFeatureScreen";
@@ -73,21 +74,7 @@ export default async function SettingsPage() {
                 <CardDescription>Informations légales et d'identification de votre entreprise.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                    <Input id="companyName" defaultValue="PGM Europe" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="siret">Numéro de SIRET</Label>
-                    <Input id="siret" defaultValue="80012345600010" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Adresse du Siège</Label>
-                  <Input id="address" defaultValue="14 Avenue de l'Opéra, 75001 Paris" />
-                </div>
-                <Button className="bg-indigo-600 text-slate-900 hover:bg-indigo-700 w-fit mt-4">Sauvegarder les modifications</Button>
+                <OrganizationProfileForm name={organization?.name || ""} taxId={organization?.tax_id} address={(((organization?.settings_json as any) || {}).address) || ""} />
               </CardContent>
             </Card>
           </TabsContent>
