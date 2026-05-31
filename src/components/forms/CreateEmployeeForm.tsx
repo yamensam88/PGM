@@ -15,6 +15,7 @@ export function CreateEmployeeForm() {
   const [jobTitle, setJobTitle] = useState("Chauffeur");
   const [monthlyCost, setMonthlyCost] = useState("3500");
   const [payMode, setPayMode] = useState("daily");
+  const [workerType, setWorkerType] = useState("salarie");
 
   // Fonction pour calculer les jours ouvrés (Lun-Sam) moins les jours fériés français
   const getAverageWorkingDaysPerMonth = (year: number) => {
@@ -171,7 +172,7 @@ export function CreateEmployeeForm() {
 
       <div className="space-y-2">
         <Label htmlFor="workerType" className="text-[13px] font-medium text-slate-600">Statut du chauffeur <span className="text-red-500">*</span></Label>
-        <Select name="workerType" defaultValue="salarie" required>
+        <Select name="workerType" value={workerType} onValueChange={(v) => setWorkerType(v || "salarie")} required>
            <SelectTrigger className="w-full bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-zinc-600">
               <SelectValue placeholder="Statut" />
            </SelectTrigger>
@@ -197,7 +198,7 @@ export function CreateEmployeeForm() {
         </Select>
       </div>
 
-      {payMode === "daily" && (
+      {payMode === "daily" && workerType === "salarie" && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2.5 bg-indigo-900/10 p-5 border border-indigo-900/30 rounded-xl">
           <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-indigo-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>
@@ -211,6 +212,14 @@ export function CreateEmployeeForm() {
           <Input id="dailyCost" name="dailyCost" type="number" step="0.01" readOnly value={calculatedDailyCost} className="w-full bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed font-semibold" />
         </div>
       </div>
+      )}
+
+      {payMode === "daily" && workerType === "independant" && (
+        <div className="space-y-2.5 bg-indigo-900/5 p-5 border border-indigo-900/20 rounded-xl">
+          <Label htmlFor="dailyCost" className="text-[13px] font-medium text-indigo-600">Montant du forfait journalier (€) <span className="text-red-500">*</span></Label>
+          <p className="text-[11px] text-slate-500">Payé au jour de présence (appelé au besoin). Coût imputé uniquement les jours où il roule, sans charges ni coût à l&apos;arrêt.</p>
+          <Input id="dailyCost" name="dailyCost" type="number" step="0.01" required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-indigo-600" placeholder="ex: 150.00" />
+        </div>
       )}
 
       {payMode === "per_package" && (
