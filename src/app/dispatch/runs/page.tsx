@@ -230,7 +230,13 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
   }));
   
   // Effectif chauffeur — source de verite UNIQUE (lib/headcount), calculee sur la PERIODE selectionnee.
-  const runDriverIds = runs.filter(r => (r as any).status !== 'cancelled').map(r => r.driver_id).filter(Boolean) as string[];
+  // Presence derivee d'une requete DEDIEE non plafonnee (et non de la liste 'runs' limitee a 100),
+  // pour garantir la synchro avec l'effectif RH meme sur un gros mois.
+  const presenceRuns = await prisma.dailyRun.findMany({
+    where: { organization_id: session.user.organization_id, date: { gte: startDate, lte: endDate }, status: { not: 'cancelled' } },
+    select: { driver_id: true }
+  });
+  const runDriverIds = presenceRuns.map(r => r.driver_id).filter(Boolean) as string[];
   const hc = computeChauffeurHeadcount({ drivers: rawDrivers as any, runDriverIds, startDate, endDate });
   const actifsChauffeurs = hc.actifs;
   const presentsChauffeursSet = hc.presentsSet;
