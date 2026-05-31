@@ -62,9 +62,22 @@ export function computeRunRevenue(run: any): number {
   return baseFlat + priceStop * stops + priceParcel * directDelivered + bonusRelay * relayDelivered;
 }
 
+/**
+ * Cout d'un chauffeur pour UNE tournee, selon son mode de remuneration :
+ *  - "per_package" (au colis) : tarif x colis LIVRES sur la tournee. 100% variable,
+ *    facture a chaque tournee (pas de logique "une fois par jour"), aucun cout a l'arret.
+ *  - sinon "daily" (forfait journalier) : charge fixe imputee UNE SEULE FOIS par jour.
+ */
+export function driverCostFor(driver: any, deliveredPackages: number, isFirstDriverRunOfDay: boolean): number {
+  if (!driver) return 0;
+  if (driver.pay_mode === "per_package") {
+    return num(driver.cost_per_package) * Math.max(0, num(deliveredPackages));
+  }
+  return isFirstDriverRunOfDay ? num(driver.daily_base_cost) : 0;
+}
+
 export function computeDriverCost(run: any, isFirstDriverRunOfDay: boolean): number {
-  if (!isFirstDriverRunOfDay) return 0;
-  return num(run?.driver?.daily_base_cost);
+  return driverCostFor(run?.driver, num(run?.packages_delivered), isFirstDriverRunOfDay);
 }
 
 export function computeVehicleCost(

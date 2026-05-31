@@ -2,6 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { driverCostFor } from "@/lib/finance";
 import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -207,6 +208,8 @@ export async function createEmployee(formData: FormData) {
     const jobTitle = formData.get("jobTitle") as string;
     const employmentType = formData.get("employmentType") as string;
     const workerType = (formData.get("workerType") as string) || "salarie";
+    const payMode = (formData.get("payMode") as string) || "daily";
+    const costPerPackage = formData.get("costPerPackage") ? parseFloat(formData.get("costPerPackage") as string) : 0;
     const hireDateStr = formData.get("hireDate") as string;
     const dailyCostStr = formData.get("dailyCost") as string;
     const monthlyCostStr = formData.get("monthlyCost") as string;
@@ -284,6 +287,8 @@ export async function createEmployee(formData: FormData) {
         job_title: jobTitle,
         employment_type: employmentType,
         worker_type: workerType,
+        pay_mode: payMode,
+        cost_per_package: costPerPackage,
         hire_date: hireDate,
         email: createdEmail,
         phone: phone || null,
@@ -333,6 +338,8 @@ export async function updateEmployee(formData: FormData) {
     const jobTitle = formData.get("jobTitle") as string;
     const employmentType = formData.get("employmentType") as string;
     const workerType = (formData.get("workerType") as string) || "salarie";
+    const payMode = (formData.get("payMode") as string) || "daily";
+    const costPerPackage = formData.get("costPerPackage") ? parseFloat(formData.get("costPerPackage") as string) : 0;
     const hireDateStr = formData.get("hireDate") as string;
     
     const paidLeaveBalanceStr = formData.get("paidLeaveBalance") as string;
@@ -401,6 +408,8 @@ export async function updateEmployee(formData: FormData) {
              job_title: jobTitle,
              employment_type: employmentType,
              worker_type: workerType,
+             pay_mode: payMode,
+             cost_per_package: costPerPackage,
              hire_date: hireDate,
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
              paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,
@@ -873,7 +882,7 @@ export async function finishRun(formData: FormData) {
     const priorDriverRuns = await prisma.dailyRun.count({
       where: { driver_id: run.driver_id, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
     });
-    const cost_driver = priorDriverRuns > 0 ? 0 : Number(run.driver.daily_base_cost || 0);
+    const cost_driver = driverCostFor(run.driver, direct_delivered + relay_delivered, priorDriverRuns === 0);
     console.log(`▶ [finishRun] Calcul cost_driver (Prorata): ${cost_driver}€`);
 
     // Cost Fleet: default_run_cost + fuel_amount + ( (km_end - km_start) * cost_per_km )
@@ -1373,7 +1382,7 @@ export async function createRun(formData: FormData) {
             const priorDriverRuns = await prisma.dailyRun.count({
               where: { driver_id: driver_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
             });
-            cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
+            cost_driver = driverCostFor(driver, packages_delivered, priorDriverRuns === 0);
 
             const priorVehicleRuns = await prisma.dailyRun.count({
               where: { vehicle_id: vehicle_id, date: { gte: startOfDay, lte: endOfDay }, status: 'completed' }
@@ -2013,7 +2022,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
         const priorDriverRuns = await prisma.dailyRun.count({
           where: { driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
-        cost_driver = priorDriverRuns > 0 ? 0 : Number(driver?.daily_base_cost || 0);
+        cost_driver = driverCostFor(driver, delivered, priorDriverRuns === 0);
 
         const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: vehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
@@ -3228,7 +3237,7 @@ export async function updateRun(formData: FormData) {
        const priorDriverRuns = await prisma.dailyRun.count({
           where: { driver_id: activeDriverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }
        });
-       const cost_driver = priorDriverRuns > 0 ? 0 : Number(activeDriver?.daily_base_cost || 0);
+       const cost_driver = driverCostFor(activeDriver, direct_delivered + relay_delivered, priorDriverRuns === 0);
 
        const priorVehicleRuns = await prisma.dailyRun.count({
           where: { vehicle_id: activeVehicleId, date: { gte: startOfDay, lte: endOfDay }, id: { not: runId }, status: 'completed' }

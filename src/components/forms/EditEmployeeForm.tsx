@@ -12,6 +12,7 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(employee.status || "active");
+  const [payMode, setPayMode] = useState<string>((employee as any).pay_mode || "daily");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -108,6 +109,25 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
            </SelectContent>
         </Select>
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="payMode" className="text-[13px] font-medium text-slate-600">Mode de rémunération *</Label>
+        <Select name="payMode" value={payMode} onValueChange={(v) => setPayMode(v || "daily")} required>
+           <SelectTrigger className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-zinc-600">
+              <SelectValue placeholder="Mode" />
+           </SelectTrigger>
+           <SelectContent className="bg-white border-slate-200 text-slate-700">
+              <SelectItem value="daily">Forfait journalier</SelectItem>
+              <SelectItem value="per_package">Au colis livré</SelectItem>
+           </SelectContent>
+        </Select>
+      </div>
+      {payMode === "per_package" && (
+        <div className="space-y-2">
+          <Label htmlFor="costPerPackage" className="text-[13px] font-medium text-emerald-600">Tarif par colis livré (€) *</Label>
+          <Input id="costPerPackage" name="costPerPackage" type="number" step="0.01" defaultValue={(employee as any).cost_per_package || ''} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-emerald-600" placeholder="ex: 0.85" />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
          <div className="space-y-2">

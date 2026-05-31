@@ -14,6 +14,7 @@ export function CreateEmployeeForm() {
   const [successData, setSuccessData] = useState<{ isDriver: boolean; email?: string; password?: string } | null>(null);
   const [jobTitle, setJobTitle] = useState("Chauffeur");
   const [monthlyCost, setMonthlyCost] = useState("3500");
+  const [payMode, setPayMode] = useState("daily");
 
   // Fonction pour calculer les jours ouvrés (Lun-Sam) moins les jours fériés français
   const getAverageWorkingDaysPerMonth = (year: number) => {
@@ -182,6 +183,21 @@ export function CreateEmployeeForm() {
         <p className="text-[11px] text-slate-400">Un indépendant facture ses prestations : coût uniquement quand il roule, sans charges ni coût à l&apos;arrêt.</p>
       </div>
 
+      {/* Mode de rémunération */}
+      <div className="space-y-2">
+        <Label htmlFor="payMode" className="text-[13px] font-medium text-slate-600">Mode de rémunération <span className="text-red-500">*</span></Label>
+        <Select name="payMode" value={payMode} onValueChange={(v) => setPayMode(v || "daily")} required>
+           <SelectTrigger className="w-full bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-zinc-600">
+              <SelectValue placeholder="Mode" />
+           </SelectTrigger>
+           <SelectContent className="bg-white border-slate-200 text-slate-700">
+              <SelectItem value="daily" className="focus:bg-white focus:text-slate-900">Forfait journalier</SelectItem>
+              <SelectItem value="per_package" className="focus:bg-white focus:text-slate-900">Au colis livré</SelectItem>
+           </SelectContent>
+        </Select>
+      </div>
+
+      {payMode === "daily" && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2.5 bg-indigo-900/10 p-5 border border-indigo-900/30 rounded-xl">
           <Label htmlFor="monthlyCost" className="text-[13px] font-medium text-indigo-400">Coût global / mois complet (€) <span className="text-red-500">*</span></Label>
@@ -195,6 +211,15 @@ export function CreateEmployeeForm() {
           <Input id="dailyCost" name="dailyCost" type="number" step="0.01" readOnly value={calculatedDailyCost} className="w-full bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed font-semibold" />
         </div>
       </div>
+      )}
+
+      {payMode === "per_package" && (
+        <div className="space-y-2.5 bg-emerald-900/5 p-5 border border-emerald-900/20 rounded-xl">
+          <Label htmlFor="costPerPackage" className="text-[13px] font-medium text-emerald-600">Tarif par colis livré (€) <span className="text-red-500">*</span></Label>
+          <p className="text-[11px] text-slate-500">Coût = ce tarif × colis livrés sur chaque tournée. 100% variable, aucun coût à l&apos;arrêt.</p>
+          <Input id="costPerPackage" name="costPerPackage" type="number" step="0.01" required className="w-full bg-[#f8f9fc] border-slate-200 text-slate-900 focus-visible:ring-emerald-600" placeholder="ex: 0.85" />
+        </div>
+      )}
 
       <div className="space-y-2.5 bg-emerald-900/5 p-5 border border-emerald-900/20 rounded-xl">
         <Label htmlFor="monthlyNetSalary" className="text-[13px] font-medium text-emerald-600">Salaire Net / Fixe Contractuel (€) <span className="text-slate-400 font-normal lowercase">(Optionnel)</span></Label>

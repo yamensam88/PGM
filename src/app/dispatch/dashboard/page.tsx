@@ -323,7 +323,7 @@ export async function DispatchDashboard(props: { searchParams: Promise<{ filter?
   // Seuls les SALARIES generent une masse salariale fixe (et donc un cout a l'arret).
   // Un independant (auto-entrepreneur) facture ses prestations : cout UNIQUEMENT quand il roule
   // (deja compte dans cost_driver de la tournee), zero cout fixe / a l'arret.
-  const salariedDrivers = operationalDrivers.filter(d => (d as any).worker_type !== 'independant');
+  const salariedDrivers = operationalDrivers.filter(d => (d as any).worker_type !== 'independant' && (d as any).pay_mode !== 'per_package');
   const globalDriverFixedParams = salariedDrivers.reduce((sum, d) => {
      const explicitMonthly = d.hourly_cost ? Number(d.hourly_cost) : (Number(d.daily_base_cost||0) * 25.33);
      return sum + (explicitMonthly / 25.33);
