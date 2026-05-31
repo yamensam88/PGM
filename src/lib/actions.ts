@@ -210,6 +210,7 @@ export async function createEmployee(formData: FormData) {
     const workerType = (formData.get("workerType") as string) || "salarie";
     const payMode = (formData.get("payMode") as string) || "daily";
     const costPerPackage = formData.get("costPerPackage") ? parseFloat(formData.get("costPerPackage") as string) : 0;
+    const dailyCostEdit = formData.get("dailyCost") ? parseFloat(formData.get("dailyCost") as string) : null;
     const hireDateStr = formData.get("hireDate") as string;
     const dailyCostStr = formData.get("dailyCost") as string;
     const monthlyCostStr = formData.get("monthlyCost") as string;
@@ -410,6 +411,7 @@ export async function updateEmployee(formData: FormData) {
              worker_type: workerType,
              pay_mode: payMode,
              cost_per_package: costPerPackage,
+             daily_base_cost: (payMode === "daily" && dailyCostEdit !== null) ? dailyCostEdit : undefined,
              hire_date: hireDate,
              paid_leave_balance: paidLeaveBalanceStr ? Number(paidLeaveBalanceStr) : 0,
              paid_leave_reference_date: paidLeaveReferenceDateStr ? new Date(paidLeaveReferenceDateStr) : null,

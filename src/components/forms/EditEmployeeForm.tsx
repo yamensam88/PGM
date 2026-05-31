@@ -122,6 +122,12 @@ export function EditEmployeeForm({ employee, onSuccess }: { employee: any, onSuc
            </SelectContent>
         </Select>
       </div>
+      {payMode === "daily" && (
+        <div className="space-y-2">
+          <Label htmlFor="dailyCost" className="text-[13px] font-medium text-indigo-600">Coût journalier / forfait (€) *</Label>
+          <Input id="dailyCost" name="dailyCost" type="number" step="0.01" defaultValue={(employee as any).daily_base_cost || ''} required className="w-full bg-white border-slate-200 text-slate-700 focus-visible:ring-indigo-600" placeholder="ex: 150.00" />
+        </div>
+      )}
       {payMode === "per_package" && (
         <div className="space-y-2">
           <Label htmlFor="costPerPackage" className="text-[13px] font-medium text-emerald-600">Tarif par colis livré (€) *</Label>
