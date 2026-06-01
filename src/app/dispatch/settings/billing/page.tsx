@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Receipt, Zap, Truck } from "lucide-react";
-import { updateBillingInterval } from "@/lib/actions";
+import { updateBillingInterval, createCheckoutSession, createPortalSession } from "@/lib/actions";
+import { isPaidStatus } from "@/lib/plans";
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ const ALL_TIERS: Tier[] = [
   { key: "business", label: "Business", monthly: null, min: 16, max: Infinity, quote: true },
 ];
 
-export default async function BillingPage() {
+export default async function BillingPage(props: { searchParams: Promise<{ stripe?: string }> }) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.organization_id) {
@@ -39,6 +40,11 @@ export default async function BillingPage() {
   });
 
   if (!organization) redirect("/login");
+
+  const { stripe: stripeMsg } = await props.searchParams;
+  const settingsJson: any = (organization.settings_json as any) || {};
+  const hasStripeCustomer = !!settingsJson.stripe_customer_id;
+  const paid = isPaidStatus(organization.subscription_status);
 
   const activeVehicles = organization.vehicles.length;
   const tier = tierForVehicles(activeVehicles);
@@ -66,6 +72,17 @@ export default async function BillingPage() {
           Votre offre est determinee par la taille de votre flotte (nombre de vehicules actifs).
         </p>
       </header>
+
+      {stripeMsg && (
+        <div className={`rounded-lg p-3 text-sm border ${stripeMsg === "success" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : stripeMsg === "cancel" ? "bg-slate-50 text-slate-600 border-slate-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+          {stripeMsg === "success" ? "✓ Paiement confirmé — votre abonnement est actif." :
+           stripeMsg === "cancel" ? "Paiement annulé. Vous pouvez réessayer quand vous voulez." :
+           stripeMsg === "unconfigured" ? "Paiement non configuré : les clés Stripe manquent côté serveur (Vercel)." :
+           stripeMsg === "noprice" ? "Tarif Stripe introuvable pour ce palier : le Price ID n'est pas renseigné." :
+           stripeMsg === "nocustomer" ? "Aucun abonnement à gérer pour le moment." :
+           "Une erreur est survenue avec le paiement. Réessayez."}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 border-slate-200 shadow-sm overflow-hidden relative">
@@ -183,14 +200,32 @@ export default async function BillingPage() {
           <CardContent className="p-5 pt-5 space-y-4">
             <div>
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Methode de Paiement</h4>
-              <div className="flex items-center gap-3 border border-slate-200 p-3 rounded-lg">
-                <div className="w-10 h-7 bg-slate-100 rounded flex items-center justify-center border border-slate-200">
-                  <CreditCard className="w-4 h-4 text-slate-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">Prelevement SEPA</p>
-                  <p className="text-[11px] text-slate-500">Active (En attente Stripe)</p>
-                </div>
+              <div className="space-y-3">
+                <span className={`inline-block text-[11px] font-bold px-2 py-1 rounded ${paid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                  {organization.subscription_status === "active" ? "Abonnement actif" : organization.subscription_status === "past_due" ? "Paiement en retard" : organization.subscription_status === "canceled" ? "Abonnement résilié" : "Période d'essai"}
+                </span>
+
+                {tier.quote ? (
+                  <a href="mailto:contact@pgm.fr" className="block w-full text-center rounded-lg bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 hover:bg-slate-900">Contactez-nous (offre Business)</a>
+                ) : (
+                  <form action={createCheckoutSession}>
+                    <input type="hidden" name="tier" value={tier.key} />
+                    <input type="hidden" name="interval" value={isAnnual ? "annual" : "monthly"} />
+                    <button type="submit" className="w-full rounded-lg bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 hover:bg-indigo-700">
+                      {paid ? "Mettre à jour le paiement" : `S'abonner — ${displayMonthly}€ / mois`}
+                    </button>
+                  </form>
+                )}
+
+                {hasStripeCustomer && (
+                  <form action={createPortalSession}>
+                    <button type="submit" className="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50">
+                      Gérer mon abonnement (carte, factures, résiliation)
+                    </button>
+                  </form>
+                )}
+
+                <p className="text-[10px] text-slate-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Paiement sécurisé par Stripe.</p>
               </div>
             </div>
 
