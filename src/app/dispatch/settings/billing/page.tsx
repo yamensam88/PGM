@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Receipt, Zap, Truck } from "lucide-react";
 import { updateBillingInterval, createCheckoutSession, createPortalSession } from "@/lib/actions";
-import { isPaidStatus } from "@/lib/plans";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +43,7 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
   const { stripe: stripeMsg } = await props.searchParams;
   const settingsJson: any = (organization.settings_json as any) || {};
   const hasStripeCustomer = !!settingsJson.stripe_customer_id;
-  const paid = isPaidStatus(organization.subscription_status);
+  const paid = ["active", "past_due"].includes((organization.subscription_status || "").toLowerCase());
 
   const activeVehicles = organization.vehicles.length;
   const tier = tierForVehicles(activeVehicles);
