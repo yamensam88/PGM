@@ -3890,8 +3890,9 @@ export async function createCheckoutSession(tier: string, interval: string): Pro
     const iv = interval === "annual" ? "annual" : "monthly";
     if (t !== "starter" && t !== "pro") return { ok: false, error: "Palier invalide." };
 
-    const { stripe, priceIdFor, appBaseUrl } = await import("@/lib/stripe");
+    const { stripe, priceIdFor, appBaseUrl, stripeKeyDebug } = await import("@/lib/stripe");
     if (!stripe) return { ok: false, error: "Stripe non configuré (STRIPE_SECRET_KEY manquante)." };
+    const _kd = stripeKeyDebug();
     const priceId = priceIdFor(t, iv as "monthly" | "annual");
     if (!priceId) return { ok: false, error: `Tarif introuvable pour ${t}/${iv} : Price ID manquant côté serveur.` };
 
@@ -3919,7 +3920,9 @@ export async function createCheckoutSession(tier: string, interval: string): Pro
   } catch (e: any) {
     console.error("createCheckoutSession error:", e, "type=", e?.type, "code=", e?.code, "detail=", e?.detail, "cause=", e?.cause);
     const detail = e?.detail?.message || e?.cause?.message || (e?.cause ? String(e.cause) : "") || e?.code || "";
-    return { ok: false, error: (e?.message || "Erreur Stripe inconnue.") + (detail ? ` — détail: ${String(detail).slice(0, 160)}` : "") };
+    let dbg = "";
+    try { const k = (await import("@/lib/stripe")).stripeKeyDebug(); dbg = ` — clé reçue: ${k.len} car., ${k.prefix}…${k.suffix} (mode ${k.mode})`; } catch {}
+    return { ok: false, error: (e?.message || "Erreur Stripe inconnue.") + (detail ? ` — détail: ${String(detail).slice(0, 160)}` : "") + dbg };
   }
 }
 

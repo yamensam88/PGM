@@ -14,6 +14,15 @@ export const stripe = STRIPE_KEY
   : null;
 
 /** Mappe (palier, périodicité) -> Price ID Stripe, défini en variables d'environnement. */
+export function stripeKeyDebug(): { len: number; prefix: string; suffix: string; mode: string } {
+  return {
+    len: STRIPE_KEY.length,
+    prefix: STRIPE_KEY.slice(0, 8),
+    suffix: STRIPE_KEY.slice(-4),
+    mode: STRIPE_KEY.startsWith("sk_live_") ? "live" : STRIPE_KEY.startsWith("sk_test_") ? "test" : "inconnu",
+  };
+}
+
 export function priceIdFor(tier: string, interval: "monthly" | "annual"): string | null {
   const clean = (v?: string) => (v || "").replace(/\s+/g, "") || undefined;
   const map: Record<string, string | undefined> = {
