@@ -15,11 +15,12 @@ export const stripe = STRIPE_KEY
 
 /** Mappe (palier, périodicité) -> Price ID Stripe, défini en variables d'environnement. */
 export function priceIdFor(tier: string, interval: "monthly" | "annual"): string | null {
+  const clean = (v?: string) => (v || "").replace(/\s+/g, "") || undefined;
   const map: Record<string, string | undefined> = {
-    "starter:monthly": process.env.STRIPE_PRICE_STARTER_MONTHLY,
-    "starter:annual": process.env.STRIPE_PRICE_STARTER_ANNUAL,
-    "pro:monthly": process.env.STRIPE_PRICE_PRO_MONTHLY,
-    "pro:annual": process.env.STRIPE_PRICE_PRO_ANNUAL,
+    "starter:monthly": clean(process.env.STRIPE_PRICE_STARTER_MONTHLY),
+    "starter:annual": clean(process.env.STRIPE_PRICE_STARTER_ANNUAL),
+    "pro:monthly": clean(process.env.STRIPE_PRICE_PRO_MONTHLY),
+    "pro:annual": clean(process.env.STRIPE_PRICE_PRO_ANNUAL),
   };
   return map[`${tier}:${interval}`] || null;
 }

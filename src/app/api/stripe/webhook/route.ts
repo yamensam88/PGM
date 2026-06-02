@@ -12,7 +12,7 @@ function mapStatus(s: string): string {
 
 export async function POST(req: Request) {
   const { stripe } = await import("@/lib/stripe");
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = (process.env.STRIPE_WEBHOOK_SECRET || "").replace(/\s+/g, "");
   if (!stripe || !secret) return NextResponse.json({ error: "Stripe non configuré." }, { status: 503 });
 
   const sig = req.headers.get("stripe-signature");
