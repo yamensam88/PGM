@@ -183,6 +183,17 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
                     </div>
                     <div className="text-lg font-black text-slate-900">{t.quote ? "Sur devis" : `${t.monthly}€`}</div>
                     <div className="text-[11px] text-slate-500 mt-0.5">{t.quote ? `${t.min} et plus` : `${t.min} a ${t.max}`} vehicules</div>
+                    {t.quote ? (
+                      <a href="mailto:contact@pgm.fr" className="mt-3 block w-full text-center rounded-md bg-slate-800 text-white text-[11px] font-semibold px-2 py-1.5 hover:bg-slate-900">Nous contacter</a>
+                    ) : (
+                      <form action={createCheckoutSession} className="mt-3">
+                        <input type="hidden" name="tier" value={t.key} />
+                        <input type="hidden" name="interval" value={isAnnual ? "annual" : "monthly"} />
+                        <button type="submit" className={`w-full rounded-md text-[11px] font-semibold px-2 py-1.5 transition-colors ${active ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-indigo-300 text-indigo-700 hover:bg-indigo-50"}`}>
+                          {active ? "S'abonner" : "Choisir cette offre"}
+                        </button>
+                      </form>
+                    )}
                   </div>
                 );
               })}
