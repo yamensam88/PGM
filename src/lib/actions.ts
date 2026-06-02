@@ -3879,72 +3879,68 @@ export async function generateDecisionNarrative(payload: string) {
 }
 
 /**
- * Stripe — Crée une session de paiement (abonnement) et redirige vers Stripe Checkout.
- * Réservé à la Direction. Repli propre (redirige vers la page billing avec un message) si non configuré.
+ * Stripe — Crée une session de paiement (abonnement). Renvoie l'URL Checkout (la redirection
+ * est faite côté client pour fiabilité). Réservé à la Direction.
  */
-export async function createCheckoutSession(formData: FormData) {
-  const session = await requireDirection();
-  const orgId = session.user.organization_id;
-  const tier = ((formData.get("tier") as string) || "").toLowerCase();
-  const interval = (formData.get("interval") as string) === "annual" ? "annual" : "monthly";
-  if (tier !== "starter" && tier !== "pro") redirect("/dispatch/settings/billing?stripe=tier");
-
-  const { stripe, priceIdFor, appBaseUrl } = await import("@/lib/stripe");
-  if (!stripe) redirect("/dispatch/settings/billing?stripe=unconfigured");
-  const priceId = priceIdFor(tier, interval as "monthly" | "annual");
-  if (!priceId) redirect("/dispatch/settings/billing?stripe=noprice");
-
-  let url = "/dispatch/settings/billing?stripe=error";
+export async function createCheckoutSession(tier: string, interval: string): Promise<{ ok: boolean; url?: string; error?: string }> {
   try {
+    const session = await requireDirection();
+    const orgId = session.user.organization_id;
+    const t = (tier || "").toLowerCase();
+    const iv = interval === "annual" ? "annual" : "monthly";
+    if (t !== "starter" && t !== "pro") return { ok: false, error: "Palier invalide." };
+
+    const { stripe, priceIdFor, appBaseUrl } = await import("@/lib/stripe");
+    if (!stripe) return { ok: false, error: "Stripe non configuré (STRIPE_SECRET_KEY manquante)." };
+    const priceId = priceIdFor(t, iv as "monthly" | "annual");
+    if (!priceId) return { ok: false, error: `Tarif introuvable pour ${t}/${iv} : Price ID manquant côté serveur.` };
+
     const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { name: true, settings_json: true } });
     const settings: any = (org?.settings_json as any) || {};
     let customerId: string | undefined = settings.stripe_customer_id;
     if (!customerId) {
-      const customer = await stripe!.customers.create({ name: org?.name || undefined, metadata: { orgId } });
+      const customer = await stripe.customers.create({ name: org?.name || undefined, metadata: { orgId } });
       customerId = customer.id;
       settings.stripe_customer_id = customerId;
       await prisma.organization.update({ where: { id: orgId }, data: { settings_json: settings } });
     }
-    const checkout = await stripe!.checkout.sessions.create({
+    const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId as string, quantity: 1 }],
       client_reference_id: orgId,
-      metadata: { orgId, tier, interval },
+      metadata: { orgId, tier: t, interval: iv },
       allow_promotion_codes: true,
       success_url: `${appBaseUrl()}/dispatch/settings/billing?stripe=success`,
       cancel_url: `${appBaseUrl()}/dispatch/settings/billing?stripe=cancel`,
     });
-    url = checkout.url || url;
+    if (!checkout.url) return { ok: false, error: "Stripe n'a pas renvoyé d'URL de paiement." };
+    return { ok: true, url: checkout.url };
   } catch (e: any) {
     console.error("createCheckoutSession error:", e);
-    redirect("/dispatch/settings/billing?stripe=error&reason=" + encodeURIComponent((e?.message || "inconnu").slice(0, 220)));
+    return { ok: false, error: e?.message || "Erreur Stripe inconnue." };
   }
-  redirect(url);
 }
 
 /**
- * Stripe — Ouvre le portail client (mise à jour carte, factures, résiliation). Réservé à la Direction.
+ * Stripe — Portail client (carte, factures, résiliation). Renvoie l'URL. Réservé à la Direction.
  */
-export async function createPortalSession() {
-  const session = await requireDirection();
-  const orgId = session.user.organization_id;
-  const { stripe, appBaseUrl } = await import("@/lib/stripe");
-  if (!stripe) redirect("/dispatch/settings/billing?stripe=unconfigured");
-  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
-  const settings: any = (org?.settings_json as any) || {};
-  if (!settings.stripe_customer_id) redirect("/dispatch/settings/billing?stripe=nocustomer");
-
-  let url = "/dispatch/settings/billing?stripe=error";
+export async function createPortalSession(): Promise<{ ok: boolean; url?: string; error?: string }> {
   try {
-    const portal = await stripe!.billingPortal.sessions.create({
+    const session = await requireDirection();
+    const orgId = session.user.organization_id;
+    const { stripe, appBaseUrl } = await import("@/lib/stripe");
+    if (!stripe) return { ok: false, error: "Stripe non configuré." };
+    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { settings_json: true } });
+    const settings: any = (org?.settings_json as any) || {};
+    if (!settings.stripe_customer_id) return { ok: false, error: "Aucun abonnement Stripe associé (abonne-toi d'abord)." };
+    const portal = await stripe.billingPortal.sessions.create({
       customer: settings.stripe_customer_id,
       return_url: `${appBaseUrl()}/dispatch/settings/billing`,
     });
-    url = portal.url;
+    return { ok: true, url: portal.url };
   } catch (e: any) {
     console.error("createPortalSession error:", e);
-    redirect("/dispatch/settings/billing?stripe=error&reason=" + encodeURIComponent((e?.message || "inconnu").slice(0, 220)));
+    return { ok: false, error: e?.message || "Erreur Stripe inconnue." };
   }
-  redirect(url);
 }

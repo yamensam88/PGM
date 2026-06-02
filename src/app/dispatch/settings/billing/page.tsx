@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Receipt, Zap, Truck } from "lucide-react";
-import { updateBillingInterval, createCheckoutSession, createPortalSession } from "@/lib/actions";
+import { updateBillingInterval } from "@/lib/actions";
+import { CheckoutButton } from "@/components/billing/CheckoutButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -186,13 +187,9 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
                     {t.quote ? (
                       <a href="mailto:contact@pgm.fr" className="mt-3 block w-full text-center rounded-md bg-slate-800 text-white text-[11px] font-semibold px-2 py-1.5 hover:bg-slate-900">Nous contacter</a>
                     ) : (
-                      <form action={createCheckoutSession} className="mt-3">
-                        <input type="hidden" name="tier" value={t.key} />
-                        <input type="hidden" name="interval" value={isAnnual ? "annual" : "monthly"} />
-                        <button type="submit" className={`w-full rounded-md text-[11px] font-semibold px-2 py-1.5 transition-colors ${active ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-indigo-300 text-indigo-700 hover:bg-indigo-50"}`}>
-                          {active ? "S'abonner" : "Choisir cette offre"}
-                        </button>
-                      </form>
+                      <div className="mt-3">
+                        <CheckoutButton tier={t.key} interval={isAnnual ? "annual" : "monthly"} label={active ? "S'abonner" : "Choisir cette offre"} className={`w-full rounded-md text-[11px] font-semibold px-2 py-1.5 transition-colors disabled:opacity-50 ${active ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-indigo-300 text-indigo-700 hover:bg-indigo-50"}`} />
+                      </div>
                     )}
                   </div>
                 );
@@ -218,21 +215,11 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
                 {tier.quote ? (
                   <a href="mailto:contact@pgm.fr" className="block w-full text-center rounded-lg bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 hover:bg-slate-900">Contactez-nous (offre Business)</a>
                 ) : (
-                  <form action={createCheckoutSession}>
-                    <input type="hidden" name="tier" value={tier.key} />
-                    <input type="hidden" name="interval" value={isAnnual ? "annual" : "monthly"} />
-                    <button type="submit" className="w-full rounded-lg bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 hover:bg-indigo-700">
-                      {paid ? "Mettre à jour le paiement" : `S'abonner — ${displayMonthly}€ / mois`}
-                    </button>
-                  </form>
+                  <CheckoutButton tier={tier.key} interval={isAnnual ? "annual" : "monthly"} label={paid ? "Mettre à jour le paiement" : `S'abonner — ${displayMonthly}€ / mois`} className="w-full rounded-lg bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 hover:bg-indigo-700 disabled:opacity-50" />
                 )}
 
                 {hasStripeCustomer && (
-                  <form action={createPortalSession}>
-                    <button type="submit" className="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50">
-                      Gérer mon abonnement (carte, factures, résiliation)
-                    </button>
-                  </form>
+                  <CheckoutButton portal label="Gérer mon abonnement (carte, factures, résiliation)" className="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50 disabled:opacity-50" />
                 )}
 
                 <p className="text-[10px] text-slate-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Paiement sécurisé par Stripe.</p>
