@@ -24,7 +24,7 @@ const ALL_TIERS: Tier[] = [
   { key: "business", label: "Business", monthly: null, min: 16, max: Infinity, quote: true },
 ];
 
-export default async function BillingPage(props: { searchParams: Promise<{ stripe?: string }> }) {
+export default async function BillingPage(props: { searchParams: Promise<{ stripe?: string; reason?: string }> }) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.organization_id) {
@@ -40,7 +40,7 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
 
   if (!organization) redirect("/login");
 
-  const { stripe: stripeMsg } = await props.searchParams;
+  const { stripe: stripeMsg, reason: stripeReason } = await props.searchParams;
   const settingsJson: any = (organization.settings_json as any) || {};
   const hasStripeCustomer = !!settingsJson.stripe_customer_id;
   const paid = ["active", "past_due"].includes((organization.subscription_status || "").toLowerCase());
@@ -79,7 +79,7 @@ export default async function BillingPage(props: { searchParams: Promise<{ strip
            stripeMsg === "unconfigured" ? "Paiement non configuré : les clés Stripe manquent côté serveur (Vercel)." :
            stripeMsg === "noprice" ? "Tarif Stripe introuvable pour ce palier : le Price ID n'est pas renseigné." :
            stripeMsg === "nocustomer" ? "Aucun abonnement à gérer pour le moment." :
-           "Une erreur est survenue avec le paiement. Réessayez."}
+           (stripeReason ? `Erreur Stripe : ${stripeReason}` : "Une erreur est survenue avec le paiement. Réessayez.")}
         </div>
       )}
 

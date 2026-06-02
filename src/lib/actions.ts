@@ -3918,7 +3918,7 @@ export async function createCheckoutSession(formData: FormData) {
     url = checkout.url || url;
   } catch (e: any) {
     console.error("createCheckoutSession error:", e);
-    redirect("/dispatch/settings/billing?stripe=error");
+    redirect("/dispatch/settings/billing?stripe=error&reason=" + encodeURIComponent((e?.message || "inconnu").slice(0, 220)));
   }
   redirect(url);
 }
@@ -3944,7 +3944,7 @@ export async function createPortalSession() {
     url = portal.url;
   } catch (e: any) {
     console.error("createPortalSession error:", e);
-    redirect("/dispatch/settings/billing?stripe=error");
+    redirect("/dispatch/settings/billing?stripe=error&reason=" + encodeURIComponent((e?.message || "inconnu").slice(0, 220)));
   }
   redirect(url);
 }
