@@ -3917,8 +3917,9 @@ export async function createCheckoutSession(tier: string, interval: string): Pro
     if (!checkout.url) return { ok: false, error: "Stripe n'a pas renvoyé d'URL de paiement." };
     return { ok: true, url: checkout.url };
   } catch (e: any) {
-    console.error("createCheckoutSession error:", e);
-    return { ok: false, error: e?.message || "Erreur Stripe inconnue." };
+    console.error("createCheckoutSession error:", e, "type=", e?.type, "code=", e?.code, "detail=", e?.detail, "cause=", e?.cause);
+    const detail = e?.detail?.message || e?.cause?.message || (e?.cause ? String(e.cause) : "") || e?.code || "";
+    return { ok: false, error: (e?.message || "Erreur Stripe inconnue.") + (detail ? ` — détail: ${String(detail).slice(0, 160)}` : "") };
   }
 }
 
@@ -3940,7 +3941,8 @@ export async function createPortalSession(): Promise<{ ok: boolean; url?: string
     });
     return { ok: true, url: portal.url };
   } catch (e: any) {
-    console.error("createPortalSession error:", e);
-    return { ok: false, error: e?.message || "Erreur Stripe inconnue." };
+    console.error("createPortalSession error:", e, "detail=", e?.detail, "cause=", e?.cause);
+    const detail = e?.detail?.message || e?.cause?.message || (e?.cause ? String(e.cause) : "") || e?.code || "";
+    return { ok: false, error: (e?.message || "Erreur Stripe inconnue.") + (detail ? ` — détail: ${String(detail).slice(0, 160)}` : "") };
   }
 }
