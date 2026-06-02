@@ -3,8 +3,11 @@ import Stripe from "stripe";
 /** Client Stripe — null si la clé n'est pas configurée (repli propre, pas de crash). */
 // Sur Vercel (serverless), le client HTTP Node par défaut du SDK peut échouer
 // (« An error occurred with our connection to Stripe »). On force le client basé sur fetch.
-export const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+// La clé peut contenir un retour-ligne/espace parasite collé depuis Vercel
+// ("invalid header value"). On retire tout caractère d'espacement (les clés Stripe n'en ont pas).
+const STRIPE_KEY = (process.env.STRIPE_SECRET_KEY || "").replace(/\s+/g, "");
+export const stripe = STRIPE_KEY
+  ? new Stripe(STRIPE_KEY, {
       httpClient: Stripe.createFetchHttpClient(),
       maxNetworkRetries: 2,
     })
