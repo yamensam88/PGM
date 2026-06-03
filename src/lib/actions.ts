@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { driverCostFor, computeRunRevenue } from "@/lib/finance";
 import { countWorkingDays } from "@/lib/calendar";
 import { randomBytes } from "crypto";
-import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
+import { requireDirection, requireRole, requireOwner, requireFeature, assertTrialQuota } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -1288,6 +1288,7 @@ export async function createRun(formData: FormData) {
       throw new Error("Non autorisé.");
   }
   const orgId = session.user.organization_id;
+  await assertTrialQuota(orgId, "runs");
 
   const driver_id = formData.get("driver_id") as string;
   const vehicle_id = formData.get("vehicle_id") as string;
@@ -1819,6 +1820,7 @@ export async function addVehicle(formData: FormData) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
+    await assertTrialQuota(orgId, "vehicles");
 
     const parseNumber = (val: any) => {
       if (!val) return 0;

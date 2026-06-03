@@ -53,6 +53,17 @@ const MATRIX: Record<Plan, Feature[]> = {
 // Essai gratuit : acces limite a la Direction (tableau de bord) et a l'Exploitation & Flotte.
 const TRIAL_FEATURES: Feature[] = ["dashboard", "runs"];
 
+/**
+ * Plafonds de l'essai gratuit (decouverte) : assez pour vivre le declic "marge reelle"
+ * sur un vehicule, pas assez pour exploiter sa flotte gratuitement au quotidien.
+ */
+export const TRIAL_LIMITS = { vehicles: 1, runs: 15 } as const;
+
+/** L'organisation est-elle en periode d'essai ? */
+export function isTrialing(org: OrgLike): boolean {
+  return !!org && (org.subscription_status || "").toLowerCase() === "trialing";
+}
+
 export const PLAN_LABELS: Record<Plan, string> = {
   starter: "Starter",
   pro: "Pro",

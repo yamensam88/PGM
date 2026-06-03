@@ -12,7 +12,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { orgCan, type Feature } from "@/lib/plans";
+import { orgCan, isTrialing, TRIAL_LIMITS, type Feature } from "@/lib/plans";
 
 export type Role =
   | "admin"
@@ -84,4 +84,28 @@ export async function requireFeature(feature: Feature): Promise<AuthedSession> {
     throw new Error("Cette fonctionnalite n'est pas incluse dans votre offre. Passez a l'offre superieure pour y acceder.");
   }
   return session;
+}
+
+
+/**
+ * Plafond d'essai : pendant l'essai (trialing), bloque la creation au-dela des quotas
+ * (1 vehicule, 15 tournees). Hors essai (paye), ne fait rien. A appeler AVANT la creation.
+ */
+export async function assertTrialQuota(orgId: string, kind: "vehicles" | "runs"): Promise<void> {
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
+    select: { subscription_status: true },
+  });
+  if (!isTrialing(org)) return;
+  const limit = TRIAL_LIMITS[kind];
+  const count =
+    kind === "vehicles"
+      ? await prisma.vehicle.count({ where: { organization_id: orgId } })
+      : await prisma.dailyRun.count({ where: { organization_id: orgId } });
+  if (count >= limit) {
+    const label = kind === "vehicles" ? `${limit} vehicule` : `${limit} tournees`;
+    throw new Error(
+      `Limite de l'essai atteinte (${label}). Choisissez un abonnement pour en ajouter davantage et debloquer toutes les fonctionnalites.`
+    );
+  }
 }
