@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { driverCostFor } from "@/lib/finance";
+import { driverCostFor, computeRunRevenue } from "@/lib/finance";
 import { countWorkingDays } from "@/lib/calendar";
 import { randomBytes } from "crypto";
 import { requireDirection, requireRole, requireOwner, requireFeature } from "@/lib/authz";
@@ -874,11 +874,7 @@ export async function finishRun(formData: FormData) {
     const direct_delivered = Math.max(0, (run.packages_loaded || 0) - advised_parcels_direct - packages_returned);
     const relay_delivered = Math.max(0, (run.packages_relay || 0) - advised_parcels_relay);
     
-    const revenue_calculated = 
-      base_flat + 
-      (price_stop * stops_done) + 
-      (price_parcel * direct_delivered) + 
-      (bonus_relay * relay_delivered);
+    const revenue_calculated = computeRunRevenue({ rate_card: { base_daily_flat: base_flat, unit_price_stop: price_stop, unit_price_package: price_parcel, bonus_relay_point: bonus_relay }, packages_delivered: direct_delivered, packages_relay: relay_delivered, packages_advised_relay: 0, stops_completed: stops_done });
     
     console.log(`▶ [finishRun] Calcul revenue_calculated: ${revenue_calculated}€`);
 
@@ -1384,7 +1380,7 @@ export async function createRun(formData: FormData) {
         stored_direct = direct_delivered;
         stored_relay_delivered = relay_delivered;
 
-        revenue_calculated = base_flat + (price_stop * colis_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
+        revenue_calculated = computeRunRevenue({ rate_card: { base_daily_flat: base_flat, unit_price_stop: price_stop, unit_price_package: price_parcel, bonus_relay_point: bonus_relay }, packages_delivered: direct_delivered, packages_relay: relay_delivered, packages_advised_relay: 0, stops_completed: colis_collected });
 
         // Filter double counting
         const startOfDay = new Date(utcDate);
@@ -2021,7 +2017,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
       // CA facturé sur les colis LIVRÉS (relais d'abord), cohérent avec createRun / finance.ts
       const relay_delivered = Math.min(delivered, relay);
       const direct_delivered = Math.max(0, delivered - relay_delivered);
-      const revenue_calculated = base_flat + (price_stop * collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
+      const revenue_calculated = computeRunRevenue({ rate_card: { base_daily_flat: base_flat, unit_price_stop: price_stop, unit_price_package: price_parcel, bonus_relay_point: bonus_relay }, packages_delivered: direct_delivered, packages_relay: relay_delivered, packages_advised_relay: 0, stops_completed: collected });
 
       // Driver & Fleet Avoid Double Counting
       const startOfDay = new Date();
@@ -3320,7 +3316,7 @@ export async function updateRun(formData: FormData) {
        const direct_delivered = Math.max(0, final_packages_loaded - final_packages_advised_direct - final_packages_returned);
        const relay_delivered = Math.max(0, final_packages_relay - final_packages_advised_relay);
 
-       const revenue_calculated = base_flat + (price_stop * final_collected) + (price_parcel * direct_delivered) + (bonus_relay * relay_delivered);
+       const revenue_calculated = computeRunRevenue({ rate_card: { base_daily_flat: base_flat, unit_price_stop: price_stop, unit_price_package: price_parcel, bonus_relay_point: bonus_relay }, packages_delivered: direct_delivered, packages_relay: relay_delivered, packages_advised_relay: 0, stops_completed: final_collected });
 
        const startOfDay = new Date(run.date);
        startOfDay.setUTCHours(0, 0, 0, 0);
