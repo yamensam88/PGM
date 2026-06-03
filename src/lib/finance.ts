@@ -103,13 +103,19 @@ export function computeVehicleCost(
   const km = num(run?.km_total);
   let variable = 0;
   if (v.ownership_type === "rented") {
-    const limit = num(v.monthly_km_limit) || DEFAULT_MONTHLY_KM_LIMIT;
-    const extra = num(v.extra_km_cost) || DEFAULT_EXTRA_KM_COST;
-    const before = Math.max(0, num(opts.kmBeforeThisRun));
-    if (before >= limit) {
-      variable = km * extra;
-    } else if (before + km > limit) {
-      variable = (before + km - limit) * extra;
+    // Aligné sur le calcul live : si AUCUNE limite km n'est configurée (<= 0),
+    // on n'applique AUCUNE pénalité (0 = "pas de limite"), pas un défaut de 4000.
+    const limit = num(v.monthly_km_limit);
+    if (limit > 0) {
+      const extra = num(v.extra_km_cost) || DEFAULT_EXTRA_KM_COST;
+      const before = Math.max(0, num(opts.kmBeforeThisRun));
+      if (before >= limit) {
+        variable = km * extra;
+      } else if (before + km > limit) {
+        variable = (before + km - limit) * extra;
+      } else {
+        variable = 0;
+      }
     } else {
       variable = 0;
     }

@@ -1417,7 +1417,7 @@ export async function createRun(formData: FormData) {
                     },
                     select: { km_start: true, km_end: true }
                 });
-                const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+                const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? r.km_end ?? 0)), 0);
                 const limit = Number(vehicle.monthly_km_limit);
                 const extraCost = Number(vehicle.extra_km_cost || 0.18);
                 
@@ -2061,7 +2061,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
                 },
                 select: { km_start: true, km_end: true }
             });
-            const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+            const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? r.km_end ?? 0)), 0);
             const limit = Number(vehicle.monthly_km_limit);
             const extraCost = Number(vehicle.extra_km_cost || 0.18);
             
@@ -3349,7 +3349,7 @@ export async function updateRun(formData: FormData) {
                },
                select: { km_start: true, km_end: true }
            });
-           const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+           const previousTotal = priorRunsThisMonth.reduce((sum: number, r: any) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? r.km_end ?? 0)), 0);
            const limit = Number(activeVehicle.monthly_km_limit);
            const extraCost = Number(activeVehicle.extra_km_cost || 0.18);
            

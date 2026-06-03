@@ -146,7 +146,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
      rental_monthly_cost: v.rental_monthly_cost ? Number(v.rental_monthly_cost) : 0,
      extra_km_cost: v.extra_km_cost ? Number(v.extra_km_cost) : 0.18,
      monthly_km_limit: v.monthly_km_limit ? Number(v.monthly_km_limit) : null,
-     km_this_month: (v.daily_runs || []).reduce((sum: number, run: any) => sum + Math.max(0, (run.km_end || 0) - (run.km_start || Number(run.km_end))), 0),
+     km_this_month: (v.daily_runs || []).reduce((sum: number, run: any) => sum + Math.max(0, (run.km_end || 0) - (run.km_start ?? run.km_end ?? 0)), 0),
      maintenance_logs: v.maintenance_logs.map((m: any) => ({ ...m, cost: Number(m.cost) })),
      incidents: v.incidents.map((i: any) => ({ 
          ...i, 
@@ -307,7 +307,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
     zoneSynthesisMap[zName].packages_advised += runAdvised;
     zoneSynthesisMap[zName].packages_returned += runReturned;
     zoneSynthesisMap[zName].packages_relay += runRelay;
-    zoneSynthesisMap[zName].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end)));
+    zoneSynthesisMap[zName].km_utiles += Math.max(0, (r.km_end || 0) - (r.km_start ?? r.km_end ?? 0));
     
     // Sum up financial entries attached to runs
     if (r.financial_entries && r.financial_entries.length > 0) {
@@ -437,7 +437,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
            });
 
            // Avg KM per run
-           const totalKm = completedRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start || Number(r.km_end))), 0);
+           const totalKm = completedRuns.reduce((sum, r) => sum + Math.max(0, (r.km_end || 0) - (r.km_start ?? r.km_end ?? 0)), 0);
            const avgKmPerRun = completedRuns.length > 0 ? (totalKm / completedRuns.length).toFixed(0) : "0";
 
            const totalFuelLiters = completedRuns.reduce((sum, r) => sum + Number(r.fuel_consumed_liters || 0), 0);

@@ -100,7 +100,7 @@ export function RunsTable({ data, showHistoryAction, isExploitationMode, groupBy
     const advised = (run.packages_advised_direct || 0) + (run.packages_advised_relay || 0) || run.packages_advised || 0;
     const returned = run.packages_returned || 0;
     const ecart = loaded - (delivered + advised + returned);
-    const kmUtiles = run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start || Number(run.km_end) || 0));
+    const kmUtiles = run.km_total || Math.max(0, (run.km_end || 0) - (run.km_start ?? run.km_end ?? 0));
 
     return (
       <TableRow key={run.id} className="hover:bg-slate-50/50 border-0 transition-colors duration-200 group">
