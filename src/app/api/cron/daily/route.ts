@@ -27,7 +27,10 @@ export async function GET(request: Request) {
           const remainingMs = trialEndMs - now.getTime();
           const remainingDays = Math.ceil(remainingMs / (1000 * 3600 * 24));
           
-          if (remainingDays === 2) {
+          // fix R3 : fenêtre J-2..J-1 (>= 1 && <= 2) au lieu de l'égalité stricte === 2,
+          // pour ne pas perdre l'alerte si le cron saute un jour. NB : sans table de dédup,
+          // l'email peut partir 2 jours de suite (acceptable : mieux 2 emails que 0).
+          if (remainingDays >= 1 && remainingDays <= 2) {
              const owner = org.users[0];
              if (owner && owner.email) {
                 await sendTrialWarningEmail(owner.email, owner.first_name || 'Propriétaire');
@@ -36,6 +39,21 @@ export async function GET(request: Request) {
           }
        }
     }
+
+    // --- TASK 1b: EXPIRE LES ESSAIS DÉPASSÉS (fix P0-04) ---
+    // L'essai dure 7 jours (created_at + 7j). Au-delà, si l'org est ENCORE "trialing"
+    // (donc jamais convertie en payante), on bascule son statut sur "expired" (non-payant).
+    // Garde de sécurité : on ne touche QUE les orgs réellement en trialing dont created_at
+    // est dépassé — jamais une org active/past_due/canceled.
+    const trialCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const expiredTrials = await prisma.organization.updateMany({
+      where: {
+        subscription_status: 'trialing',
+        created_at: { lte: trialCutoff },
+      },
+      data: { subscription_status: 'expired' },
+    });
+    const trialsExpired = expiredTrials.count;
 
     // --- TASK 2: J-7 RENEWAL WARNINGS ---
     const activeOrgs = await prisma.organization.findMany({
@@ -69,6 +87,7 @@ export async function GET(request: Request) {
        message: "Cron executed successfully",
        stats: {
           trialAlertsSent,
+          trialsExpired,
           renewalAlertsSent
        }
     });

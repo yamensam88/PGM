@@ -93,10 +93,17 @@ export function CreateVehicleForm({ onSuccess }: CreateVehicleFormProps) {
       )}
 
       {ownershipType === 'owned' && (
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="fixed_monthly_cost" className="text-right">Coût Fixe / Mensualité (€)</Label>
-          <Input id="fixed_monthly_cost" name="fixed_monthly_cost" type="number" step="0.01" defaultValue={0} className="col-span-3" />
-        </div>
+        <>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="fixed_monthly_cost" className="text-right">Coût Fixe / Mensualité (€)</Label>
+            <Input id="fixed_monthly_cost" name="fixed_monthly_cost" type="number" step="0.01" defaultValue={0} className="col-span-3" />
+          </div>
+          {/* fix P0-10: champ coût kilométrique interne (€/km) — lu par addVehicle via formData.get("internal_cost_per_km") */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="internal_cost_per_km" className="text-right">Coût kilométrique interne (€/km)</Label>
+            <Input id="internal_cost_per_km" name="internal_cost_per_km" type="number" step="0.01" defaultValue={0} placeholder="Ex: 0.25" className="col-span-3" />
+          </div>
+        </>
       )}
 
       {ownershipType === 'rented' && (

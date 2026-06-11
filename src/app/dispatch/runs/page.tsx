@@ -125,7 +125,7 @@ export default async function DispatchRunsPage({ searchParams }: { searchParams:
         take: 20 
       },
       incidents: { 
-        where: { incident_type: "casse_vehicule", created_at: { gte: startDate, lte: endDate } }, 
+        where: { incident_type: "vehicle_damage", created_at: { gte: startDate, lte: endDate } }, // fix P0-11: lecture alignée sur l'écriture (reportVehicleDamage écrit 'vehicle_damage')
         orderBy: { created_at: "desc" }, 
         take: 20, 
         include: { driver: { select: { first_name: true, last_name: true } } } 

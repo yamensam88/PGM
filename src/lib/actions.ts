@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { driverCostFor, computeRunRevenue } from "@/lib/finance";
 import { countWorkingDays } from "@/lib/calendar";
 import { randomBytes } from "crypto";
-import { requireDirection, requireRole, requireOwner, requireFeature, assertTrialQuota } from "@/lib/authz";
+import { requireDirection, requireRole, requireOwner, requireFeature, assertTrialQuota, assertCanOperateRun, resolveSessionDriver, assertBelongsToOrg } from "@/lib/authz"; // fix P0-05/P0-07
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -34,7 +34,7 @@ export async function registerOrganization(formData: FormData) {
     const organization = await prisma.organization.create({
       data: {
         name: companyName,
-        subscription_plan: 'pro',
+        subscription_plan: 'starter', // fix R2 : défaut sain (le webhook élèvera le palier après paiement)
         subscription_status: 'trialing'
       }
     });
@@ -101,6 +101,10 @@ export async function toggleSaaSClientStatus(formData: FormData) {
  * Server Action: Update Billing Interval (Monthly / Annual)
  */
 export async function updateBillingInterval(formData: FormData) {
+  // fix P0-03 : ne JAMAIS écrire subscription_plan directement (cela attribuait un palier
+  // payant gratuitement, sans passer par Stripe). On route désormais le changement
+  // d'intervalle (mensuel/annuel) par le flux Stripe Checkout existant : c'est Stripe
+  // (via le webhook) qui mettra à jour le palier après paiement réel.
   try {
     await requireDirection();
     const session = await getServerSession(authOptions);
@@ -112,14 +116,17 @@ export async function updateBillingInterval(formData: FormData) {
        throw new Error("Plan invalide.");
     }
 
-    await prisma.organization.update({
-      where: { id: orgId },
-      data: { subscription_plan: plan }
-    });
-
-    revalidatePath("/dispatch/settings/billing");
-    return { success: true };
+    // Déduit l'intervalle demandé à partir du suffixe du plan, sans toucher au palier en base.
+    const interval = plan === "pro-annual" ? "annual" : "monthly";
+    const checkout = await createCheckoutSession("pro", interval);
+    if (!checkout.ok || !checkout.url) {
+      return { success: false, error: checkout.error || "Impossible d'ouvrir le paiement Stripe." };
+    }
+    // Redirige vers Stripe Checkout (le palier sera appliqué par le webhook après paiement).
+    redirect(checkout.url);
   } catch (error: any) {
+    // redirect() lève une exception interne Next.js (NEXT_REDIRECT) qu'il ne faut pas avaler.
+    if (error?.digest?.startsWith?.("NEXT_REDIRECT")) throw error;
     console.error("Erreur updateBillingInterval:", error);
     return { success: false, error: error.message };
   }
@@ -172,6 +179,7 @@ export async function createDriver(formData: FormData) {
     await prisma.driver.create({
       data: {
         organization_id: orgId,
+        user_id: user.id, // fix R1 : lie le Driver au compte User créé (fiabilise resolveSessionDriver P0-05)
         first_name: firstName,
         last_name: lastName,
         email: email,
@@ -750,6 +758,10 @@ export async function toggleMonthlyBonus(formData: FormData) {
 
     if (!driverId || !action || isNaN(month) || isNaN(year)) throw new Error("Données manquantes.");
 
+    // fix P0-06 : le driverId vient du formulaire — on vérifie qu'il appartient bien à l'org de la session avant toute écriture.
+    const targetDriver = await prisma.driver.findFirst({ where: { id: driverId, organization_id: orgId }, select: { id: true } });
+    if (!targetDriver) throw new Error("Chauffeur introuvable dans votre société.");
+
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59);
 
@@ -764,7 +776,7 @@ export async function toggleMonthlyBonus(formData: FormData) {
 
        if (existingEvents.length > 0) {
           await tx.hrEvent.deleteMany({
-             where: { id: { in: existingEvents.map((e: any) => e.id) } }
+             where: { id: { in: existingEvents.map((e: any) => e.id) }, organization_id: orgId } // fix P0-06
           });
        }
 
@@ -857,6 +869,8 @@ export async function finishRun(formData: FormData) {
     });
 
     if (!run) throw new Error("Tournée introuvable ou non autorisée.");
+    // fix P0-05 : un chauffeur ne peut clôturer QUE sa propre tournée (Direction/Exploitation = override)
+    await assertCanOperateRun(run);
     if (run.status === "completed") throw new Error("Cette tournée est déjà clôturée.");
     
     const final_km_start = km_start !== null ? km_start : (run.km_start !== null ? Number(run.km_start) : null);
@@ -878,10 +892,11 @@ export async function finishRun(formData: FormData) {
     
     console.log(`▶ [finishRun] Calcul revenue_calculated: ${revenue_calculated}€`);
 
-    // Determine if this is the first run of the day for the vehicle/driver
-    const startOfDay = new Date();
+    // fix P0-09 : la déduplication "première tournée du jour" doit se baser sur la DATE MÉTIER de la tournée (run.date),
+    // pas sur la date serveur. Sinon une clôture après minuit réimpute salaire journalier + part fixe véhicule de la veille.
+    const startOfDay = new Date(run.date);
     startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date();
+    const endOfDay = new Date(run.date);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
     const priorDriverRuns = await prisma.dailyRun.count({
@@ -1181,10 +1196,12 @@ export async function reportIncident(formData: FormData) {
         id: runId,
         organization_id: orgId
     },
-    select: { organization_id: true }
+    select: { organization_id: true, driver_id: true } // fix P0-05
   });
 
   if (!run) throw new Error("Run not found or unauthorized");
+  // fix P0-05 : un chauffeur ne peut signaler un incident QUE sur sa propre tournée (Direction/Exploitation = override)
+  await assertCanOperateRun(run);
 
   await prisma.incident.create({
     data: {
@@ -1235,6 +1252,10 @@ export async function startRun(formData: FormData) {
     });
 
     if (!run) throw new Error("Tournée introuvable.");
+    // fix P0-05 : un chauffeur ne peut démarrer QUE sa propre tournée (Direction/Exploitation = override)
+    await assertCanOperateRun(run);
+    // fix P0-07 : le vehicle_id reçu du client doit appartenir à l'organisation avant d'être écrit sur la tournée.
+    await assertBelongsToOrg("vehicle", vehicle_id, orgId);
     if (run.status !== "planned") throw new Error("Cette tournée ne peut pas être démarrée.");
 
     await prisma.$transaction(async (tx) => {
@@ -1307,6 +1328,11 @@ export async function createRun(formData: FormData) {
     throw new Error("Veuillez remplir tous les champs obligatoires (date, zone, chauffeur, véhicule).");
   }
 
+  // fix P0-07 : tout id reçu du client doit appartenir à l'organisation, quel que soit le statut du run.
+  await assertBelongsToOrg("driver", driver_id, orgId);
+  await assertBelongsToOrg("vehicle", vehicle_id, orgId);
+  await assertBelongsToOrg("zone", zone_id, orgId);
+
   const clientsDataJson = formData.get("clients_data_json") as string;
   let clientsData: any[] = [];
   if (clientsDataJson) {
@@ -1339,6 +1365,9 @@ export async function createRun(formData: FormData) {
   for (const clientRow of clientsData) {
       const client_id = clientRow.client_id;
       const rate_card_id = clientRow.rate_card_id || undefined;
+      // fix P0-07 : valider l'appartenance org du client et de la grille tarifaire pour chaque ligne, quel que soit le statut.
+      await assertBelongsToOrg("client", client_id, orgId);
+      await assertBelongsToOrg("rateCard", rate_card_id, orgId);
       const direct_parcels = Number(clientRow.direct_parcels || 0);
       const colis_collected = Number(clientRow.colis_collected || 0);
       
@@ -1761,6 +1790,14 @@ export async function reportVehicleDamage(formData: FormData) {
       throw new Error("Veuillez remplir les champs obligatoires correctement.");
     }
 
+    // fix P0-07 : valider l'appartenance org de tout id reçu du client avant écriture.
+    await assertBelongsToOrg("vehicle", vehicle_id, orgId);
+    await assertBelongsToOrg("driver", driver_id, orgId);
+    if (run_id) {
+      const ownedRun = await prisma.dailyRun.findFirst({ where: { id: run_id, organization_id: orgId }, select: { id: true } });
+      if (!ownedRun) throw new Error("Tournée introuvable dans votre société.");
+    }
+
     const incidentDate = new Date(date_input);
 
     let documentUrl = null;
@@ -1803,9 +1840,9 @@ export async function reportVehicleDamage(formData: FormData) {
       });
     });
 
-    revalidatePath("/dispatch/fleet");
-    revalidatePath("/dispatch/vehicles");
-    revalidatePath("/direction");
+    // fix P0-11 : la liste vehicules vit sous /dispatch/runs ; fleet/vehicles/direction n'existent pas.
+    revalidatePath("/dispatch/runs");
+    revalidatePath("/dispatch/dashboard");
     return { success: true };
   } catch (error: any) {
     console.error("Erreur reportVehicleDamage:", error);
@@ -1816,7 +1853,7 @@ export async function reportVehicleDamage(formData: FormData) {
 // DISPATCH/VEHICLES - Create a new vehicle
 export async function addVehicle(formData: FormData) {
   try {
-    await requireDirection();
+    await requireRole(["dispatcher", "manager"]); // fix EXPLOITATION : action de la page Exploitation & Flotte, ouverte au dispatcher/manager (Direction passe toujours)
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -1957,8 +1994,18 @@ export async function saveUnifiedDelivery(formData: FormData) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
+    const role = session.user.role; // fix P0-05
 
-    const driverId = formData.get("driverId") as string;
+    const formDriverId = formData.get("driverId") as string; // fix P0-05
+    // fix P0-05 : pour un chauffeur, on IGNORE le driverId du FormData (falsifiable)
+    // et on impose le chauffeur de la session. Direction/Exploitation gardent l'override.
+    let driverId = formDriverId;
+    const isOverrideRole = ["admin", "owner", "dispatcher", "manager"].includes(role as string);
+    if (!isOverrideRole) {
+      const sessionDriver = await resolveSessionDriver();
+      if (!sessionDriver) throw new Error("Profil chauffeur introuvable. Contactez l'exploitation.");
+      driverId = sessionDriver.id;
+    }
     const vehicleId = formData.get("vehicle_id") as string;
     const runIdsStr = formData.get("runIds") as string | null;
     const runStatsStr = formData.get("runStats") as string | null;
@@ -1982,6 +2029,18 @@ export async function saveUnifiedDelivery(formData: FormData) {
     const runIds: string[] = JSON.parse(runIdsStr);
     const runStats: Record<string, { loaded: string, returned: string, relay: string, collected: string }> = JSON.parse(runStatsStr);
 
+    // fix P0-08 : la date saisie/planifiée (champ "date" du FormData) doit primer sur la date serveur.
+    // On la normalise à minuit UTC du jour saisi (même logique que createRun) pour éviter le décalage TZ.
+    // Repli : date existante du run planifié, puis aujourd'hui en dernier recours (calculé par run dans la boucle).
+    const dateInput = formData.get("date") as string | null;
+    let formRunDate: Date | null = null;
+    if (dateInput) {
+      const parsed = new Date(dateInput);
+      if (!isNaN(parsed.getTime())) {
+        formRunDate = new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+      }
+    }
+
     let isFirstIteration = true;
 
     for (const id of runIds) {
@@ -2002,6 +2061,8 @@ export async function saveUnifiedDelivery(formData: FormData) {
       const existingRun = await prisma.dailyRun.findUnique({ where: { id } });
       // SECURITY CHECK: Verify Ownership of Run Entity to prevent Cross-Tenant IDOR bleeding
       if (!existingRun || existingRun.organization_id !== orgId) continue;
+      // fix P0-05 : pour un chauffeur, le run doit lui appartenir (driverId déjà forcé à la session).
+      if (!isOverrideRole && existingRun.driver_id !== driverId) continue;
 
       let client = await prisma.client.findUnique({ where: { id: existingRun.client_id }, include: { rate_cards: true }});
       if (!client) throw new Error("Client manquant pour la tournée.");
@@ -2021,10 +2082,16 @@ export async function saveUnifiedDelivery(formData: FormData) {
       const direct_delivered = Math.max(0, delivered - relay_delivered);
       const revenue_calculated = computeRunRevenue({ rate_card: { base_daily_flat: base_flat, unit_price_stop: price_stop, unit_price_package: price_parcel, bonus_relay_point: bonus_relay }, packages_delivered: direct_delivered, packages_relay: relay_delivered, packages_advised_relay: 0, stops_completed: collected });
 
+      // fix P0-08 / P0-09 : date métier effective de la tournée = date saisie (formRunDate),
+      // sinon date du run déjà planifié (existingRun.date), sinon aujourd'hui en dernier recours.
+      const effectiveRunDate = formRunDate ?? (existingRun.date ? new Date(existingRun.date) : new Date());
+
       // Driver & Fleet Avoid Double Counting
-      const startOfDay = new Date();
+      // fix P0-09 : bornes du jour calculées sur la DATE MÉTIER de la tournée (pas la date serveur)
+      // pour éviter de réimputer salaire journalier + part fixe véhicule lors d'une clôture après minuit.
+      const startOfDay = new Date(effectiveRunDate);
       startOfDay.setUTCHours(0, 0, 0, 0);
-      const endOfDay = new Date();
+      const endOfDay = new Date(effectiveRunDate);
       endOfDay.setUTCHours(23, 59, 59, 999);
 
       let cost_driver = 0;
@@ -2037,7 +2104,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
         const priorDriverRuns = await prisma.dailyRun.count({
           where: { organization_id: orgId, driver_id: driverId, date: { gte: startOfDay, lte: endOfDay }, id: { not: id }, status: 'completed' }
         });
-        const isWorkingDayRun = countWorkingDays(new Date(), new Date()) > 0;
+        const isWorkingDayRun = countWorkingDays(new Date(effectiveRunDate), new Date(effectiveRunDate)) > 0; // fix P0-09
         cost_driver = driverCostFor(driver, direct_delivered + relay_delivered, priorDriverRuns === 0, isWorkingDayRun);
 
         const priorVehicleRuns = await prisma.dailyRun.count({
@@ -2050,7 +2117,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
 
         let penalty_cost = 0;
         if (vehicle?.ownership_type === 'rented' && vehicle?.monthly_km_limit && vehicle.monthly_km_limit > 0) {
-            const nowForMonth = new Date();
+            const nowForMonth = new Date(effectiveRunDate); // fix P0-09 : fenêtre mensuelle alignée sur la date métier (cf. createRun)
             const monthStart = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth(), 1);
             const monthEnd = new Date(nowForMonth.getFullYear(), nowForMonth.getMonth() + 1, 0, 23, 59, 59, 999);
             
@@ -2094,7 +2161,7 @@ export async function saveUnifiedDelivery(formData: FormData) {
         organization_id: orgId,
         driver_id: driverId,
         vehicle_id: vehicleId,
-        date: new Date(),
+        date: effectiveRunDate, // fix P0-08 : conserver la date saisie/planifiée, ne pas écraser par la date serveur
         status: 'completed',
         run_code: routeNumber && routeNumber.trim() !== '' ? routeNumber : (existingRun.run_code || null),
         km_start: kmStart,
@@ -3126,7 +3193,7 @@ export async function createClient(formData: FormData) {
 
 export async function createZone(formData: FormData) {
   try {
-    await requireDirection();
+    await requireRole(["dispatcher", "manager"]); // fix EXPLOITATION : action de la page Exploitation & Flotte, ouverte au dispatcher/manager (Direction passe toujours)
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3211,7 +3278,7 @@ export async function toggleClientStatus(formData: FormData) {
 
 export async function deleteZone(formData: FormData) {
   try {
-    await requireDirection();
+    await requireRole(["dispatcher", "manager"]); // fix EXPLOITATION : action de la page Exploitation & Flotte, ouverte au dispatcher/manager (Direction passe toujours)
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé");
     const orgId = session.user.organization_id;
@@ -3263,6 +3330,10 @@ export async function updateRun(formData: FormData) {
     });
 
     if (!run) throw new Error("Tournée introuvable.");
+
+    // fix P0-07 : valider l'appartenance org de tout id client AVANT écriture, quel que soit le statut du run.
+    await assertBelongsToOrg("driver", formDriverId, orgId);
+    await assertBelongsToOrg("vehicle", formVehicleId, orgId);
 
     const final_status = formStatus || run.status;
     const final_packages_loaded = formData.has("packages_loaded") ? Number(formData.get("packages_loaded")) : Number(run.packages_loaded || 0);
@@ -3527,7 +3598,7 @@ export async function updateRun(formData: FormData) {
  */
 export async function updateVehicle(formData: FormData) {
   try {
-    await requireDirection();
+    await requireRole(["dispatcher", "manager"]); // fix EXPLOITATION : action de la page Exploitation & Flotte, ouverte au dispatcher/manager (Direction passe toujours)
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;
@@ -3599,7 +3670,7 @@ export async function updateVehicle(formData: FormData) {
  */
 export async function archiveVehicle(vehicleId: string) {
   try {
-    await requireDirection();
+    await requireRole(["dispatcher", "manager"]); // fix EXPLOITATION : action de la page Exploitation & Flotte, ouverte au dispatcher/manager (Direction passe toujours)
     const session = await getServerSession(authOptions);
     if (!session?.user?.organization_id) throw new Error("Non autorisé.");
     const orgId = session.user.organization_id;

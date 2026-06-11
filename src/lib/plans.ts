@@ -54,6 +54,13 @@ const MATRIX: Record<Plan, Feature[]> = {
 const TRIAL_FEATURES: Feature[] = ["dashboard", "runs"];
 
 /**
+ * fix P0-02 : statuts considérés comme payants/donnant accès au palier.
+ * "past_due" = délai de grâce (paiement en retard mais abonnement encore actif).
+ * Tout autre statut (canceled, unpaid, expired, vide…) → AUCUN accès (fail-closed).
+ */
+const PAID_STATUSES = ["active", "past_due"] as const;
+
+/**
  * Plafonds de l'essai gratuit (decouverte) : assez pour vivre le declic "marge reelle"
  * sur un vehicule, pas assez pour exploiter sa flotte gratuitement au quotidien.
  */
@@ -70,11 +77,19 @@ export const PLAN_LABELS: Record<Plan, string> = {
   business: "Business",
 };
 
-/** Normalise une valeur de plan en provenance de la base (défaut historique : "pro"). */
+/**
+ * Normalise une valeur de plan en provenance de la base.
+ * Reconnait les valeurs exactes ET les valeurs préfixées par tier ("starter-monthly",
+ * "pro-annual", "business-*") stockées par le webhook Stripe.
+ * fix P0-01 : en cas de valeur vraiment inconnue, retombe sur le palier le PLUS RESTRICTIF
+ * ("starter") au lieu de "pro" (fail-closed, pas fail-open).
+ */
 export function normalizePlan(plan?: string | null): Plan {
   const v = (plan || "").toLowerCase();
-  if (v === "starter" || v === "pro" || v === "business") return v;
-  return "pro";
+  if (v === "business" || v.startsWith("business-")) return "business";
+  if (v === "pro" || v.startsWith("pro-")) return "pro";
+  if (v === "starter" || v.startsWith("starter-")) return "starter";
+  return "starter"; // fix P0-01 : fail-closed sur le palier le plus restrictif
 }
 
 /** Le palier donné inclut-il la fonctionnalité (hors logique d'essai) ? */
@@ -90,15 +105,26 @@ type OrgLike = { subscription_plan?: string | null; subscription_status?: string
  */
 export function orgCan(org: OrgLike, feature: Feature): boolean {
   if (!org) return false;
-  if ((org.subscription_status || "").toLowerCase() === "trialing") {
+  const status = (org.subscription_status || "").toLowerCase();
+  // fix P0-02 : accès du palier UNIQUEMENT si le statut est payant (active/past_due).
+  if ((PAID_STATUSES as readonly string[]).includes(status)) {
+    return planAllows(org.subscription_plan, feature);
+  }
+  if (status === "trialing") {
     return TRIAL_FEATURES.includes(feature);
   }
-  return planAllows(org.subscription_plan, feature);
+  // canceled / unpaid / expired / vide → aucun accès (fail-closed).
+  return false;
 }
 
 /** Liste des fonctionnalités effectivement accessibles (pour le menu, etc.). */
 export function allowedFeatures(org: OrgLike): Feature[] {
   if (!org) return [];
-  if ((org.subscription_status || "").toLowerCase() === "trialing") return [...TRIAL_FEATURES];
-  return [...MATRIX[normalizePlan(org.subscription_plan)]];
+  const status = (org.subscription_status || "").toLowerCase();
+  // fix P0-02 : aligné sur orgCan — palier payant uniquement si statut payant.
+  if ((PAID_STATUSES as readonly string[]).includes(status)) {
+    return [...MATRIX[normalizePlan(org.subscription_plan)]];
+  }
+  if (status === "trialing") return [...TRIAL_FEATURES];
+  return [];
 }

@@ -109,3 +109,113 @@ export async function assertTrialQuota(orgId: string, kind: "vehicles" | "runs")
     );
   }
 }
+
+/**
+ * Résout le Driver associé à la session courante (rôle "driver").
+ * Lien fort par user_id si présent, sinon repli par email (bug M5/M10 : createDriver
+ * ne renseigne pas toujours Driver.user_id). Toujours borné à l'organisation.
+ * Retourne null si aucun profil chauffeur n'est trouvé.
+ */
+// fix P0-05
+export async function resolveSessionDriver(): Promise<{ id: string } | null> {
+  const session = await requireSession();
+  const orgId = session.user.organization_id;
+  const userId = session.user.id;
+  const email = session.user.email;
+
+  // 1) Lien fort par user_id (préféré dès que disponible)
+  if (userId) {
+    const byUser = await prisma.driver.findFirst({
+      where: { organization_id: orgId, user_id: userId },
+      select: { id: true },
+    });
+    if (byUser) return byUser;
+  }
+
+  // 2) Repli par email (chemin actuellement fonctionnel, cf. driver/page.tsx)
+  if (email) {
+    const byEmail = await prisma.driver.findFirst({
+      where: { organization_id: orgId, email },
+      select: { id: true },
+    });
+    if (byEmail) return byEmail;
+  }
+
+  return null;
+}
+
+/**
+ * Vérifie que la session a le droit d'agir sur `run` (déjà chargé et confirmé
+ * dans la bonne organisation par l'appelant).
+ *  - Direction (admin/owner) + Exploitation (dispatcher/manager) : override total.
+ *  - Chauffeur : autorisé uniquement si run.driver_id === driver de la session.
+ *  - Autres rôles (hr, finance) : refusés (ils n'ont rien à piloter sur une tournée).
+ * Lève une erreur explicite sinon.
+ */
+// fix P0-05
+export async function assertCanOperateRun(run: { driver_id: string | null }): Promise<AuthedSession> {
+  const session = await requireSession();
+  const role = session.user.role;
+
+  // Direction + Exploitation : override
+  if (DIRECTION.includes(role) || role === "dispatcher" || role === "manager") {
+    return session;
+  }
+
+  if (role === "driver") {
+    const driver = await resolveSessionDriver();
+    if (!driver) {
+      throw new Error("Profil chauffeur introuvable. Contactez l'exploitation.");
+    }
+    if (run.driver_id !== driver.id) {
+      throw new Error("Accès refusé : cette tournée n'est pas la vôtre.");
+    }
+    return session;
+  }
+
+  throw new Error("Accès refusé : votre rôle ne permet pas de piloter une tournée.");
+}
+
+/**
+ * Vérifie qu'une entité (driver/vehicle/client/zone/rate_card) appartient bien
+ * à l'organisation de la session, AVANT de l'écrire dans un run. Empêche
+ * l'injection d'identifiants d'autres organisations (IDOR cross-tenant).
+ * `id` vide/nul => ignoré (pas d'erreur). Lève une erreur claire sinon.
+ */
+// fix P0-07
+type OrgScopedEntity = "driver" | "vehicle" | "client" | "zone" | "rateCard";
+export async function assertBelongsToOrg(
+  kind: OrgScopedEntity,
+  id: string | null | undefined,
+  orgId: string
+): Promise<void> {
+  if (!id) return;
+  const labels: Record<OrgScopedEntity, string> = {
+    driver: "Chauffeur",
+    vehicle: "Véhicule",
+    client: "Client",
+    zone: "Zone",
+    rateCard: "Grille tarifaire",
+  };
+  let found: { id: string } | null = null;
+  switch (kind) {
+    case "driver":
+      found = await prisma.driver.findFirst({ where: { id, organization_id: orgId }, select: { id: true } });
+      break;
+    case "vehicle":
+      found = await prisma.vehicle.findFirst({ where: { id, organization_id: orgId }, select: { id: true } });
+      break;
+    case "client":
+      found = await prisma.client.findFirst({ where: { id, organization_id: orgId }, select: { id: true } });
+      break;
+    case "zone":
+      found = await prisma.zone.findFirst({ where: { id, organization_id: orgId }, select: { id: true } });
+      break;
+    case "rateCard":
+      found = await prisma.rateCard.findFirst({ where: { id, organization_id: orgId }, select: { id: true } });
+      break;
+  }
+  if (!found) {
+    throw new Error(`${labels[kind]} introuvable dans votre société.`);
+  }
+}

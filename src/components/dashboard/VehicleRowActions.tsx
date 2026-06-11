@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // fix P0-11
 import { Wrench, AlertTriangle, History } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { EditVehicleForm } from "@/components/forms/EditVehicleForm";
 import { archiveVehicle } from "@/lib/actions";
 
 export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers: any }) {
+  const router = useRouter(); // fix P0-11
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [damageOpen, setDamageOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -105,7 +107,7 @@ export function VehicleRowActions({ vehicle, drivers }: { vehicle: any, drivers:
               <AlertTriangle className="w-5 h-5"/> Signaler un sinistre
             </DialogTitle>
           </DialogHeader>
-          <CreateDamageForm vehicleId={vehicle.id} drivers={drivers} onSuccess={() => setDamageOpen(false)} />
+          <CreateDamageForm vehicleId={vehicle.id} drivers={drivers} onSuccess={() => { setDamageOpen(false); router.refresh(); /* fix P0-11: rafraîchir pour voir la casse */ }} />
         </DialogContent>
       </Dialog>
 

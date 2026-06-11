@@ -17,8 +17,10 @@ model Organization {
   tax_id              String?   @db.VarChar(100)
   currency            String?   @default("EUR") @db.VarChar(10)
   country             String?   @default("FR") @db.VarChar(50)
-  subscription_plan   String?   @default("pro") @db.VarChar(50)
-  subscription_status String?   @default("active") @db.VarChar(50)
+  // Défauts fail-closed : une organisation créée sans valeurs explicites démarre en ESSAI
+  // au palier le plus bas, jamais en "active/pro" (qui débloquerait toutes les interfaces).
+  subscription_plan   String?   @default("starter") @db.VarChar(50)
+  subscription_status String?   @default("trialing") @db.VarChar(50)
   settings_json       Json?
   created_at          DateTime? @default(now()) @db.Timestamptz(6)
   updated_at          DateTime? @default(now()) @db.Timestamptz(6)
