@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck, Map, Briefcase, Radio } from "lucide-react";
+import { Settings, Loader2, LayoutDashboard, Route, Users, History, CreditCard, Truck, Map, Briefcase, Radio, Clock } from "lucide-react";
 import { updateUserPermissions } from "@/lib/actions";
 
 type PermissionItem = {
@@ -24,7 +24,8 @@ const permissionModules: PermissionItem[] = [
   { id: "/driver", label: "Interface Chauffeur", icon: Truck },
   { id: "https://pro.viafleet.io/", label: "Suivi Véhic.", icon: Map },
   { id: "https://gestiontournee.colisprive.com/Mop/", label: "Portail CP", icon: Briefcase },
-  { id: "https://cps.gofoexpress.fr/login", label: "Portail GF", icon: Truck }
+  { id: "https://cps.gofoexpress.fr/login", label: "Portail GF", icon: Truck },
+  { id: "https://mobilic.beta.gouv.fr/login", label: "Mobilic", icon: Clock }
 ];
 
 export function ManageUserPermissions({ userId, userName, initialPermissions }: { userId: string, userName: string, initialPermissions: any }) {

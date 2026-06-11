@@ -18,6 +18,7 @@ import {
   Map,
   Lock,
   Radio,
+  Clock,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,9 @@ const navItems = [
   { name: "Suivi Véhic.", href: "https://pro.viafleet.io/", icon: Map, external: true },
   { name: "Portail CP", href: "https://gestiontournee.colisprive.com/Mop/", icon: Briefcase, external: true },
   { name: "Portail GF", href: "https://cps.gofoexpress.fr/login", icon: Truck, external: true },
+  // Mobilic : lien externe, CACHÉ par défaut. Visible seulement pour les utilisateurs
+  // à qui la Direction l'active via Paramètres > Utilisateurs > Accès & Permissions.
+  { name: "Mobilic", href: "https://mobilic.beta.gouv.fr/login", icon: Clock, external: true, optIn: true },
 ];
 
 const allowedPaths: Record<string, string[]> = {
@@ -117,7 +121,10 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           const isActive = !item.external && pathname.startsWith(item.href);
           
           let isAllowed = item.external ? true : (allowedPaths[userRole]?.includes(item.href) || false);
-          
+
+          // Item "opt-in" (ex. Mobilic) : refusé par défaut pour tous, y compris la Direction.
+          if ((item as any).optIn) isAllowed = false;
+
           // Override with granular permissions if defined for this specific interface
           if (userPermissions && typeof userPermissions[item.href] === 'boolean') {
               isAllowed = userPermissions[item.href];
@@ -133,6 +140,10 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           if (item.name === "Cockpit Direction" && userRole !== "owner") {
              return null;
           }
+          // Item opt-in non accordé à cet utilisateur : entièrement masqué.
+          if ((item as any).optIn && !isAllowed) {
+             return null;
+          }
           // Portails CP / GF : interfaces internes a NOTRE societe (compte maitre). Visibles par toute l'equipe ;
           // l'acces individuel se gere via Parametres > Utilisateurs > Acces & Permissions.
           if ((item.name === "Portail CP" || item.name === "Portail GF") && !isMasterOrg) {
@@ -144,7 +155,7 @@ function SidebarContent({ userRole, isSuperAdmin, userPermissions = {}, planFeat
           }
 
           // Verrouillage : essai (tout sauf Direction / Exploitation / Abonnement) ou palier (fonctionnalite absente).
-          const trialLocked = isTrialing && item.href !== "/dispatch/dashboard" && item.href !== "/dispatch/runs" && item.href !== "/dispatch/settings/billing";
+          const trialLocked = isTrialing && !(item as any).optIn && item.href !== "/dispatch/dashboard" && item.href !== "/dispatch/runs" && item.href !== "/dispatch/settings/billing";
           const planLocked = !!reqFeat && !planFeatures.includes(reqFeat);
           const locked = trialLocked || planLocked;
 
