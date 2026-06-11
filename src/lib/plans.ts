@@ -78,6 +78,18 @@ export const PLAN_LABELS: Record<Plan, string> = {
 };
 
 /**
+ * Prix mensuels réels (€), alignés sur la landing et plans.ts.
+ * Business = 0 = "sur devis" : non compté dans le MRR (cf. monthlyPriceFor / super-admin).
+ */
+export const PLAN_PRICES: Record<Plan, number> = { starter: 99, pro: 249, business: 0 };
+
+/** Prix mensuel réel pour un plan (normalisé). Business → 0 (sur devis). */
+export function monthlyPriceFor(plan?: string | null): number {
+  return PLAN_PRICES[normalizePlan(plan)];
+}
+
+
+/**
  * Normalise une valeur de plan en provenance de la base.
  * Reconnait les valeurs exactes ET les valeurs préfixées par tier ("starter-monthly",
  * "pro-annual", "business-*") stockées par le webhook Stripe.

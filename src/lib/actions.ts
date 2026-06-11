@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { driverCostFor, computeRunRevenue } from "@/lib/finance";
 import { countWorkingDays } from "@/lib/calendar";
 import { randomBytes } from "crypto";
-import { requireDirection, requireRole, requireOwner, requireFeature, assertTrialQuota, assertCanOperateRun, resolveSessionDriver, assertBelongsToOrg } from "@/lib/authz"; // fix P0-05/P0-07
+import { requireDirection, requireRole, requireOwner, requireFeature, assertTrialQuota, assertCanOperateRun, resolveSessionDriver, assertBelongsToOrg, getMasterOrgId } from "@/lib/authz"; // fix P0-05/P0-07 + SA-C1
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -66,14 +66,16 @@ export async function registerOrganization(formData: FormData) {
  */
 export async function toggleSaaSClientStatus(formData: FormData) {
   try {
-    await requireDirection();
+    // fix SA-M2 : page Super Admin owner-only -> action owner-only (avant : requireDirection = admin OU owner)
+    await requireOwner();
     const session = await getServerSession(authOptions);
     const orgId = session?.user?.organization_id;
     if (!orgId) throw new Error("Non autorisé.");
 
     // Security check: Must be Super Admin (Master Org)
-    const masterOrg = await prisma.organization.findFirst({ orderBy: { created_at: 'asc' } });
-    if (masterOrg?.id !== orgId) {
+    // fix SA-C1 : source autoritaire de l'org maîtresse (MASTER_ORG_ID, sinon la plus ancienne)
+    const masterOrgId = await getMasterOrgId();
+    if (masterOrgId !== orgId) {
       throw new Error("Action réservée au Super Admin.");
     }
 
@@ -82,11 +84,40 @@ export async function toggleSaaSClientStatus(formData: FormData) {
 
     if (!targetOrgId || !action) throw new Error("Paramètres manquants.");
 
-    const newStatus = action === 'suspend' ? 'suspended' : 'active';
+    // fix SA-M1 : anti-auto-suspension côté serveur (l'UI seule ne suffit pas, POST forgé possible)
+    if (action === 'suspend' && targetOrgId === masterOrgId) {
+      return { success: false, error: "Impossible de suspendre l'organisation maîtresse." };
+    }
+
+    // fix SA-C2 : ne JAMAIS écrire 'active' en dur (= accès payant gratuit, cf. P0-02).
+    // Suspension : on mémorise le statut courant dans settings_json (status_before_suspend).
+    // Réactivation : on restaure ce statut s'il existe, sinon 'trialing' (jamais 'active' gratuit).
+    const target = await prisma.organization.findUnique({
+      where: { id: targetOrgId },
+      select: { subscription_status: true, settings_json: true },
+    });
+    if (!target) throw new Error("Organisation introuvable.");
+
+    // settings_json peut être une string JSON ou un objet (comme le gère le webhook / cron).
+    const settings: any =
+      typeof target.settings_json === 'string'
+        ? JSON.parse(target.settings_json)
+        : (target.settings_json as any) || {};
+
+    let newStatus: string;
+    if (action === 'suspend') {
+      // Mémorise le statut courant avant de suspendre (ne pas écraser les autres clés).
+      settings.status_before_suspend = target.subscription_status;
+      newStatus = 'suspended';
+    } else {
+      // Restaure le dernier statut connu, sinon retombe sur 'trialing' (jamais 'active' en dur).
+      newStatus = settings.status_before_suspend || 'trialing';
+      delete settings.status_before_suspend; // nettoyage après restauration
+    }
 
     await prisma.organization.update({
       where: { id: targetOrgId },
-      data: { subscription_status: newStatus }
+      data: { subscription_status: newStatus, settings_json: settings }
     });
 
     revalidatePath("/super-admin");

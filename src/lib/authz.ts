@@ -73,6 +73,24 @@ export async function requireOwner(): Promise<AuthedSession> {
   return session;
 }
 
+/**
+ * Identifiant de l'organisation maîtresse (Super Admin de la plateforme).
+ * Source autoritaire = variable d'env MASTER_ORG_ID si définie. Sinon, repli sur
+ * « l'organisation la plus ancienne » (comportement historique, conservé pour ne rien
+ * casser tant que l'env n'est pas réglée — mais fragile, cf. audit C1).
+ * Retourne null si aucune organisation n'existe.
+ */
+// fix SA-C1
+export async function getMasterOrgId(): Promise<string | null> {
+  const fromEnv = process.env.MASTER_ORG_ID;
+  if (fromEnv) return fromEnv;
+  const oldest = await prisma.organization.findFirst({
+    orderBy: { created_at: "asc" },
+    select: { id: true },
+  });
+  return oldest?.id ?? null;
+}
+
 /** Exige que l'offre de l'organisation inclue la fonctionnalite (verrouillage par palier). Essai = acces complet. */
 export async function requireFeature(feature: Feature): Promise<AuthedSession> {
   const session = await requireSession();
